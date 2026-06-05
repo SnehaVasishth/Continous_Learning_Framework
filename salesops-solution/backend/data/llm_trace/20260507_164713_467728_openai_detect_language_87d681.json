@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260507_164713_467728",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 274,
+  "raw_response_chars": 146,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\n\u4fee\u7406\u4f9d\u983c \u2014 Infiniium UXR0334A Ch3 \u30c8\u30ea\u30ac\u4e0d\u5177\u5408\uff08FOSI \u7533\u8acb\uff09\nKeysight \u30b5\u30fc\u30d3\u30b9\u5fa1\u4e2d\n\nInfiniium UXR0334A (S/N: KS-UXR-770283) \u306e\u30c1\u30e3\u30f3\u30cd\u30eb 3 \u3067\u30c8\u30ea\u30ac\u304c\u639b\u304b\u3089\u306a\u304f\u306a\u308b\u4e8b\u8c61\u304c\u767a\u751f\u3057\u3066\u304a\u308a\u307e\u3059\u3002DUT \u5074\u306e\u554f\u984c\u306f\u5207\u308a\u5206\u3051\u6e08\u307f\u3067\u3059\u3002\u51fa\u5f35\u4fee\u7406\u307e\u305f\u306f\u4ea4\u63db\u6a5f\u306e\u624b\u914d\u3092\u3054\u691c\u8a0e\u304f\u3060\u3055\u3044\u3002FOSI \u3068\u3057\u3066\u512a\u5148\u5bfe\u5fdc\u3092\u304a\u9858\u3044\u3067\u304d\u308c\u3070\u5e78\u3044\u3067\u3059\u3002\n\n\u3088\u308d\u3057\u304f\u304a\u9858\u3044\u3044\u305f\u3057\u307e\u3059\u3002\n\u5927\u91ce / \u8a55\u4fa1\u90e8\nSakura Semiconductor KK\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"ja\",\"confidence\":0.99,\"reasoning\":\"Japanese script (kanji/kana) and business email phrases like\u300c\u5fa1\u4e2d\u300d\u300c\u3088\u308d\u3057\u304f\u304a\u9858\u3044\u3044\u305f\u3057\u307e\u3059\u300dindicate Japanese.\"}",
+  "parsed": {
+    "language": "ja",
+    "confidence": 0.99,
+    "reasoning": "Japanese script (kanji/kana) and business email phrases like\u300c\u5fa1\u4e2d\u300d\u300c\u3088\u308d\u3057\u304f\u304a\u9858\u3044\u3044\u305f\u3057\u307e\u3059\u300dindicate Japanese."
+  },
+  "error": null
+}

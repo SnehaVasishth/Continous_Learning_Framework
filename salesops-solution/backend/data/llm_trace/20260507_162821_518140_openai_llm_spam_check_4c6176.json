@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260507_162821_518140",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 839,
+  "user_prompt_chars": 637,
+  "raw_response_chars": 353,
+  "system": "You are a spam / phishing classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Given an email's subject, sender, and translated body, decide whether it is spam or phishing. Most legitimate inbound mail is from established customers asking about purchase orders, calibration, work orders, service contracts, or product information. Spam / phishing signals: unsolicited promo blasts, fake-discount language, urgency pressure ('act now', 'today only'), credential phishing ('verify your account'), payment-redirect scams ('our banking details have changed'), wire-fraud setups, and lookalike-domain senders. Return strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: chumon@sakurasemi.co.jp\nSUBJECT: \u4fee\u7406\u4f9d\u983c \u2014 Infiniium UXR0334A Ch3 \u30c8\u30ea\u30ac\u4e0d\u5177\u5408\uff08FOSI \u7533\u8acb\uff09\nBODY (translated to English):\nRepair Request \u2014 Infiniium UXR0334A Ch3 Trigger Malfunction (FOSI Application)\nKeysight Service Team,\n\nWe are experiencing an issue where the trigger fails to engage on Channel 3 of our Infiniium UXR0334A (S/N: KS-UXR-770283). We have already isolated and ruled out any issues on the DUT side. Please consider arranging an on-site repair or a replacement unit. We would greatly appreciate it if you could prioritize this as a FOSI case.\n\nBest regards,\nOno / Evaluation Department\nSakura Semiconductor KK\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.96,\"reasoning\":\"Sender is a corporate domain (sakurasemi.co.jp) and the email is a specific service/repair request for a Keysight instrument with model and serial number, asking for on-site repair/replacement and FOSI prioritization; no promo, credential request, or payment/banking change cues.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.96,
+    "reasoning": "Sender is a corporate domain (sakurasemi.co.jp) and the email is a specific service/repair request for a Keysight instrument with model and serial number, asking for on-site repair/replacement and FOSI prioritization; no promo, credential request, or payment/banking change cues.",
+    "category": "legitimate"
+  },
+  "error": null
+}

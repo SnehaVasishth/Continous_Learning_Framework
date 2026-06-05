@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_125103_425482",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 373,
+  "raw_response_chars": 202,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nRelease SO-NORDS-TELCO-045-2007 \u2014 open invoice cleared\nHola,\n\nEl pedido SO-NORDS-TELCO-045-2007 est\u00e1 actualmente en payment hold. The open invoice has been wired this morning \u2014 confirmation #WT-7732. Por favor lib\u00e9renlo para que pueda enviarse \u2014 nuestro plan de calibraci\u00f3n depende de esta entrega.\n\nSaludos,\nLuc\u00eda M\u00e9ndez, AP\nNordstern Telecom Labs\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"es\",\"confidence\":0.86,\"reasoning\":\"Predominantly Spanish vocabulary and structure (e.g., \\\"El pedido\\\", \\\"Por favor lib\u00e9renlo\\\", \\\"Saludos\\\"), with some embedded English business phrases.\"}",
+  "parsed": {
+    "language": "es",
+    "confidence": 0.86,
+    "reasoning": "Predominantly Spanish vocabulary and structure (e.g., \"El pedido\", \"Por favor lib\u00e9renlo\", \"Saludos\"), with some embedded English business phrases."
+  },
+  "error": null
+}

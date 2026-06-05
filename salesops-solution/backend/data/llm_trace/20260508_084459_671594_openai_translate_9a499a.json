@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260508_084459_671594",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1742,
+  "user_prompt_chars": 1433,
+  "raw_response_chars": 1418,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.",
+  "user": "SOURCE_LANGUAGE_HINT: es\nTEXT:\nEstimado equipo de Compras de Meridian Comunicaciones SA:\n\nAcusamos recibo de su orden de compra PO-MERID-COMM-077-Q2O-73116 asociada a la cotizaci\u00f3n QT-MERID-COMM-077-DEMO. Hemos registrado los siguientes datos para su revisi\u00f3n:\n\n- N\u00famero de PO: PO-MERID-COMM-077-Q2O-73116\n- Cotizaci\u00f3n de referencia: QT-MERID-COMM-077-DEMO\n- Fecha de env\u00edo solicitada: 2026-06-04\n- Condiciones de pago: Net 60\n- Importe total: 370.200,00\n\nL\u00edneas incluidas:\n1. M9384B-04F \u2014 VXG Vector Signal Generator, 44 GHz, 2 canales, 2 GHz BW (Cant. 1)\n2. N9040B-550 \u2014 UXA Signal Analyzer, 50 GHz, 510 MHz de ancho de an\u00e1lisis (Cant. 1)\n3. CAL-A2LA-1Y \u2014 Servicio de Calibraci\u00f3n A2LA/ISO 17025, 1 a\u00f1o (Cant. 1)\n4. 85052D \u2014 Kit de Calibraci\u00f3n Economy 3.5 mm, DC a 26,5 GHz (Cant. 1)\n\nHemos tomado nota de la variaci\u00f3n se\u00f1alada: la inclusi\u00f3n del kit de calibraci\u00f3n 85052D, que no figuraba en la cotizaci\u00f3n original. Su pedido se encuentra actualmente en revisi\u00f3n interna para validar el precio de esta l\u00ednea adicional antes de proceder con la conversi\u00f3n formal a orden de venta. Le confirmaremos la aceptaci\u00f3n o, en su caso, le indicaremos si es necesario un PO revisado, dentro de los pr\u00f3ximos 2 d\u00edas h\u00e1biles, conforme a su solicitud de acuse.\n\nTodos los env\u00edos y facturas har\u00e1n referencia al n\u00famero de PO indicado.\n\nQuedamos atentos a cualquier consulta.\n\nAtentamente,\nEquipo de SalesOps \u2014 Keysight Technologies\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"Dear Meridian Comunicaciones SA Purchasing Team:\\n\\nWe acknowledge receipt of your purchase order PO-MERID-COMM-077-Q2O-73116 associated with quotation QT-MERID-COMM-077-DEMO. We have recorded the following details for your review:\\n\\n- PO number: PO-MERID-COMM-077-Q2O-73116\\n- Reference quotation: QT-MERID-COMM-077-DEMO\\n- Requested ship date: 2026-06-04\\n- Payment terms: Net 60\\n- Total amount: 370,200.00\\n\\nIncluded line items:\\n1. M9384B-04F \u2014 VXG Vector Signal Generator, 44 GHz, 2 channels, 2 GHz BW (Qty. 1)\\n2. N9040B-550 \u2014 UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth (Qty. 1)\\n3. CAL-A2LA-1Y \u2014 A2LA/ISO 17025 Calibration Service, 1 year (Qty. 1)\\n4. 85052D \u2014 Economy 3.5 mm Calibration Kit, DC to 26.5 GHz (Qty. 1)\\n\\nWe have noted the indicated variation: the inclusion of calibration kit 85052D, which was not listed in the original quotation. Your order is currently under internal review to validate the price of this additional line item before proceeding with the formal conversion to a sales order. We will confirm acceptance or, as applicable, advise whether a revised PO is required within the next 2 business days, in accordance with your acknowledgment request.\\n\\nAll shipments and invoices will reference the PO number indicated.\\n\\nWe remain available for any questions.\\n\\nSincerely,\\nSalesOps Team \u2014 Keysight Technologies\",\"source_language\":\"es\",\"notes\":\"\"}",
+  "parsed": {
+    "translated_text": "Dear Meridian Comunicaciones SA Purchasing Team:\n\nWe acknowledge receipt of your purchase order PO-MERID-COMM-077-Q2O-73116 associated with quotation QT-MERID-COMM-077-DEMO. We have recorded the following details for your review:\n\n- PO number: PO-MERID-COMM-077-Q2O-73116\n- Reference quotation: QT-MERID-COMM-077-DEMO\n- Requested ship date: 2026-06-04\n- Payment terms: Net 60\n- Total amount: 370,200.00\n\nIncluded line items:\n1. M9384B-04F \u2014 VXG Vector Signal Generator, 44 GHz, 2 channels, 2 GHz BW (Qty. 1)\n2. N9040B-550 \u2014 UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth (Qty. 1)\n3. CAL-A2LA-1Y \u2014 A2LA/ISO 17025 Calibration Service, 1 year (Qty. 1)\n4. 85052D \u2014 Economy 3.5 mm Calibration Kit, DC to 26.5 GHz (Qty. 1)\n\nWe have noted the indicated variation: the inclusion of calibration kit 85052D, which was not listed in the original quotation. Your order is currently under internal review to validate the price of this additional line item before proceeding with the formal conversion to a sales order. We will confirm acceptance or, as applicable, advise whether a revised PO is required within the next 2 business days, in accordance with your acknowledgment request.\n\nAll shipments and invoices will reference the PO number indicated.\n\nWe remain available for any questions.\n\nSincerely,\nSalesOps Team \u2014 Keysight Technologies",
+    "source_language": "es",
+    "notes": ""
+  },
+  "error": null
+}

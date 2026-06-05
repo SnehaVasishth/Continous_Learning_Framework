@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260514_160524_975256",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 2827,
+  "user_prompt_chars": 830,
+  "raw_response_chars": 316,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email \u2014 not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these \u2014 the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nCRITICAL \u2014 DOMAIN UNFAMILIARITY ALONE IS NOT SPAM. Keysight is a B2B vendor with thousands of enterprise customers worldwide. Most legitimate sender domains will be UNFAMILIAR to you (raytheon-elseg.com, tesserasemiconductor.com.tw, auroraauto.com, meridiancomms.es, sakurasemi.co.jp, nordstern-telecom.de, etc.). These look unfamiliar but they are real customers' actual corporate domains. \n\nWhen the BODY CONTENT is a coherent customer business request \u2014 purchase order, quote-to-order conversion, ship-date change, hold release, calibration / repair / work-order request, service contract / renewal / cal-plan / PM-plan inquiry, or status question on an existing order/WO \u2014 the email is NOT spam, regardless of how unfamiliar the sender's domain looks to you. Set is_spam=False with category='legitimate' in those cases. \n\nReal lookalike-domain phishing requires BOTH (a) a domain that's clearly impersonating a known trusted brand (e.g., faux-keysight.com mimicking keysight.com, suspicious capital letters or homoglyphs, IP literal in URL) AND (b) a phishing pattern in the BODY (credential prompt, banking details change, urgent action click, executive-impersonation wire request, fake-invoice attachment from an unfamiliar sender). One signal alone \u2014 domain unfamiliarity OR business urgency \u2014 is NEVER sufficient. Both must be present. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: ee.procurement@auroraauto.com\nSUBJECT: Change order \u2014 SO-AURA-AUTO-119-2508 \u2014 qty bump + add cal kit + bill-to update\nBODY (translated to English):\nHi Keysight Sales Ops,\n\nWe need to make the following changes to our existing booked order SO-AURA-AUTO-119-2508:\n\n  \u2022 Increase qty on the first line item by 1 (we need a second test bench).\n  \u2022 Add a 3.5 mm cal kit (SKU 85052D) to the order \u2014 this was missed on the original PO.\n  \u2022 Update the bill-to address to our new AP office: PO Box 11337, Waltham, MA 02454.\n\nCustomer PO ref will follow as a revision (we'll send PO-SO-AURA-AUTO-119-2508-R02 once finance signs off). Please confirm receipt and let me know if any of these need a sales-ops approval given the order is already booked.\n\nThanks,\nMatt Holloway, Senior Buyer\nAurora Automotive Electronics\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.96,\"reasoning\":\"Coherent customer procurement request referencing an existing sales order number, specific line-item quantity change, adding a known SKU, and updating bill-to address; no credential prompts, links, or payment/bank-detail redirection patterns.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.96,
+    "reasoning": "Coherent customer procurement request referencing an existing sales order number, specific line-item quantity change, adding a known SKU, and updating bill-to address; no credential prompts, links, or payment/bank-detail redirection patterns.",
+    "category": "legitimate"
+  },
+  "error": null
+}

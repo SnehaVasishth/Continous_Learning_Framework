@@ -1,0 +1,146 @@
+{
+  "timestamp": "20260513_232901_054151",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 8108,
+  "user_prompt_chars": 151,
+  "raw_response_chars": 1081,
+  "system": "You are a language-detection agent. Given a short piece of text, decide which of [en, es, ja, other] the text is in. Then SCORE your confidence by applying the rubric below and returning a per-rule breakdown (matched true/false, delta, evidence). The downstream system recomputes confidence from your breakdown \u2014 your `confidence` value should equal base + sum(matched deltas), clamped to [0,1].\n\nLANGUAGE-CONFIDENCE RUBRIC (apply this to score the chosen language):\n  Start with base = 0.40 (uninformed prior over [en, es, ja, other]).\n  Then EVALUATE EACH RULE BELOW against the text and decide matched=true|false.\n  Final confidence = base + sum(delta where matched=true), clamped to [0.0, 1.0].\n  EMIT one entry in confidence_breakdown for EVERY rule below \u2014 even rules that don't match (matched=false, delta=0.0, evidence=\"\").\n  When matched=true, set delta to the rule's weight for the chosen language (per-language override if present, else default_delta) and put a SHORT quote in evidence.\n\n  \u2022 diacritic_signature [trigger, default +0.15] (per-language: es=+0.18, en=+0.05) \u2014 What it does: rewards the chosen language when distinctive diacritics or punctuation patterns are present \u2014 `\u00f1 \u00bf \u00a1` for Spanish, full-width punctuation \u300c\u300d\u30fb for Japanese, plain ASCII apostrophes / no diacritics for English. Weaker than full script presence but a strong corroborating signal for Latin-script languages.\n\nHow to optimize:\n  \u2022 Per-language overrides handle most tuning: es=+0.18 (diacritics are     common and load-bearing in Spanish), en=+0.05 (most English doesn't     use diacritics, so absence-of-diacritics is the signal \u2014 kept low).\n  \u2022 Raise es override if Spanish emails are getting under-scored because     only 1-2 diacritics appear (e.g., 'a\u00f1o' alone, no '\u00bf' or '\u00a1').\n  \u2022 Don't conflate this with keyword_density_high \u2014 they should fire     independently. If both fire, that's strong corroboration. e.g., for es: \u00bfqu\u00e9?, \u00a1hola!, est\u00e1\n  \u2022 greeting_or_signoff_match [trigger, default +0.10] \u2014 What it does: rewards the chosen language when the opening salutation or closing sign-off matches its conventions \u2014 'Hi/Hello/Best regards' for en, 'Hola/Estimado/Saludos/Cordialmente' for es, '\u304a\u4e16\u8a71\u306b\u306a\u3063\u3066\u304a\u308a\u307e\u3059/\u656c\u5177' for ja. Especially useful for short emails where the body itself doesn't carry enough function words.\n\nHow to optimize:\n  \u2022 Default +0.10 is intentionally low \u2014 greetings can leak across     languages (an English speaker writing 'Saludos' to a Spanish customer).\n  \u2022 Raise to +0.15 if your customer base is multilingual and short emails     are common.\n  \u2022 If you observe operators consistently fixing language detection on     short emails in HITL, raise this AND keyword_density_high together \u2014     short emails benefit from both. e.g., for en: Hi team, Hello, Best regards\n  \u2022 keyword_density_high [trigger, default +0.15] \u2014 What it does: rewards the chosen language when \u22653 top-50 stopwords / function words appear in the text (e.g. 'que', 'de', 'la', 'el', 'en' for es; 'the', 'and', 'of', 'to' for en; '\u3067\u3059', '\u307e\u3059', '\u3057\u3066' for ja). This is THE primary signal for distinguishing English vs Spanish where script gives us nothing.\n\nHow to optimize:\n  \u2022 Raise default_delta if real-world Latin-script email is being     classified as 'other' too often \u2014 the keyword test is the disambiguator.\n  \u2022 Lower the threshold from 3 \u2192 2 in the prompt examples if you're     seeing short Spanish emails ('Hola, gracias') get under-credited.\n  \u2022 The actual word lists live in the language_heuristic KB namespace     (LANGUAGE_KEYWORD_LISTS) \u2014 extend those to support new languages.\n  \u2022 Pairs well with greeting_or_signoff_match; together they should     push a clean monolingual email to ~0.85 even without diacritics. e.g., for en: the, and, of\n  \u2022 script_definitive_match [trigger, default +0.50] (per-language: ja=+0.55, es=+0.30, en=+0.30, other=+0.30) \u2014 What it does: rewards the chosen language when the text contains a script that's near-definitive for it (hiragana/katakana for ja, Cyrillic / Devanagari / Arabic / Hangul for 'other'). For Latin-script languages (en / es) this rule alone isn't strong because Latin is shared \u2014 per-language overrides drop the delta accordingly.\n\nHeaviest single signal in the rubric (default +0.50) because script presence is the most reliable language cue we have.\n\nHow to optimize:\n  \u2022 Per-language override is the main lever here \u2014 already set: ja=+0.55     (script is unambiguous), es=+0.30 / en=+0.30 (Latin script alone is     weak), other=+0.30.\n  \u2022 Bump ja override even higher (e.g. +0.60) if you're seeing valid     JA emails get sent to HITL because they have lots of English SKUs     embedded \u2014 the script signal should trump the mix.\n  \u2022 Don't lower below +0.30 for any language \u2014 script is fundamental.\n  \u2022 If you add support for a new language (e.g. de, fr, zh), add a new     per-language override here. e.g., for ja: hiragana \u3042-\u3093, katakana \u30a2-\u30f3, kanji \u4e00-\u9fff\n  \u2022 single_language_throughout [clearance, default +0.10] \u2014 What it does: rewards clarity. Fires when the text shows signals from ONLY the chosen language \u2014 no code-switching to another, no foreign-script intrusion. Counterpart to mixed_language_penalty.\n\nHow to optimize:\n  \u2022 Don't raise above ~+0.15 \u2014 clarity is corroboration, the triggers     (script / diacritic / keyword / greeting) should do the primary work.\n  \u2022 If both this AND mixed_language_penalty fire on the same email,     your LLM is hedging \u2014 tighten the rule's prompt examples or accept     the net (-0.10) effect (penalty wins).\n  \u2022 Lower to +0.05 if you're seeing systematic over-scoring on emails     that have a few foreign tokens but the LLM still calls them     monolingual.\n  \u2022 mixed_language_penalty [penalty, default -0.20] (per-language: ja=-0.10) \u2014 What it does: drops confidence when the text has clear tokens from a second language alongside the chosen one \u2014 Spanish body with English PO line items, Japanese body with English SKUs, etc. Mixed-language email is genuinely harder to translate cleanly, so the system should be less confident.\n\nHow to optimize:\n  \u2022 Default -0.20 is the floor for most languages.\n  \u2022 ja=-0.10 is the existing override \u2014 Japanese B2B email routinely     embeds English part numbers / SKUs and we don't want to penalize     that pattern as heavily.\n  \u2022 Lower magnitude (e.g. -0.10 across the board) if too many     legitimate code-switching emails are being routed to HITL.\n  \u2022 Raise magnitude (e.g. -0.30) if you've started supporting machine     translation downstream and need cleaner monolingual input.\n  \u2022 script_signal_disagreement [penalty, default -0.20] \u2014 What it does: drops confidence when the script signal points to one language but greeting, keyword, or idiom signals point to a different one. Rare in practice but it's a real phishing / translation-leak pattern (e.g., Spanish-looking diacritics with English-only function words could be a machine-translation artifact). Force HITL review.\n\nHow to optimize:\n  \u2022 Default -0.20 is appropriate. Raise to -0.30 if you start supporting     high-stakes auto-actions (purchase orders > $500K) and need extra     safety.\n  \u2022 Lower to -0.10 if you're seeing legitimate emails get penalized     because the LLM can't reconcile two valid signals (e.g., Spanish     body with English greeting from a corporate template).\n  \u2022 The rule fires rarely. If it never fires across thousands of runs,     that's expected \u2014 keep it active for safety.\n  \u2022 too_short_for_signal [penalty, default -0.20] \u2014 What it does: drops confidence on extremely short emails (< 30 non-whitespace chars). Even strong signals like a Japanese kanji can mislead with little text \u2014 a one-word forwarded email shouldn't trip L4 auto.\n\nHow to optimize:\n  \u2022 Raise the threshold from 30 to e.g. 50 chars in the rule's     description if you're seeing short auto-replies (out-of-office,     'Got it, thanks') get over-confident detection.\n  \u2022 Lower magnitude (e.g. -0.10) if your real inbound is mostly     short and you're seeing too many emails route to HITL.\n  \u2022 Keep this rule active \u2014 short emails are inherently uncertain     and the penalty is the right behavior.",
+  "user": "TEXT:\n[UC5-E1] Status check on WO-2026-0101\nHello, what is the current status on WO-2026-0101? Customer asked for an update. Thanks.\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "confidence_base",
+      "confidence_breakdown",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Final confidence after applying the rubric, clamped to [0, 1]. MUST equal base + sum of matched deltas."
+      },
+      "confidence_base": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Starting prior from the KB rubric (typically 0.40). Echo as-is."
+      },
+      "confidence_breakdown": {
+        "type": "array",
+        "description": "Per-rule breakdown of how confidence was scored. EMIT ONE ENTRY FOR EVERY RUBRIC RULE \u2014 even rules that didn't match. Order: triggers \u2192 clearance \u2192 penalties.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule_key",
+            "matched",
+            "delta",
+            "evidence"
+          ],
+          "properties": {
+            "rule_key": {
+              "type": "string",
+              "enum": [
+                "diacritic_signature",
+                "greeting_or_signoff_match",
+                "keyword_density_high",
+                "script_definitive_match",
+                "single_language_throughout",
+                "mixed_language_penalty",
+                "script_signal_disagreement",
+                "too_short_for_signal"
+              ]
+            },
+            "matched": {
+              "type": "boolean"
+            },
+            "delta": {
+              "type": "number",
+              "description": "Effective delta when matched=true (use per-language override if present); 0.0 when matched=false"
+            },
+            "evidence": {
+              "type": "string",
+              "description": "Short quote from the text justifying matched=true; empty when matched=false"
+            }
+          }
+        }
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1-sentence explanation of the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.85,\"confidence_base\":0.4,\"confidence_breakdown\":[{\"rule_key\":\"diacritic_signature\",\"matched\":true,\"delta\":0.05,\"evidence\":\"\\\"Hello, what is the current status\\\" (plain ASCII, no diacritics)\"},{\"rule_key\":\"greeting_or_signoff_match\",\"matched\":true,\"delta\":0.1,\"evidence\":\"\\\"Hello\\\" / \\\"Thanks.\\\"\"},{\"rule_key\":\"keyword_density_high\",\"matched\":true,\"delta\":0.15,\"evidence\":\"\\\"what is the current status on\\\" (what/is/the/on)\"},{\"rule_key\":\"script_definitive_match\",\"matched\":true,\"delta\":0.3,\"evidence\":\"Latin script throughout: \\\"Status check on\\\"\"},{\"rule_key\":\"single_language_throughout\",\"matched\":true,\"delta\":0.1,\"evidence\":\"No non-English script or clear foreign-language tokens\"},{\"rule_key\":\"mixed_language_penalty\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"script_signal_disagreement\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"too_short_for_signal\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"}],\"reasoning\":\"English greeting/sign-off and multiple common English function words in a Latin-script email indicate en.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.85,
+    "confidence_base": 0.4,
+    "confidence_breakdown": [
+      {
+        "rule_key": "diacritic_signature",
+        "matched": true,
+        "delta": 0.05,
+        "evidence": "\"Hello, what is the current status\" (plain ASCII, no diacritics)"
+      },
+      {
+        "rule_key": "greeting_or_signoff_match",
+        "matched": true,
+        "delta": 0.1,
+        "evidence": "\"Hello\" / \"Thanks.\""
+      },
+      {
+        "rule_key": "keyword_density_high",
+        "matched": true,
+        "delta": 0.15,
+        "evidence": "\"what is the current status on\" (what/is/the/on)"
+      },
+      {
+        "rule_key": "script_definitive_match",
+        "matched": true,
+        "delta": 0.3,
+        "evidence": "Latin script throughout: \"Status check on\""
+      },
+      {
+        "rule_key": "single_language_throughout",
+        "matched": true,
+        "delta": 0.1,
+        "evidence": "No non-English script or clear foreign-language tokens"
+      },
+      {
+        "rule_key": "mixed_language_penalty",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "script_signal_disagreement",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "too_short_for_signal",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      }
+    ],
+    "reasoning": "English greeting/sign-off and multiple common English function words in a Latin-script email indicate en."
+  },
+  "error": null
+}

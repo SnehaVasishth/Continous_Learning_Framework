@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260507_170353_033405",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 205,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nConvert quote QT-AURA-AUTO-119-DEMO \u2192 order \u2014 PO + BOM + ATP attached\nHello team,\n\nPlease convert quote QT-AURA-AUTO-119-DEMO into an order using the attached PO PO-AURA-AUTO-119-Q2O-72296, BOM workbook, and acceptance test plan. The instruments will support our automotive Ethernet 100BASE-T1 conformance + ISO 26262 functional safety program with delivery into our automotive Ethernet / 100BASE-T1 conformance bench.\n\nSend SOA, projected ship date, and confirm cal certs will be A2LA-traceable as quoted.\n\nThanks,\nDanielle Park, Engineering Procurement\nAurora Automotive Electronics\n--- PO_PO-AURA-AUTO-119-Q2O-72296.pdf (light extract) ---\n---**Page 1**PURCHASE ORDER AURORA AUTOMOTIVE ELECTRONICS Automotive Electronics . Americas Operations Procurement & Lab Operations Buyer: Danielle Park, Engineering ProcurementBILL TOAurora Automotive ElectronicsAccounts Payable - Americasee.procurement@auroraauto.comSHIP TOAurora Automotive ElectronicsReceiving Dock - AmericasAttn: Lab OperationsNOTESIssued against quote QT-AURA-AUTO-119-DEMO. Acceptance test plan attached.This purchase order is issued subject to the buyer's standard terms and conditions of purchase. Acknowledgment of receipt is requested within 2 business days. All shipments must reference the PO Number on packing slips and invoices.- **PO Number:** PO-AURA-AUTO-119-Q2O -72296- **Issue Date:** 2026-05-07- **Requested Ship Date:** 2026-05-26- **Payment Terms:** Net 45- **Quote Reference:** QT-AURA-AUTO-119-DEM O- **SKU:** Desc\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"Text is in English with business/procurement vocabulary and standard English syntax (e.g., 'Please convert quote', 'Requested Ship Date', 'Payment Terms').\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "Text is in English with business/procurement vocabulary and standard English syntax (e.g., 'Please convert quote', 'Requested Ship Date', 'Payment Terms')."
+  },
+  "error": null
+}

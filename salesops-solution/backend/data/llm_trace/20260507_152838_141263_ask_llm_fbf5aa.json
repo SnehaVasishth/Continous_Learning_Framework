@@ -1,0 +1,48 @@
+{
+  "timestamp": "20260507_152838_141263",
+  "system_prompt_chars": 1222,
+  "user_prompt_chars": 2935,
+  "raw_response_chars": 1042,
+  "system": "You are a document-intelligence agent. Extract structured PO data from the email body and any provided attachments (text from PDFs, Excel BOMs, DOCX specs, or images). Important: quote_number is the referenced quote ID \u2014 usually starts with 'Q-', 'QT-', or 'QUOTE-'. Pull it whether mentioned in the email body, the BOM, or the PO. If a field is genuinely missing, use null. Do not invent values.\n\nReturn strict JSON with these fields:\n  - po_number (string, required): PO identifier from email or attachment header\n  - quote_number (string, optional): Referenced quote ID (Q-\u2026 / QT-\u2026 / QUOTE-\u2026) \u2014 pull from email body, BOM, or PO header\n  - customer_name (string, required): Customer legal entity name as printed on the PO\n  - requested_ship_date (ISO date, optional): Customer's requested ship date\n  - payment_terms (string, optional): Net 30 / Net 45 / Net 60 / etc.\n  - bill_to (string, optional): Bill-to address\n  - ship_to (string, optional): Ship-to address\n  - line_items (list, required): Array of {sku, description, qty, unit_price}\n  - total (number, required): PO grand total\n  - notes (string, optional): Free-text notes from the PO or email\n\nIf a field is genuinely missing, use null. Do not invent values.",
+  "user": "FROM: ee.procurement@auroraauto.com\nSUBJECT: Convert quote QT-AURA-AUTO-119-DEMO \u2192 order \u2014 PO + BOM + ATP attached\nINTENT: quote_to_order\nBODY:\nHello team,\n\nPlease convert quote QT-AURA-AUTO-119-DEMO into an order using the attached PO PO-AURA-AUTO-119-Q2O-72296, BOM workbook, and acceptance test plan. The instruments will support our automotive Ethernet 100BASE-T1 conformance + ISO 26262 functional safety program with delivery into our automotive Ethernet / 100BASE-T1 conformance bench.\n\nSend SOA, projected ship date, and confirm cal certs will be A2LA-traceable as quoted.\n\nThanks,\nDanielle Park, Engineering Procurement\nAurora Automotive Electronics\n\nATTACHMENTS:\n--- PDF ATTACHMENT: PO_PO-AURA-AUTO-119-Q2O-72296.pdf ---\nPURCHASE ORDER\nAURORA AUTOMOTIVE ELECTRONICS\nAutomotive Electronics \u00b7 Americas Operations\nProcurement & Lab Operations\nBuyer: Danielle Park, Engineering Procurement\nPO Number\nPO-AURA-AUTO-119-Q2O\n-72296\nIssue Date\n2026-05-07\nRequested Ship Date\n2026-05-26\nPayment Terms\nNet 45\nQuote Reference\nQT-AURA-AUTO-119-DEM\nO\nBILL TO\nAurora Automotive Electronics\nAccounts Payable \u2014 Americas\nee.procurement@auroraauto.com\nSHIP TO\nAurora Automotive Electronics\nReceiving Dock \u2014 Americas\nAttn: Lab Operations\nSKU\nDescription\n Qty\n Unit Price\n Extended\nMSOS804A\nInfiniium S-Series Oscilloscope, 8 GHz, 4 analog + 16\ndigital\n 1\n $56,400.00\n $56,400.00\nB2902B\nPrecision Source/Measure Unit, 2-Ch, 10 fA / 100 nV\n 1\n $8,400.00\n $8,400.00\nCAL-A2LA-1Y\nCalibration Service - A2LA/ISO 17025 traceable,\n1-year\n 1\n $1,450.00\n $1,450.00\n Subtotal\n $66,250.00\n Tax (0%)\n $0.00\n TOTAL\n $66,250.00\nNOTES\nIssued against quote QT-AURA-AUTO-119-DEMO. Acceptance test plan attached.\nThis purchase order is issued subject to the buyer's standard terms and conditions of purchase. Acknowledgment of receipt is requested within 2 business\ndays. All shipments must reference the PO Number on packing slips and invoices.\n\n\n--- XLSX ATTACHMENT: BOM_PO-AURA-AUTO-119-Q2O-72296.xlsx ---\n# Sheet: BOM\nBill of Materials |  |  |  | \nCustomer | Aurora Automotive Electronics |  |  | \nQuote # | QT-AURA-AUTO-119-DEMO |  |  | \nSKU | Description | Qty | Unit Price (USD) | Extended (USD)\nMSOS804A | Infiniium S-Series Oscilloscope, 8 GHz, 4 analog + 16 digital | 1 | 56400 | 56400\nB2902B | Precision Source/Measure Unit, 2-Ch, 10 fA / 100 nV | 1 | 8400 | 8400\nCAL-A2LA-1Y | Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | 1450 | 1450\n |  |  | Subtotal | 66250\n |  |  | TOTAL | 66250\n\n--- DOCX ATTACHMENT: SPEC_PO-AURA-AUTO-119-Q2O-72296.docx ---\nAcceptance test plan \u2014 Aurora Automotive Electronics\nScope\nAcceptance testing for 3 units against quote QT-AURA-AUTO-119-DEMO.\nDUT\nMSOS804A/B2902B/CAL-A2LA-1Y\nCompliance\nCal certs delivered with as-found data per ANSI/NCSL Z540.\nStandards referenced\nISO/IEC 17025, IEC 61000, MIL-STD-810.\n\nReturn JSON only.\n\nRespond with a single JSON object only. No code fences. No prose before or after.",
+  "raw_response": "{\"po_number\":\"PO-AURA-AUTO-119-Q2O-72296\",\"quote_number\":\"QT-AURA-AUTO-119-DEMO\",\"customer_name\":\"Aurora Automotive Electronics\",\"buyer_name\":\"Danielle Park\",\"buyer_email\":\"ee.procurement@auroraauto.com\",\"issue_date\":\"2026-05-07\",\"requested_ship_date\":\"2026-05-26\",\"payment_terms\":\"Net 45\",\"currency\":\"USD\",\"line_items\":[{\"sku\":\"MSOS804A\",\"description\":\"Infiniium S-Series Oscilloscope, 8 GHz, 4 analog + 16 digital\",\"quantity\":1,\"unit_price\":56400.00,\"extended_price\":56400.00},{\"sku\":\"B2902B\",\"description\":\"Precision Source/Measure Unit, 2-Ch, 10 fA / 100 nV\",\"quantity\":1,\"unit_price\":8400.00,\"extended_price\":8400.00},{\"sku\":\"CAL-A2LA-1Y\",\"description\":\"Calibration Service - A2LA/ISO 17025 traceable, 1-year\",\"quantity\":1,\"unit_price\":1450.00,\"extended_price\":1450.00}],\"subtotal\":66250.00,\"tax\":0.00,\"total\":66250.00,\"notes\":\"Issued against quote QT-AURA-AUTO-119-DEMO. Acceptance test plan attached. Supports automotive Ethernet 100BASE-T1 conformance + ISO 26262 functional safety program. Cal certs to be A2LA-traceable as quoted.\"}",
+  "parsed": {
+    "po_number": "PO-AURA-AUTO-119-Q2O-72296",
+    "quote_number": "QT-AURA-AUTO-119-DEMO",
+    "customer_name": "Aurora Automotive Electronics",
+    "buyer_name": "Danielle Park",
+    "buyer_email": "ee.procurement@auroraauto.com",
+    "issue_date": "2026-05-07",
+    "requested_ship_date": "2026-05-26",
+    "payment_terms": "Net 45",
+    "currency": "USD",
+    "line_items": [
+      {
+        "sku": "MSOS804A",
+        "description": "Infiniium S-Series Oscilloscope, 8 GHz, 4 analog + 16 digital",
+        "quantity": 1,
+        "unit_price": 56400.0,
+        "extended_price": 56400.0
+      },
+      {
+        "sku": "B2902B",
+        "description": "Precision Source/Measure Unit, 2-Ch, 10 fA / 100 nV",
+        "quantity": 1,
+        "unit_price": 8400.0,
+        "extended_price": 8400.0
+      },
+      {
+        "sku": "CAL-A2LA-1Y",
+        "description": "Calibration Service - A2LA/ISO 17025 traceable, 1-year",
+        "quantity": 1,
+        "unit_price": 1450.0,
+        "extended_price": 1450.0
+      }
+    ],
+    "subtotal": 66250.0,
+    "tax": 0.0,
+    "total": 66250.0,
+    "notes": "Issued against quote QT-AURA-AUTO-119-DEMO. Acceptance test plan attached. Supports automotive Ethernet 100BASE-T1 conformance + ISO 26262 functional safety program. Cal certs to be A2LA-traceable as quoted."
+  },
+  "error": null
+}

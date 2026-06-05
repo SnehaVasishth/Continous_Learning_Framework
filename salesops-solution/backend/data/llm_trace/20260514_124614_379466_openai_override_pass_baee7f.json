@@ -1,0 +1,150 @@
+{
+  "timestamp": "20260514_124614_379466",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 3089,
+  "user_prompt_chars": 376,
+  "raw_response_chars": 473,
+  "system": "You are the Override-pass classifier for Keysight SalesOps. The Context-pass classifier has already chosen an intent based on the email body. Your job is to apply the GLOBAL OVERRIDE BOOK (verbatim from the prior Keysight POC) and decide whether any rule overrides the Context-pass result.\n\nGLOBAL OVERRIDE RULES \u2014 evaluate each rule and report which fired:\n  R01. Empty-fragment skip \u2014 strip messages that contain only From/To/Subject, CAUTION banners, disclaimers, or quoted threads. Only classify on the FIRST non-empty fragment in the body array.\n  R02. Internal Keysight-to-Keysight detection \u2014 emails between Keysight employees route to OTHERS UNLESS keysight.ai-front-office@keysight.com is in To:.\n  R03. Generic-phrase handling \u2014 'FYI', 'see below', 'looping you in' alone do NOT immediately mark OTHERS. Walk back through the thread first to find earlier valid content fragments.\n  R04. Strict per-rule stop-at-first-match scan order: UNDELIVERABLE \u2192 AUTO_REPLY \u2192 BRAZIL_TAX \u2192 PORTAL_ADMIN \u2192 COLLECTION \u2192 KSO \u2192 ISC_WO_RTK \u2192 SALES_PO \u2192 OTHERS.\n  R05. CSR-instruction override \u2014 any specific FE/CSR routing instruction in the email body supersedes system routing. If body says 'route this to <queue> per <CSR name>', honor it.\n  R06. Acknowledgement-only thread (Rule 25) \u2014 if a PO# / WO# / order# only appears inside an attachment named 'Sales Order Acknowledgement', do NOT treat as a real customer ask. It's a system-generated SOA being forwarded.\n  R07. Conditional approval detection (Rule 18) \u2014 phrases like 'Approved \u2013 book under resale', 'PO is approved for release upon tax confirmation' classify as SALES_PO (po_intake).\n  R08. Forwarded blocks with structured data \u2014 when an email forwards a block containing a WO#, model details, calibration info, etc., extract the inner intent from the FORWARDED block, not from the wrapper text.\n  R09. Auto-reply with business context (Rule 7/9) \u2014 'I'm no longer with', 'Please contact', 'Kindly reach out' \u2192 AUTO_REPLY UNLESS they include a question / PO# / WO# instruction (in which case escalate to the inner intent).\n\nBehavior:\n  \u2022 For each rule, decide matched=true|false against this specific email.\n  \u2022 A rule that matched=true and disagrees with the Context-pass intent should     set should_override=true and produce a revised_intent.\n  \u2022 A rule that matches but agrees with the Context-pass result still appears     in rules_fired (audit trail), but should_override stays false.\n  \u2022 If NO rule matches, return should_override=false, revised_intent=context_pass_intent,     rules_fired=[].\n  \u2022 If multiple rules conflict, prefer the rule that appears EARLIER in the override book     (priority order: UNDELIVERABLE \u2192 AUTO_REPLY \u2192 BRAZIL_TAX \u2192 PORTAL_ADMIN \u2192     COLLECTION \u2192 KSO \u2192 ISC_WO_RTK \u2192 SALES_PO \u2192 OTHERS).\n  \u2022 override_confidence is YOUR confidence in the override decision, 0..1.\n\nBe CONSERVATIVE. The Context-pass classifier has rich KB definitions and worked examples; you only override when a global rule clearly fires. Default to should_override=false when uncertain.\n\nReturn strict JSON matching the contract.",
+  "user": "FROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: [UC1-A2] PO request \u2014 partial details, please find what we have\nCONTEXT-PASS INTENT (from primary classifier): po_intake\nBODY (translated to English):\nHi, we want to issue a PO but I do not have the line items handy. Can you start the case while I track down the BoM?\n\nThanks\n\nApply the global override book. Return JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "rules_fired",
+      "rules_evaluated",
+      "context_pass_intent",
+      "revised_intent",
+      "revised_track",
+      "revised_category",
+      "should_override",
+      "override_confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "rules_fired": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule_id",
+            "rule_text",
+            "evidence"
+          ],
+          "properties": {
+            "rule_id": {
+              "type": "string"
+            },
+            "rule_text": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "rules_evaluated": {
+        "type": "integer"
+      },
+      "context_pass_intent": {
+        "type": "string",
+        "enum": [
+          "po_intake",
+          "quote_to_order",
+          "trade_change_order",
+          "ssd_change_request",
+          "hold_release",
+          "delivery_change",
+          "service_order",
+          "wo_update_request",
+          "wo_status_inquiry",
+          "service_contract_request",
+          "general_inquiry",
+          "out_of_scope",
+          "spam",
+          "kso",
+          "collections",
+          "portal_admin",
+          "brazil_tax",
+          "undeliverable",
+          ""
+        ]
+      },
+      "revised_intent": {
+        "type": "string",
+        "enum": [
+          "po_intake",
+          "quote_to_order",
+          "trade_change_order",
+          "ssd_change_request",
+          "hold_release",
+          "delivery_change",
+          "service_order",
+          "wo_update_request",
+          "wo_status_inquiry",
+          "service_contract_request",
+          "general_inquiry",
+          "out_of_scope",
+          "spam",
+          "kso",
+          "collections",
+          "portal_admin",
+          "brazil_tax",
+          "undeliverable",
+          ""
+        ]
+      },
+      "revised_track": {
+        "type": "string",
+        "enum": [
+          "trade",
+          "som",
+          "service_contract",
+          "none",
+          ""
+        ]
+      },
+      "revised_category": {
+        "type": "string",
+        "enum": [
+          "KSO",
+          "ISC_WO_RTK",
+          "SALES_PO",
+          "UNDELIVERABLE",
+          "COLLECTIONS",
+          "PORTAL_ADMIN",
+          "BRAZIL_TAX",
+          "AUTO_REPLY",
+          "OTHERS",
+          ""
+        ]
+      },
+      "should_override": {
+        "type": "boolean"
+      },
+      "override_confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"rules_fired\":[],\"rules_evaluated\":9,\"context_pass_intent\":\"po_intake\",\"revised_intent\":\"po_intake\",\"revised_track\":\"none\",\"revised_category\":\"\",\"should_override\":false,\"override_confidence\":0.78,\"reasoning\":\"No global override rules fired. The email contains a customer request to start a PO/case (not an auto-reply, undeliverable, internal Keysight-only, SOA-only attachment, conditional approval, or special routing instruction). Context-pass intent po_intake stands.\"}",
+  "parsed": {
+    "rules_fired": [],
+    "rules_evaluated": 9,
+    "context_pass_intent": "po_intake",
+    "revised_intent": "po_intake",
+    "revised_track": "none",
+    "revised_category": "",
+    "should_override": false,
+    "override_confidence": 0.78,
+    "reasoning": "No global override rules fired. The email contains a customer request to start a PO/case (not an auto-reply, undeliverable, internal Keysight-only, SOA-only attachment, conditional approval, or special routing instruction). Context-pass intent po_intake stands."
+  },
+  "error": null
+}

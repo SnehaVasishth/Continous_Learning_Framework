@@ -1,0 +1,19 @@
+{
+  "timestamp": "20260507_154246_775431",
+  "system_prompt_chars": 452,
+  "user_prompt_chars": 910,
+  "raw_response_chars": 173,
+  "system": "You are an operations-fields extraction agent. Read the customer email and pull out actionable fields. Return strict JSON matching this schema: {\"order_number\": string|null, \"quote_number\": string|null, \"work_order_number\": string|null, \"asset_serial\": string|null, \"requested_action\": string, \"new_ship_date\": ISO date string|null, \"service_type\": string|null}. Use null for any field not present. requested_action should be a short imperative phrase.",
+  "user": "FROM: Google <no-reply@accounts.google.com>\nSUBJECT: Security alert\nINTENT: spam\nBODY:\n[image: Google]\r\nApp password created to sign in to your account\r\n\r\n\r\norderinbox@leewayhertz.com\r\nIf you didn't generate this password for Application, someone might be\r\nusing your account. Check and secure your account now.\r\nCheck activity\r\n<https://accounts.google.com/AccountChooser?Email=orderinbox@leewayhertz.com&continue=https://myaccount.google.com/alert/nt/1778148650334?rfn%3D20%26rfnc%3D1%26eid%3D-4643087032193397348%26et%3D0>\r\nYou can also see security activity at\r\nhttps://myaccount.google.com/notifications\r\nYou received this email to let you know about important changes to your\r\nGoogle Account and services.\r\n\u00a9 2026 Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA\n\nATTACHMENTS:\n(none)\n\nReturn JSON only.\n\nRespond with a single JSON object only. No code fences. No prose before or after.",
+  "raw_response": "{\"order_number\": null, \"quote_number\": null, \"work_order_number\": null, \"asset_serial\": null, \"requested_action\": \"ignore spam\", \"new_ship_date\": null, \"service_type\": null}",
+  "parsed": {
+    "order_number": null,
+    "quote_number": null,
+    "work_order_number": null,
+    "asset_serial": null,
+    "requested_action": "ignore spam",
+    "new_ship_date": null,
+    "service_type": null
+  },
+  "error": null
+}

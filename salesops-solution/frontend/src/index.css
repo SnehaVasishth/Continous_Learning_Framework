@@ -1,0 +1,836 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+html {
+  background: #F7F8FB;
+  color-scheme: light;
+}
+html.dark {
+  background: #0B0E1A;
+  color-scheme: dark;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #131426;
+  background: #F7F8FB;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum", "cv01", "cv11", "ss01";
+  transition: background-color 180ms ease;
+}
+html.dark body {
+  color: #E7EAF6;
+  background: #0B0E1A;
+}
+
+/* Better selection color in both modes */
+::selection { background: rgba(26,85,249,0.25); color: inherit; }
+html.dark ::selection { background: rgba(91,133,250,0.35); }
+
+/* Refined scrollbars (subtle, enterprise) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(19,20,38,0.15); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(19,20,38,0.30); background-clip: padding-box; border: 2px solid transparent; }
+html.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); background-clip: padding-box; border: 2px solid transparent; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); background-clip: padding-box; border: 2px solid transparent; }
+
+/* Universal focus ring (keyboard-only) */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26,85,249,0.30);
+  border-radius: 6px;
+}
+html.dark *:focus-visible {
+  box-shadow: 0 0 0 3px rgba(91,133,250,0.45);
+}
+
+/* =========================================================================
+ * Design system v2 — Apple-style enterprise polish
+ * =========================================================================
+ *
+ * Three principles applied here:
+ *   1. Surfaces float on shadow elevation, not borders. Borders only mark
+ *      table rows / dividers. Cards = `surface` (no border, soft shadow).
+ *   2. Motion uses Apple's spring-ish curve (more present at start, decel
+ *      at end). Used on every interaction: hover, click, expand.
+ *   3. Typography hierarchy is loud-soft-quiet, not all-medium-grey.
+ *      `display`, `eyebrow` (small caps), `body`, `caption`.
+ * ----------------------------------------------------------------------- */
+
+:root {
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-decel:  cubic-bezier(0, 0, 0.2, 1);
+  --ease-accel:  cubic-bezier(0.4, 0, 1, 1);
+
+  /* Refined elevation — softer, more diffuse than the existing -elev-N tokens */
+  --elev-resting: 0 1px 2px rgba(19,20,38,0.04), 0 0 1px rgba(19,20,38,0.06);
+  --elev-raised:  0 1px 2px rgba(19,20,38,0.04), 0 8px 24px -8px rgba(19,20,38,0.08);
+  --elev-floating: 0 4px 6px -2px rgba(19,20,38,0.04), 0 16px 40px -12px rgba(19,20,38,0.12);
+}
+html.dark {
+  --elev-resting: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.30);
+  --elev-raised:  0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px -8px rgba(0,0,0,0.40);
+  --elev-floating: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 40px -12px rgba(0,0,0,0.55);
+}
+
+@layer components {
+  /* Surface = the new primary container. No border, shadow elevation,
+   * 14px radius, white surface (dark: elev1). Use this instead of `.card`
+   * for any redesigned screen. */
+  .surface {
+    @apply bg-white rounded-[14px];
+    box-shadow: var(--elev-resting);
+    transition: box-shadow 220ms var(--ease-spring), transform 220ms var(--ease-spring);
+  }
+  .surface-raised {
+    @apply bg-white rounded-[14px];
+    box-shadow: var(--elev-raised);
+  }
+  .surface-floating {
+    @apply bg-white rounded-[16px];
+    box-shadow: var(--elev-floating);
+  }
+  html.dark .surface,
+  html.dark .surface-raised,
+  html.dark .surface-floating {
+    background-color: #11152A;
+  }
+
+  /* Eyebrow = the small-caps section/field label that appears above values */
+  .eyebrow {
+    @apply text-[10px] uppercase tracking-[0.08em] text-zbrain-muted font-medium;
+  }
+  .eyebrow-tight {
+    @apply text-[9px] uppercase tracking-[0.10em] text-zbrain-muted font-semibold;
+  }
+
+  /* Display heading — page titles. Tight tracking, generous size. */
+  .display-md {
+    @apply text-[22px] font-semibold tracking-[-0.015em] text-zbrain-ink;
+  }
+  .display-lg {
+    @apply text-[28px] font-semibold tracking-[-0.02em] text-zbrain-ink;
+  }
+
+  /* Section title — the "card heading" inside a Surface. */
+  .section-title {
+    @apply text-[15px] font-semibold tracking-[-0.005em] text-zbrain-ink;
+  }
+
+  /* Refined buttons that match the new philosophy. The existing .btn-primary
+   * still works for legacy screens. */
+  .btn-primary-v2 {
+    @apply bg-zbrain text-white px-4 py-2 rounded-[10px] text-[13px] font-medium
+           hover:bg-zbrain-600 active:bg-zbrain-700
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 1px 2px rgba(26,85,249,0.20);
+    transition: background-color 180ms var(--ease-spring),
+                box-shadow 180ms var(--ease-spring),
+                transform 120ms var(--ease-spring);
+  }
+  .btn-primary-v2:hover {
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 4px 12px rgba(26,85,249,0.30);
+  }
+  .btn-primary-v2:active {
+    transform: translateY(0.5px);
+  }
+  .btn-secondary-v2 {
+    @apply bg-white text-zbrain-ink px-3.5 py-1.5 rounded-[10px] text-[13px] font-medium
+           hover:bg-zbrain-50;
+    box-shadow: inset 0 0 0 1px rgba(19,20,38,0.08), 0 1px 0 rgba(19,20,38,0.02);
+    transition: background-color 180ms var(--ease-spring), box-shadow 180ms var(--ease-spring);
+  }
+  .btn-secondary-v2:hover {
+    box-shadow: inset 0 0 0 1px rgba(19,20,38,0.14), 0 1px 0 rgba(19,20,38,0.02);
+  }
+  html.dark .btn-secondary-v2 {
+    background-color: #11152A; color: #E7EAF6;
+    box-shadow: inset 0 0 0 1px #262B45;
+  }
+  html.dark .btn-secondary-v2:hover {
+    background-color: #1A1F38;
+    box-shadow: inset 0 0 0 1px #2E3554;
+  }
+  .btn-ghost-v2 {
+    @apply text-zbrain-ink hover:bg-zbrain-50 px-3 py-1.5 rounded-[10px] text-[13px] font-medium;
+    transition: background-color 180ms var(--ease-spring);
+  }
+  html.dark .btn-ghost-v2 { color: #E7EAF6; }
+  html.dark .btn-ghost-v2:hover { background-color: #1A1F38; }
+
+  /* Status-toned buttons — for "destructive" / "alert" outcomes. */
+  .btn-rose-v2 {
+    @apply bg-white text-rose-700 px-3.5 py-1.5 rounded-[10px] text-[13px] font-medium
+           hover:bg-rose-50;
+    box-shadow: inset 0 0 0 1px rgba(244,63,94,0.20);
+    transition: background-color 180ms var(--ease-spring), box-shadow 180ms var(--ease-spring);
+  }
+  .btn-rose-v2:hover {
+    box-shadow: inset 0 0 0 1px rgba(244,63,94,0.40);
+  }
+
+  /* iOS-style segmented control — used as inline tab strips */
+  .segmented {
+    @apply inline-flex p-0.5 rounded-[10px] bg-zbrain-surface text-[13px] font-medium gap-0.5;
+  }
+  html.dark .segmented { background-color: #1A1F38; }
+  .segmented-item {
+    @apply px-3 py-1.5 rounded-[8px] text-zbrain-muted hover:text-zbrain-ink;
+    transition: color 180ms var(--ease-spring), background-color 180ms var(--ease-spring),
+                box-shadow 180ms var(--ease-spring);
+  }
+  .segmented-item-active {
+    @apply text-zbrain-ink bg-white;
+    box-shadow: 0 1px 2px rgba(19,20,38,0.06), 0 0 0 1px rgba(19,20,38,0.04);
+  }
+  html.dark .segmented-item-active {
+    background-color: #11152A;
+    color: #E7EAF6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 0 0 1px #262B45;
+  }
+
+  /* Refined pills with depth — slight gradient and inner border */
+  .chip {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium tracking-tight gap-1;
+    box-shadow: inset 0 0 0 1px rgba(19,20,38,0.06);
+  }
+  html.dark .chip {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  /* Legacy .card / .btn-* — upgraded to the v2 visual language so every
+   * legacy page automatically picks up the new look. Pages that adopt the
+   * Surface/Button primitives directly get the same result + better intent. */
+  .card {
+    @apply bg-white rounded-[14px];
+    box-shadow: var(--elev-resting);
+  }
+  .card-elevated {
+    @apply bg-white rounded-[14px];
+    box-shadow: var(--elev-raised);
+  }
+  .btn-primary {
+    @apply bg-zbrain text-white px-4 py-2 rounded-[10px] text-[13px] font-medium
+           hover:bg-zbrain-600 active:bg-zbrain-700
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 1px 2px rgba(26,85,249,0.20);
+    transition: background-color 180ms var(--ease-spring),
+                box-shadow 180ms var(--ease-spring),
+                transform 120ms var(--ease-spring);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 4px 12px rgba(26,85,249,0.30);
+  }
+  .btn-primary:active {
+    transform: translateY(0.5px);
+  }
+  .btn-ghost {
+    @apply text-zbrain-ink hover:bg-zbrain-50 px-3 py-1.5 rounded-[10px] text-[13px] font-medium;
+    transition: background-color 180ms var(--ease-spring);
+  }
+  .btn-secondary {
+    @apply bg-white text-zbrain-ink hover:bg-zbrain-50
+           px-3.5 py-1.5 rounded-[10px] text-[13px] font-medium;
+    box-shadow: inset 0 0 0 1px rgba(19,20,38,0.08), 0 1px 0 rgba(19,20,38,0.02);
+    transition: background-color 180ms var(--ease-spring),
+                box-shadow 180ms var(--ease-spring);
+  }
+  .btn-secondary:hover {
+    box-shadow: inset 0 0 0 1px rgba(19,20,38,0.14), 0 1px 0 rgba(19,20,38,0.02);
+  }
+  .pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium tracking-tight;
+  }
+  /* Status pill base — content-tones override the default neutral */
+  .pill-neutral {
+    @apply pill bg-slate-100 text-slate-700 border border-slate-200;
+  }
+  /* Subtle hover surface for table rows / list rows */
+  .row-hover {
+    @apply hover:bg-zbrain-50/60;
+  }
+  /* Top-bar nav chip */
+  .nav-link {
+    @apply px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+           text-zbrain-ink hover:bg-zbrain-50;
+  }
+  .nav-link-active {
+    @apply text-zbrain bg-zbrain-50;
+  }
+}
+
+/* Dark-mode component overrides (raw CSS — bypasses Tailwind's @apply
+ * dark: resolution which gets confused with hyphenated palette keys). */
+html.dark .card,
+html.dark .card-elevated {
+  background-color: #11152A;
+}
+html.dark .card { box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.30); }
+html.dark .card-elevated { box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px -8px rgba(0,0,0,0.40); }
+
+html.dark .btn-primary { background-color: #5B85FA; }
+html.dark .btn-primary:hover { background-color: #5B85FA; filter: brightness(1.10); }
+html.dark .btn-primary:active { background-color: #1A55F9; }
+
+html.dark .btn-ghost { color: #E7EAF6; }
+html.dark .btn-ghost:hover { background-color: #1A1F38; }
+
+html.dark .btn-secondary {
+  background-color: #11152A;
+  color: #E7EAF6;
+  border-color: #262B45;
+}
+html.dark .btn-secondary:hover { background-color: #1A1F38; }
+
+html.dark .pill-neutral {
+  background-color: #1A1F38;
+  color: #94A0BD;
+  border-color: #262B45;
+}
+html.dark .row-hover:hover { background-color: #1A1F38; }
+
+html.dark .nav-link { color: #E7EAF6; }
+html.dark .nav-link:hover { background-color: #1A1F38; }
+html.dark .nav-link-active { color: #5B85FA; background-color: #1A1F38; }
+
+/* Tighter, more enterprise typography defaults for body content */
+.text-zbrain-muted, .text-zbrain-dark-muted { letter-spacing: -0.005em; }
+.tabular-nums { font-feature-settings: "tnum"; }
+
+/* ----------------------------------------------------------------------------
+ * Dark-mode color shim
+ * ----------------------------------------------------------------------------
+ * The app has a few thousand uses of bg-white / text-zbrain-ink / etc. that
+ * predate dark mode. Rather than editing every page, this block redirects
+ * those Tailwind utility classes to their dark-mode equivalents under
+ * `html.dark`. Components that need different behavior can still use explicit
+ * `dark:` variants in their JSX — those take precedence due to selector
+ * specificity (the dark: variant selector starts with .dark and Tailwind
+ * places it later in the stylesheet).
+ * --------------------------------------------------------------------------*/
+
+html.dark .bg-white { background-color: #11152A; }
+html.dark .bg-white\/85 { background-color: rgba(17,21,42,0.85); }
+html.dark .bg-white\/70 { background-color: rgba(17,21,42,0.70); }
+html.dark .bg-white\/60 { background-color: rgba(17,21,42,0.60); }
+html.dark .bg-slate-50 { background-color: #131831; }
+html.dark .bg-slate-50\/30 { background-color: rgba(19,24,49,0.45); }
+html.dark .bg-slate-50\/40 { background-color: rgba(19,24,49,0.55); }
+html.dark .bg-slate-50\/50 { background-color: rgba(19,24,49,0.6); }
+html.dark .bg-slate-100 { background-color: #1A1F38; }
+html.dark .bg-slate-200 { background-color: #1F2543; }
+/* zbrain-surface is the off-page surface used for table headers + inner cards.
+ * In light it's #F7F8FB (just below white). In dark, render it as elev2 — a
+ * shade ABOVE the card (#11152A) so inner panels still look raised, not voided. */
+html.dark .bg-zbrain-surface { background-color: #1A1F38; }
+html.dark .bg-zbrain-50 { background-color: rgba(91,133,250,0.10); }
+html.dark .bg-zbrain-50\/30 { background-color: rgba(91,133,250,0.06); }
+html.dark .bg-zbrain-50\/40 { background-color: rgba(91,133,250,0.08); }
+html.dark .bg-zbrain-50\/50 { background-color: rgba(91,133,250,0.10); }
+html.dark .bg-zbrain-50\/60 { background-color: rgba(91,133,250,0.12); }
+html.dark .bg-zbrain-100 { background-color: rgba(91,133,250,0.18); }
+
+html.dark .text-zbrain-ink { color: #E7EAF6; }
+html.dark .text-zbrain-ink\/90 { color: rgba(231,234,246,0.92); }
+html.dark .text-zbrain-ink\/80 { color: rgba(231,234,246,0.85); }
+html.dark .text-zbrain-ink\/70 { color: rgba(231,234,246,0.78); }
+html.dark .text-zbrain-muted { color: #94A0BD; }
+html.dark .text-zbrain { color: #5B85FA; }
+/* Zbrain palette ramps used in the body of the app — keep the brand-blue
+ * legible against dark surfaces. The 700/800/900 ramps are very dark navy
+ * (#10359F class) and become unreadable on dark elev1/2; remap to a brightened
+ * accent that still reads as the brand colour. */
+html.dark .text-zbrain-700, html.dark .text-zbrain-800 { color: #93B0FF; }
+html.dark .border-zbrain-200 { border-color: rgba(91,133,250,0.45); }
+html.dark .border-zbrain-100 { border-color: rgba(91,133,250,0.30); }
+/* Chart bar fills (light-blue blocks behind the primary brand bar) */
+html.dark .bg-zbrain-200 { background-color: rgba(91,133,250,0.28); }
+html.dark .text-slate-900 { color: #E7EAF6; }
+html.dark .text-slate-800 { color: #D5DBEE; }
+html.dark .text-slate-700 { color: #C9D1E5; }
+html.dark .text-slate-600 { color: #B6BFD8; }
+html.dark .text-slate-500 { color: #94A0BD; }
+html.dark .text-slate-400 { color: #6B7693; }
+html.dark .text-slate-300 { color: #4A5172; }
+
+html.dark .border-zbrain-divider { border-color: #262B45; }
+html.dark .border-zbrain-divider\/40 { border-color: rgba(38,43,69,0.55); }
+html.dark .border-zbrain-divider\/50 { border-color: rgba(38,43,69,0.6); }
+html.dark .border-zbrain-divider\/60 { border-color: rgba(38,43,69,0.7); }
+html.dark .border-zbrain-divider\/70 { border-color: rgba(38,43,69,0.8); }
+/* `bg-zbrain-divider/40` is used as a subtle progress-bar track in Learning's
+ * throughput distribution — in light it's a faint cool grey; in dark we want
+ * a slightly lighter strip than the card surface, not the literal divider hex
+ * which would show as a near-white band. */
+html.dark .bg-zbrain-divider\/40 { background-color: rgba(148,160,189,0.18); }
+html.dark .bg-zbrain-divider\/50 { background-color: rgba(148,160,189,0.22); }
+html.dark .border-slate-300 { border-color: #2E3554; }
+html.dark .border-slate-200 { border-color: #262B45; }
+html.dark .border-slate-100 { border-color: #1A1F38; }
+html.dark .border-l-slate-200 { border-left-color: #262B45; }
+html.dark .border-l-slate-300 { border-left-color: #2E3554; }
+
+html.dark .divide-zbrain-divider > :not([hidden]) ~ :not([hidden]) { border-color: #262B45; }
+html.dark .divide-zbrain-divider\/60 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(38,43,69,0.7); }
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #262B45; }
+
+/* Status pill tints — dark-mode variants of the most common pill colors */
+html.dark .bg-emerald-50 { background-color: rgba(16,185,129,0.14); }
+html.dark .bg-emerald-50\/40 { background-color: rgba(16,185,129,0.10); }
+html.dark .bg-emerald-50\/50 { background-color: rgba(16,185,129,0.12); }
+html.dark .bg-emerald-100 { background-color: rgba(16,185,129,0.20); }
+html.dark .text-emerald-600 { color: #34D399; }
+html.dark .text-emerald-700, html.dark .text-emerald-800, html.dark .text-emerald-900 { color: #6EE7B7; }
+html.dark .border-emerald-200 { border-color: rgba(16,185,129,0.35); }
+html.dark .border-emerald-300 { border-color: rgba(16,185,129,0.50); }
+
+html.dark .bg-amber-50 { background-color: rgba(245,158,11,0.14); }
+html.dark .bg-amber-50\/40 { background-color: rgba(245,158,11,0.10); }
+html.dark .bg-amber-50\/50 { background-color: rgba(245,158,11,0.12); }
+html.dark .bg-amber-100 { background-color: rgba(245,158,11,0.20); }
+html.dark .text-amber-600 { color: #FBBF24; }
+html.dark .text-amber-700, html.dark .text-amber-800, html.dark .text-amber-900 { color: #FCD34D; }
+html.dark .border-amber-200 { border-color: rgba(245,158,11,0.35); }
+html.dark .border-amber-300 { border-color: rgba(245,158,11,0.50); }
+
+html.dark .bg-rose-50 { background-color: rgba(244,63,94,0.14); }
+html.dark .bg-rose-50\/40 { background-color: rgba(244,63,94,0.10); }
+html.dark .bg-rose-50\/50 { background-color: rgba(244,63,94,0.12); }
+html.dark .bg-rose-100 { background-color: rgba(244,63,94,0.20); }
+html.dark .text-rose-600 { color: #FB7185; }
+html.dark .text-rose-700, html.dark .text-rose-800, html.dark .text-rose-900 { color: #FDA4AF; }
+html.dark .border-rose-200 { border-color: rgba(244,63,94,0.35); }
+html.dark .border-rose-300 { border-color: rgba(244,63,94,0.50); }
+
+html.dark .bg-sky-50 { background-color: rgba(14,165,233,0.14); }
+html.dark .bg-sky-50\/40 { background-color: rgba(14,165,233,0.10); }
+html.dark .bg-sky-50\/50 { background-color: rgba(14,165,233,0.12); }
+html.dark .bg-sky-50\/60 { background-color: rgba(14,165,233,0.15); }
+html.dark .bg-sky-100 { background-color: rgba(14,165,233,0.20); }
+html.dark .text-sky-600 { color: #38BDF8; }
+html.dark .text-sky-700, html.dark .text-sky-800 { color: #7DD3FC; }
+html.dark .border-sky-200 { border-color: rgba(14,165,233,0.35); }
+html.dark .border-sky-300 { border-color: rgba(14,165,233,0.50); }
+html.dark .border-sky-200\/50 { border-color: rgba(14,165,233,0.25); }
+
+html.dark .bg-blue-50 { background-color: rgba(59,130,246,0.14); }
+html.dark .bg-blue-100 { background-color: rgba(59,130,246,0.20); }
+html.dark .text-blue-600 { color: #60A5FA; }
+html.dark .text-blue-700, html.dark .text-blue-800 { color: #93C5FD; }
+html.dark .border-blue-200 { border-color: rgba(59,130,246,0.35); }
+
+html.dark .bg-violet-50 { background-color: rgba(139,92,246,0.14); }
+html.dark .bg-violet-100 { background-color: rgba(139,92,246,0.20); }
+html.dark .text-violet-700, html.dark .text-violet-800 { color: #C4B5FD; }
+html.dark .border-violet-200 { border-color: rgba(139,92,246,0.35); }
+
+html.dark .bg-indigo-50 { background-color: rgba(99,102,241,0.14); }
+html.dark .bg-indigo-100 { background-color: rgba(99,102,241,0.20); }
+html.dark .text-indigo-700, html.dark .text-indigo-800 { color: #A5B4FC; }
+html.dark .border-indigo-200 { border-color: rgba(99,102,241,0.35); }
+
+/* Yellow ramp — used by the KB severity pill ("cap_at_0.88"). Tailwind's
+ * yellow palette is functionally identical to amber for our purposes. */
+html.dark .bg-yellow-50 { background-color: rgba(234,179,8,0.14); }
+html.dark .bg-yellow-100 { background-color: rgba(234,179,8,0.20); }
+html.dark .text-yellow-600 { color: #FACC15; }
+html.dark .text-yellow-700, html.dark .text-yellow-800, html.dark .text-yellow-900 { color: #FDE047; }
+html.dark .border-yellow-200 { border-color: rgba(234,179,8,0.35); }
+html.dark .border-yellow-300 { border-color: rgba(234,179,8,0.50); }
+
+/* Loading skeletons — keep `bg-slate-100 animate-pulse` legible in dark */
+html.dark .animate-pulse.bg-slate-100,
+html.dark .bg-slate-100.animate-pulse { background-color: #1A1F38; }
+
+/* Gradient stops — used for fade-out previews and overlays. Tailwind generates
+ * --tw-gradient-from / --tw-gradient-to CSS variables; we override them so the
+ * gradient blends to the dark surface instead of white. */
+html.dark .from-white { --tw-gradient-from: #11152A var(--tw-gradient-from-position); --tw-gradient-to: rgba(17,21,42,0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html.dark .from-white\/0 { --tw-gradient-from: rgba(17,21,42,0) var(--tw-gradient-from-position); --tw-gradient-to: rgba(17,21,42,0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html.dark .via-white { --tw-gradient-to: rgba(17,21,42,0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), #11152A var(--tw-gradient-via-position), var(--tw-gradient-to); }
+html.dark .via-white\/80 { --tw-gradient-to: rgba(17,21,42,0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgba(17,21,42,0.80) var(--tw-gradient-via-position), var(--tw-gradient-to); }
+html.dark .to-white { --tw-gradient-to: #11152A var(--tw-gradient-to-position); }
+html.dark .from-zbrain-surface { --tw-gradient-from: #1A1F38 var(--tw-gradient-from-position); --tw-gradient-to: rgba(26,31,56,0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html.dark .to-zbrain-surface { --tw-gradient-to: #1A1F38 var(--tw-gradient-to-position); }
+
+/* Pre-formatted code blocks (raw <pre> from trace JSON dumps etc.) */
+html.dark pre {
+  background-color: #0B0E1A !important;
+  color: #C9D1E5;
+  border-color: #262B45;
+}
+
+/* Common shadow softening in dark mode (light shadows look muddy) */
+html.dark .shadow-soft,
+html.dark .shadow-elev-1 {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.4);
+}
+html.dark .shadow-elev-2,
+html.dark .shadow-2xl {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* Inputs: consistent dark-mode field styling without rewriting every page */
+input, textarea, select {
+  background-color: white;
+  color: #131426;
+}
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #11152A;
+  color: #E7EAF6;
+  border-color: #262B45;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #6B7693; }
+
+/* PDF-style document page (used by /solution viewer + /solution-overview) */
+.doc-page {
+  width: 100%;
+  max-width: 920px;
+}
+html.dark .doc-page {
+  background: #11152A !important;
+  border: 1px solid #262B45;
+}
+
+.doc-body {
+  color: #1f2233;
+  font-size: 15px;
+  line-height: 1.72;
+  font-feature-settings: "ss01", "cv01", "cv11";
+}
+html.dark .doc-body { color: #C9D1E5; }
+html.dark .doc-body h1,
+html.dark .doc-body h2,
+html.dark .doc-body h3,
+html.dark .doc-body strong { color: #E7EAF6; }
+html.dark .doc-body h2 { border-bottom-color: #5B85FA; }
+html.dark .doc-body h3::before { color: #5B85FA; }
+html.dark .doc-body h4 { color: #5B85FA; }
+html.dark .doc-body code {
+  background: #1A1F38;
+  border-color: #262B45;
+  color: #E7EAF6;
+}
+html.dark .doc-body a { color: #5B85FA; }
+html.dark .doc-body a:hover { color: #7DA0FF; }
+html.dark .doc-body blockquote {
+  background: linear-gradient(90deg, rgba(91,133,250,0.10), rgba(91,133,250,0.03));
+  border-left-color: #5B85FA;
+  color: #E7EAF6;
+}
+html.dark .doc-body blockquote strong { color: #5B85FA; }
+html.dark .doc-body blockquote::before { background: #5B85FA; }
+html.dark .doc-body table {
+  border-color: #262B45;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+html.dark .doc-body thead { background: #1A1F38; }
+html.dark .doc-body th { color: #94A0BD; }
+html.dark .doc-body th, html.dark .doc-body td { border-bottom-color: #262B45; }
+html.dark .doc-body tr:nth-child(even) td { background: #131831; }
+html.dark .doc-body hr { border-top-color: #262B45; }
+html.dark .doc-body ul li::marker,
+html.dark .doc-body ol li::marker { color: #5B85FA; }
+
+.doc-body > *:first-child {
+  margin-top: 0;
+}
+
+.doc-body h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: #131426;
+}
+
+.doc-body h2 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #131426;
+  position: relative;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid #1A55F9;
+  display: inline-block;
+  padding-right: 1.5rem;
+}
+
+.doc-body h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: #131426;
+  letter-spacing: -0.005em;
+}
+
+.doc-body h3::before {
+  content: "▸";
+  color: #1A55F9;
+  margin-right: 0.5rem;
+  font-weight: 700;
+}
+
+.doc-body h4 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 1.4rem;
+  margin-bottom: 0.4rem;
+  color: #1A55F9;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.doc-body p {
+  margin: 0.85rem 0;
+}
+
+.doc-body strong {
+  font-weight: 600;
+  color: #131426;
+}
+
+.doc-body p:first-of-type {
+  font-size: 1.02rem;
+  color: #131426;
+}
+
+.doc-body em {
+  font-style: italic;
+}
+
+.doc-body a {
+  color: #1a55f9;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.doc-body a:hover {
+  color: #1547cc;
+}
+
+.doc-body ul,
+.doc-body ol {
+  margin: 0.7rem 0 0.9rem;
+  padding-left: 1.6rem;
+}
+
+.doc-body ul {
+  list-style: disc;
+}
+
+.doc-body ol {
+  list-style: decimal;
+}
+
+.doc-body li {
+  margin: 0.3rem 0;
+}
+
+.doc-body li > p {
+  margin: 0.2rem 0;
+}
+
+.doc-body code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: #f1f4f9;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  border: 1px solid #e3e6ed;
+  color: #131426;
+}
+
+.doc-body pre {
+  background: #131426;
+  color: #e7eaf3;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  margin: 1rem 0;
+  overflow: auto;
+  font-size: 0.84em;
+  line-height: 1.55;
+}
+
+.doc-body pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.doc-body blockquote {
+  margin: 1.4rem 0;
+  padding: 1rem 1.2rem 1rem 1.2rem;
+  border-left: 4px solid #1a55f9;
+  background: linear-gradient(90deg, rgba(26, 85, 249, 0.06), rgba(26, 85, 249, 0.02));
+  color: #131426;
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
+  position: relative;
+}
+
+.doc-body blockquote::before {
+  content: "💡";
+  position: absolute;
+  left: -14px;
+  top: 0.85rem;
+  background: #1A55F9;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.doc-body blockquote p {
+  margin: 0.3rem 0;
+}
+
+.doc-body blockquote strong {
+  color: #1a55f9;
+}
+
+.doc-body hr + h2,
+.doc-body p + h2 {
+  margin-top: 3.2rem;
+}
+
+/* Make tables feel more enterprise-grade */
+.doc-body table {
+  box-shadow: 0 1px 3px rgba(19, 20, 38, 0.04);
+}
+
+.doc-body thead th:first-child {
+  border-top-left-radius: 6px;
+}
+
+.doc-body thead th:last-child {
+  border-top-right-radius: 6px;
+}
+
+/* Lists with extra breathing room */
+.doc-body ul li::marker {
+  color: #1A55F9;
+}
+
+.doc-body ol li::marker {
+  color: #1A55F9;
+  font-weight: 700;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.92em;
+  border: 1px solid #d9dce4;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.doc-body thead {
+  background: #f1f4f9;
+}
+
+.doc-body th,
+.doc-body td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid #e3e6ed;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-body th {
+  font-weight: 600;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b6275;
+}
+
+.doc-body tr:last-child td {
+  border-bottom: none;
+}
+
+.doc-body tr:nth-child(even) td {
+  background: #fafbfc;
+}
+
+.doc-body hr {
+  border: none;
+  border-top: 1px solid #d9dce4;
+  margin: 2rem 0;
+}
+
+.doc-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+  .doc-page {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+  }
+  .doc-body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  .doc-body pre {
+    background: #f5f5f5;
+    color: #131426;
+    border: 1px solid #ddd;
+  }
+  .doc-body a {
+    color: #131426;
+    text-decoration: underline;
+  }
+  .doc-body h1 {
+    page-break-before: auto;
+  }
+  .doc-body h2,
+  .doc-body h3 {
+    page-break-after: avoid;
+  }
+  .doc-body table,
+  .doc-body pre,
+  .doc-body blockquote {
+    page-break-inside: avoid;
+  }
+}
+
+/* Ringing-bell animation used by the NotificationBell when there is a blocker. */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(6deg); }
+}

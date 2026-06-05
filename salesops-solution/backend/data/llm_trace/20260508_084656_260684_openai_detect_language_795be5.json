@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_084656_260684",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 218,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nQ2O QT-MERID-COMM-077-DEMO \u2014 PO PO-MERID-COMM-077-Q2O-73116 attached (variance noted)\nHola,\n\nAdjunto OC PO-MERID-COMM-077-Q2O-73116 para convertir la cotizaci\u00f3n QT-MERID-COMM-077-DEMO. Added a cal kit (85052D) that was not on the original quote. Please include in the order if pricing is in line; otherwise let us know and we will issue a revised PO.\n\nEmitan el SOA o av\u00edsenme si la variaci\u00f3n requiere aprobaci\u00f3n de Sales Ops.\n\nSaludos,\nMariela Sol\u00eds, Compras T\u00e9cnicas\nMeridian Comunicaciones SA\n--- PO_PO-MERID-COMM-077-Q2O-73116.pdf (light extract) ---\n---**Page 1**PURCHASE ORDERMERIDIAN COMUNICACIONES SA Wireless / 5G/6G \u00b7 EMEA Operations Procurement & Lab Operations Procurement contact: see email signature for buyer details.BILL TOMeridian Comunicaciones SAAccounts Payable - EMEAcompras.lab@meridiancomms.esSHIP TOMeridian Comunicaciones SAReceiving Dock - EMEAAttn: Lab OperationsNOTES Added a cal kit (85052D) that was not on the original quote. Please include in the order if pricing is in line; otherwise let us know and we will issue a revised PO. This purchase order is issued subject to the buyer's standard terms and conditions of purchase. Acknowledgment of receipt is requested within 2 business days. All shipments must reference the PO Number on packing slips and invoices.- **PO Number:** PO-MERID-COMM-077-Q2 O-73116- **Issue Date:** 2026-05-07- **Requested Ship Date:** 2026-06-04- **Payment Terms:** Net 60- **Quote Reference:** QT-MERID-COMM-077-DE MO- **SKU:** Description \n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"es\",\"confidence\":0.86,\"reasoning\":\"Contains clear Spanish greetings and sentences (\\\"Hola\\\", \\\"Adjunto\\\", \\\"Emitan\\\", \\\"Saludos\\\") mixed with some English procurement terms, indicating primarily Spanish.\"}",
+  "parsed": {
+    "language": "es",
+    "confidence": 0.86,
+    "reasoning": "Contains clear Spanish greetings and sentences (\"Hola\", \"Adjunto\", \"Emitan\", \"Saludos\") mixed with some English procurement terms, indicating primarily Spanish."
+  },
+  "error": null
+}

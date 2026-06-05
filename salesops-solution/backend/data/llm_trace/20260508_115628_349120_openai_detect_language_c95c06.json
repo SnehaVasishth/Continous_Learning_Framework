@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_115628_349120",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 402,
+  "raw_response_chars": 187,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nReschedule shipment SO-TSMC-FAB-308-2503 \u2192 2026-05-28\nHello,\n\nCould you push the requested ship date for SO-TSMC-FAB-308-2503 out to 2026-05-28? Our anechoic chamber installation has slipped and we won't be ready to receive the instruments before then.\n\nPlease confirm impact on the cal-cycle SLA if any.\n\nRegards,\nIsaac Tran, Test Lab Manager\nTessera Semiconductor (Foundry 4)\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"English business email vocabulary and syntax (e.g., 'Could you push the requested ship date', 'Please confirm impact') with Latin script.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "English business email vocabulary and syntax (e.g., 'Could you push the requested ship date', 'Please confirm impact') with Latin script."
+  },
+  "error": null
+}

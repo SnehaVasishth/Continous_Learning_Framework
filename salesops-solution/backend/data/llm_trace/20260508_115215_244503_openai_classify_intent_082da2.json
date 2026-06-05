@@ -1,0 +1,129 @@
+{
+  "timestamp": "20260508_115215_244503",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 8904,
+  "user_prompt_chars": 731,
+  "raw_response_chars": 652,
+  "system": "You are the Stage-1 Intake & Classification agent for Keysight SalesOps. Read one customer email and emit ONE strict JSON object. Output goes directly to json.loads() and enum validators.\n\nOUTPUT CONTRACT \u2014 emit exactly these 10 keys:\n{\n  \"language\": \"<\"en\", \"es\", \"ja\", \"other\">\",\n  \"language_reasoning\": \"<string>\",\n  \"intent\": \"<\"po_intake\", \"quote_to_order\", \"trade_change_order\", \"ssd_change_request\", \"hold_release\", \"delivery_change\", \"service_order\", \"wo_update_request\", \"wo_status_inquiry\", \"service_contract_request\", \"general_inquiry\", \"out_of_scope\", \"spam\">\",\n  \"intent_confidence\": <number 0.0-1.0>,\n  \"intent_reasoning\": \"<1-2 sentences citing exact words from the email>\",\n  \"secondary_intents\": [],\n  \"spam\": <true|false>,\n  \"spam_reason\": \"<string; \"\" if not spam>\",\n  \"summary\": \"<one English sentence>\",\n  \"track_hint\": \"<trade|som|service_contract|none>\"\n}\n\nFIELD RULES (positive form):\n  \u2022 \"intent\" is a single string from the canonical list (never an array, never inside another object).\n  \u2022 \"intent_confidence\" is a top-level number (never inside an \"intents\" object).\n  \u2022 \"track_hint\" is the workflow track \u2014 one of: trade, som, service_contract, none. NOT an autonomy tier (no \"L4_auto\", \"L3\", \"auto\").\n  \u2022 \"intent_reasoning\" is a sentence quoting words from the email (the field name is \"intent_reasoning\", not \"notes\" or \"rationale\").\n  \u2022 Emit all 10 keys every time. Use \"\" or [] for empty values.\n\nINTENT MAPPING (track in parens):\n  \"po_intake\" (track=trade) \u2014 new purchase order received from a customer (no prior quote referenced)\n  \"quote_to_order\" (track=trade) \u2014 customer asking to convert an existing quote into a sales order\n  \"trade_change_order\" (track=trade) \u2014 customer requesting changes to an EXISTING booked sales order (qty, line items, billing) \u2014 NOT just a ship-date change\n  \"ssd_change_request\" (track=trade) \u2014 customer requesting a Ship Schedule Date (SSD) change on an existing order \u2014 push out, pull in, or partial\n  \"hold_release\" (track=trade) \u2014 customer asking to release an order from a hold (credit, export, payment)\n  \"delivery_change\" (track=trade) \u2014 customer requesting a one-time delivery rescheduling (use ssd_change_request when they say 'ship schedule date' explicitly)\n  \"service_order\" (track=som) \u2014 new request to create a work order \u2014 calibration, repair, installation, on-site service, possibly multi-asset\n  \"wo_update_request\" (track=som) \u2014 customer asking to update or modify an EXISTING work order (add notes, add tasks, update assets)\n  \"wo_status_inquiry\" (track=som) \u2014 customer asking about the status of an existing work order or open WOs\n  \"service_contract_request\" (track=service_contract) \u2014 customer asking for a service contract / support agreement quote or order (cal plan, onsite plan, PM plan)\n  \"general_inquiry\" (track=none) \u2014 other legitimate business question (EOL roadmap, product info, lead-time questions, etc.)\n  \"out_of_scope\" (track=none) \u2014 legitimate but non-customer-business \u2014 automated notifications (Google/Microsoft security, AWS, GitHub), social-network alerts (LinkedIn), n\u2026\n  \"spam\" (track=none) \u2014 unsolicited / phishing / off-topic / promotional\n  Trade = orders/PO/quote conversion/holds/ship-date changes. SOM = work-orders/calibration/repair/install. service_contract = cal plan/PM plan/support agreement. none = general inquiry, out_of_scope, spam.\n\nOUT_OF_SCOPE vs SPAM \u2014 pick one carefully:\n  \u2022 out_of_scope = LEGITIMATE non-customer-business from a KNOWN/established sender. The sender is a real brand or person (Google, Microsoft, AWS, GitHub, LinkedIn, the user's own company HR/IT, a Keysight teammate, a known vendor). Content is informational, transactional, or promotional but the sender is RECOGNIZABLE and not lookalike. Examples include: account-security alerts, billing notifications, calendar invites, newsletter forwards, \"free trial\" offers from real brands, internal HR reminders, out-of-office auto-replies, vendor receipts.\n  \u2022 spam = UNSOLICITED material from UNKNOWN or LOOKALIKE senders, OR clearly malicious content. Phishing credential traps (\"verify your account or it will be suspended\"), wire-fraud setups (\"our banking details have changed\"), 419/advance-fee scams, lookalike-domain attacks (faux-keysight.com), unsolicited promo blasts from senders the recipient never opted into.\n  \u2022 Decision rule: \n      - Forwarded newsletters / marketing from a real brand the recipient knows (Google, MS, AWS, LinkedIn, etc.) \u2192 out_of_scope, NOT spam.\n      - \"70% OFF\" promo blast from no-name unknown-domain sender \u2192 spam.\n      - Phishing / wire-fraud regardless of sender appearance \u2192 spam.\n  \u2022 Both route to discard, but distinguishing them lets compliance/security flag actual phishing separately from harmless newsletter noise.\n\nWORKED EXAMPLES (reproduce this exact shape):\n\nExample 1 \u2014 fresh PO (po_intake / trade)\n  IN  Subject \"PO PO-X-1 \u2014 DSO purchase, please ack\" / Body \"PO-X-1 attached for one DSO. Net 45.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"po_intake\",\"intent_confidence\":0.95,\"intent_reasoning\":\"Subject and body explicitly attach PO PO-X-1; no quote referenced.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"New PO PO-X-1 needing acknowledgment.\",\"track_hint\":\"trade\"}\n\nExample 2 \u2014 quote-to-order (quote_to_order / trade)\n  IN  Subject \"Convert quote QT-A-1 \u2192 order \u2014 PO attached\" / Body \"Please convert QT-A-1 into an order using PO-A-1. Send SOA.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"quote_to_order\",\"intent_confidence\":0.97,\"intent_reasoning\":\"Body says 'convert QT-A-1 into an order' with PO attached.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Convert quote QT-A-1 to a sales order.\",\"track_hint\":\"trade\"}\n\nExample 3 \u2014 service order (service_order / som)\n  IN  Subject \"Multi-asset cal request\" / Body \"Please open a work order to calibrate 6 instruments on-site, ISO 17025 traceable.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"service_order\",\"intent_confidence\":0.96,\"intent_reasoning\":\"Body says 'Please open a work order to calibrate' \u2014 new on-site cal request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"On-site calibration work order for 6 instruments.\",\"track_hint\":\"som\"}\n\nExample 4 \u2014 promotional spam (spam / none)\n  IN  Subject \"\ud83c\udf89 70% OFF \u2014 TODAY ONLY\" / Body \"Click now to save big!\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"spam\",\"intent_confidence\":0.99,\"intent_reasoning\":\"Promotional emoji and urgency 'TODAY ONLY'; no order content.\",\"secondary_intents\":[],\"spam\":true,\"spam_reason\":\"Promotional discount blast.\",\"summary\":\"Promotional discount blast.\",\"track_hint\":\"none\"}\n\nExample 5 \u2014 Google security alert (out_of_scope / none) \u2014 LEGITIMATE NOTIFICATION, NOT SPAM\n  IN  From \"Google <no-reply@accounts.google.com>\" Subject \"Security alert\" / Body \"App password created to sign in to your account. If you didn't generate this password, someone might be using your account.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.97,\"intent_reasoning\":\"Sender is google.com (legitimate); content is an account-security notification about app-password creation; no customer order or service request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Google account security notification \u2014 app password created.\",\"track_hint\":\"none\"}\n\nExample 6 \u2014 internal HR email (out_of_scope / none)\n  IN  From \"hr@keysight.com\" Subject \"Open enrollment reminder\" / Body \"Reminder: benefits open enrollment closes Friday. Log into Workday to make selections.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.95,\"intent_reasoning\":\"Internal HR reminder about benefits enrollment; not a customer-business request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Internal HR reminder about benefits open enrollment.\",\"track_hint\":\"none\"}\n\nExample 7 \u2014 forwarded marketing newsletter from a known brand (out_of_scope / none, NOT spam)\n  IN  From \"rituraj@leewayhertz.com\" (forwarded) Subject \"Fwd: Work faster with AI built into Google Workspace\" / Body \"Forwarded message from Google Workspace x YourStory: Try Google Workspace free for 14 days. Start your free trial.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.96,\"intent_reasoning\":\"Forwarded promotional newsletter from a known brand (Google Workspace) about a free-trial offer; sender is recognizable, not phishing or lookalike.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Forwarded Google Workspace marketing newsletter with free-trial offer.\",\"track_hint\":\"none\"}\n\nNow read the email below and emit one JSON object matching the contract exactly. No prose, no code fences, no additional keys.",
+  "user": "FROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: Service contract renewal \u2014 Z540.3 cal plan, Platinum SLA\nLANGUAGE_HINT: en\nBODY:\nHi Keysight Service Contracts team,\n\nOur existing service contract is approaching expiry and we'd like to **renew** for another 12 months at the same coverage level (Platinum tier). Our defense program quality plan continues to require Z540.3 cal with full uncertainty budgets.\n\nIf there's any pricing concession for multi-year renewal, we'd consider extending to 24 or 36 months. Please send the renewal quote with start date aligning to current contract end date.\n\nAaron Brewer, Calibration Lab Supervisor\nRaytheon Aerospace - El Segundo Lab\n\nClassify per the contract. Output one JSON object only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "language_reasoning",
+      "intent",
+      "intent_confidence",
+      "intent_reasoning",
+      "secondary_intents",
+      "spam",
+      "spam_reason",
+      "summary",
+      "track_hint"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ],
+        "description": "ISO 639-1 code from the canonical list"
+      },
+      "language_reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the language cue (script, vocabulary, idiom)"
+      },
+      "intent": {
+        "type": "string",
+        "enum": [
+          "po_intake",
+          "quote_to_order",
+          "trade_change_order",
+          "ssd_change_request",
+          "hold_release",
+          "delivery_change",
+          "service_order",
+          "wo_update_request",
+          "wo_status_inquiry",
+          "service_contract_request",
+          "general_inquiry",
+          "out_of_scope",
+          "spam"
+        ],
+        "description": "Single canonical intent value \u2014 never an array, never invented"
+      },
+      "intent_confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Top-level confidence as a float 0.0\u20131.0"
+      },
+      "intent_reasoning": {
+        "type": "string",
+        "description": "1\u20132 sentences citing exact words from the email subject or body"
+      },
+      "secondary_intents": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "po_intake",
+            "quote_to_order",
+            "trade_change_order",
+            "ssd_change_request",
+            "hold_release",
+            "delivery_change",
+            "service_order",
+            "wo_update_request",
+            "wo_status_inquiry",
+            "service_contract_request",
+            "general_inquiry",
+            "out_of_scope",
+            "spam"
+          ]
+        },
+        "description": "Other plausible intents beyond the primary; empty array if none"
+      },
+      "spam": {
+        "type": "boolean",
+        "description": "True iff the email is spam/phishing/promotional"
+      },
+      "spam_reason": {
+        "type": "string",
+        "description": "Why it's spam; empty string if not spam"
+      },
+      "summary": {
+        "type": "string",
+        "description": "One English sentence summarizing the primary request"
+      },
+      "track_hint": {
+        "type": "string",
+        "enum": [
+          "trade",
+          "som",
+          "service_contract",
+          "none"
+        ],
+        "description": "Workflow track: trade=orders/PO/holds; som=work-orders/cal/repair; service_contract=cal-plan/PM-plan; none=general/spam"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"language_reasoning\":\"Email is written entirely in English (e.g., 'service contract renewal', 'Please send the renewal quote').\",\"intent\":\"service_contract_request\",\"intent_confidence\":0.97,\"intent_reasoning\":\"Subject says 'Service contract renewal \u2014 Z540.3 cal plan, Platinum SLA' and body requests 'renew for another 12 months' and 'Please send the renewal quote'.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Customer requests a renewal quote for an expiring Z540.3 calibration service contract at Platinum tier, with options for 12/24/36 months aligned to the current end date.\",\"track_hint\":\"service_contract\"}",
+  "parsed": {
+    "language": "en",
+    "language_reasoning": "Email is written entirely in English (e.g., 'service contract renewal', 'Please send the renewal quote').",
+    "intent": "service_contract_request",
+    "intent_confidence": 0.97,
+    "intent_reasoning": "Subject says 'Service contract renewal \u2014 Z540.3 cal plan, Platinum SLA' and body requests 'renew for another 12 months' and 'Please send the renewal quote'.",
+    "secondary_intents": [],
+    "spam": false,
+    "spam_reason": "",
+    "summary": "Customer requests a renewal quote for an expiring Z540.3 calibration service contract at Platinum tier, with options for 12/24/36 months aligned to the current end date.",
+    "track_hint": "service_contract"
+  },
+  "error": null
+}

@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_085207_782184",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 740,
+  "raw_response_chars": 199,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nSecurity alert\n[image: Google]\r\nApp password created to sign in to your account\r\n\r\n\r\norderinbox@leewayhertz.com\r\nIf you didn't generate this password for Application, someone might be\r\nusing your account. Check and secure your account now.\r\nCheck activity\r\n<https://accounts.google.com/AccountChooser?Email=orderinbox@leewayhertz.com&continue=https://myaccount.google.com/alert/nt/1778148650334?rfn%3D20%26rfnc%3D1%26eid%3D-4643087032193397348%26et%3D0>\r\nYou can also see security activity at\r\nhttps://myaccount.google.com/notifications\r\nYou received this email to let you know about important changes to your\r\nGoogle Account and services.\r\n\u00a9 2026 Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"The text uses English vocabulary and phrasing typical of Google security notifications (e.g., 'Security alert', 'Check and secure your account now').\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "The text uses English vocabulary and phrasing typical of Google security notifications (e.g., 'Security alert', 'Check and secure your account now')."
+  },
+  "error": null
+}

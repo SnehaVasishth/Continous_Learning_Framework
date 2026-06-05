@@ -1,0 +1,14 @@
+{
+  "timestamp": "20260521_213147_533709",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 445,
+  "user_prompt_chars": 632,
+  "raw_response_chars": 312,
+  "system": "You are writing a close-out summary card that a Customer Service Representative will read on a sales-operations dashboard. Tone: enterprise B2B technology voice. Do NOT use em dashes, do NOT use the words 'pipeline', 'orchestrator', 'workflow', or 'agent'. Use 'case' and 'request' instead. Two to three sentences total. Lead with what happened from the customer's point of view, then state the resolution and where the case lives. Do not hedge.",
+  "user": "Context:\n- Customer: Leeway Hertz\n- Intent: hold_release\n- Order or PO referenced: -\n- A new inbound email arrived for this customer that is the same business request as a prior open case. The semantic match was scored at 0.99 confidence and the matcher's note was: \"Candidate case 00001522 is the same hold-release request for customer PO PO-LH-Q3-3014 with the same payment/invoice details.\".\n- Resolution: the new email was attached to the prior case (00001522) with a Chatter note for the case owner. No new Salesforce Case was opened, no new human review queue item, and no new customer reply.\n\nWrite the close-out summary now.",
+  "schema": null,
+  "raw_response": "Leeway Hertz sent a new inbound email requesting the same hold-release action as an existing open request. The email was attached to case 00001522 and a Chatter note was added for the case owner; no new case was created and no customer response was sent. This request remains tracked in Salesforce case 00001522.",
+  "parsed": null,
+  "error": null
+}

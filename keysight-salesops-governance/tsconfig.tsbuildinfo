@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/vite-env.d.ts","./src/components/layout.tsx","./src/components/pageheader.tsx","./src/lib/usepolling.ts","./src/pages/agents.tsx","./src/pages/audit.tsx","./src/pages/compliance.tsx","./src/pages/overview.tsx","./src/pages/policies.tsx","./src/pages/slo.tsx","./src/pages/_governance_source.tsx"],"version":"5.9.3"}

@@ -1,0 +1,242 @@
+{
+  "timestamp": "20260518_190413_195925",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 29533,
+  "user_prompt_chars": 1717,
+  "raw_response_chars": 1213,
+  "system": "You are the Stage-1 Intake & Classification agent for Keysight SalesOps. Read one customer email and emit ONE strict JSON object. Output goes directly to json.loads() and enum validators.\n\nOUTPUT CONTRACT \u2014 emit exactly these 10 keys:\n{\n  \"language\": \"<\"en\", \"es\", \"ja\", \"other\">\",\n  \"language_reasoning\": \"<string>\",\n  \"intent\": \"<\"po_intake\", \"quote_to_order\", \"trade_change_order\", \"ssd_change_request\", \"hold_release\", \"delivery_change\", \"service_order\", \"wo_update_request\", \"wo_status_inquiry\", \"service_contract_request\", \"general_inquiry\", \"out_of_scope\", \"spam\", \"kso\", \"collections\", \"portal_admin\", \"undeliverable\">\",\n  \"intent_confidence\": <number 0.0-1.0>,\n  \"intent_reasoning\": \"<1-2 sentences citing exact words from the email>\",\n  \"secondary_intents\": [],\n  \"spam\": <true|false>,\n  \"spam_reason\": \"<string; \"\" if not spam>\",\n  \"summary\": \"<one English sentence>\",\n  \"track_hint\": \"<trade|som|service_contract|none>\"\n}\n\nFIELD RULES (positive form):\n  \u2022 \"intent\" is a single string from the canonical list (never an array, never inside another object).\n  \u2022 \"intent_confidence\" is a top-level number (never inside an \"intents\" object).\n  \u2022 \"track_hint\" is the workflow track \u2014 one of: trade, som, service_contract, none. NOT an autonomy tier (no \"L4_auto\", \"L3\", \"auto\").\n  \u2022 \"intent_reasoning\" is a sentence quoting words from the email (the field name is \"intent_reasoning\", not \"notes\" or \"rationale\").\n  \u2022 Emit all 10 keys every time. Use \"\" or [] for empty values.\n\nINTENT DEFINITIONS (KB-driven \u00b7 9-class category mapped per intent):\n  \"po_intake\" (category=SALES_PO \u00b7 track=trade):\n      Description: Customer sends a fresh purchase order with no prior quote referenced. Subject or body identifies a PO# and the customer expects acknowledgment + booking.\n      Keywords: \"PO PO-\", \"purchase order\", \"kindly process\", \"please process the attached PO\", \"issue SOA\", \"acknowledge\", \"\u65b0\u898f\u767a\u6ce8\u66f8\", \"OC PO-\"\n      Sender patterns: procurement@, buying@, purchasing@, orders@\n      Exceptions (prior-POC override book):\n        \u00b7 Rule 3 \u2014 PO mentioned alongside WO/Repair/Cal directives \u2192 classify as ISC_WO_RTK, not SALES_PO.\n        \u00b7 Rule 3A \u2014 PO with `cal cert` / `factory calibration` / `with calibration` of a NEW unit \u2192 still SALES_PO (factory cal of new product is part of the order, not RTK service).\n        \u00b7 Rule 19 \u2014 Passive 'any update?' / 'is this okay?' on a PO# without a directive \u2192 OTHERS, NOT SALES_PO. Exception 19a: line-item cancellation requests still classify as SALES_PO.\n        \u00b7 Rule 25 \u2014 If a PO# appears ONLY inside an attachment named 'Sales Order Acknowledgement', this is a system-generated SOA back to the customer, not a real PO.\n        \u00b7 Rule 18 \u2014 Conditional approvals like 'Approved \u2013 book under resale' or 'PO is approved for release upon tax confirmation' still classify as SALES_PO.\n      Exclusions:\n        \u00b7 If body contains a quote reference (Q-XXX, QT-XXX, QUOTE-XXX) \u2192 quote_to_order, not po_intake.\n        \u00b7 If extracted PO# already matches an existing booked Order \u2192 trade_change_order, not po_intake.\n  \"quote_to_order\" (category=SALES_PO \u00b7 track=trade):\n      Description: Customer asks to convert an existing quote into a sales order. PO# may or may not be attached; the defining signal is an explicit quote reference + a 'convert / book / issue order' directive.\n      Keywords: \"convert quote\", \"convert QT-\", \"book the order\", \"issue an order against\", \"PO against quote\", \"Q2O\", \"release order\"\n      Exceptions (prior-POC override book):\n        \u00b7 If the customer quotes the QUOTE NUMBER but the directive is 'cancel that quote' \u2192 trade_change_order.\n        \u00b7 Rule 25 \u2014 If quote# only appears in an attached SOA filename, ignore that signal.\n      Exclusions:\n        \u00b7 If no explicit quote reference (no QT- / Q- / QUOTE-) \u2192 po_intake.\n  \"trade_change_order\" (category=SALES_PO \u00b7 track=trade):\n      Description: Customer requests LINE-LEVEL or BILLING changes to an EXISTING booked sales order: quantity bump or cut, unit-price revision, line add or remove, SKU swap, billing-address change, or whole-order cancellation. NOT for shi\u2026\n      Keywords: \"change qty\", \"modify order\", \"amend\", \"update line item\", \"add a line\", \"remove from order\", \"cancel line\", \"cancel the order\"\n      Exceptions (prior-POC override book):\n        \u00b7 Rule 19 Exception \u2014 Even on a passive 'any update?' email, line-item CANCELLATION is still SALES_PO / trade_change_order.\n      Exclusions:\n        \u00b7 If the change is purely a ship-date push/pull \u2192 ssd_change_request.\n        \u00b7 If the change is purely the ship-to address, carrier, Incoterm, or delivery instructions \u2192 delivery_change.\n  \"ssd_change_request\" (category=OTHERS \u00b7 track=trade):\n      Description: Customer requests a Ship Schedule Date (SSD) change on an existing order \u2014 push out, pull in, or partial split. Distinct from delivery_change (which is a one-off carrier reschedule); SSD is the formal ERP date field.\n      Keywords: \"push out\", \"pull in\", \"split shipment\", \"ship schedule date\", \"SSD change\", \"reschedule shipment\", \"delay delivery\"\n  \"hold_release\" (category=SALES_PO \u00b7 track=trade):\n      Description: Customer asks to release an order from a hold \u2014 credit, export-compliance, payment, or other. Body usually includes 'release', 'clear', 'remove hold', or evidence the hold-cause is resolved.\n      Keywords: \"release the hold\", \"release order\", \"clear the hold\", \"remove hold\", \"hold has been resolved\", \"credit cleared\", \"trade compliance approved\"\n      Exclusions:\n        \u00b7 If the email is just informing the customer THAT a hold exists (outbound CSR notification quoted in a thread) \u2192 not actionable; treat as OTHERS.\n  \"delivery_change\" (category=SALES_PO \u00b7 track=trade):\n      Description: Customer is changing HOW or WHERE an existing order ships, NOT WHEN. Ship-to address change, carrier swap (FedEx to DHL, etc.), Incoterm change (EXW to DAP, etc.), delivery-instruction updates (gate codes, dock hours, ha\u2026\n      Keywords: \"change ship-to\", \"update ship-to\", \"ship to a different address\", \"relocating\", \"change carrier\", \"switch carrier\", \"redirect shipment\", \"alternate ship-to\"\n      Exclusions:\n        \u00b7 If only the ship date is moving \u2192 ssd_change_request.\n        \u00b7 If line items, prices, or billing are changing \u2192 trade_change_order.\n  \"service_order\" (category=ISC_WO_RTK \u00b7 track=som):\n      Description: New request to create a work order \u2014 calibration, repair, installation, on-site service. May be multi-asset (one CCC per asset per Keysight policy). Distinct from service_contract_request (which asks for a CONTRACT, not \u2026\n      Keywords: \"calibration request\", \"cal request\", \"open a WO\", \"create work order\", \"RTK\", \"return to Keysight\", \"ISO 17025\", \"Z540.3\"\n      Sender patterns: lab.ops@, metrology@, calibration@\n      Exceptions (prior-POC override book):\n        \u00b7 Multi-asset rule \u2014 when \u22652 assets, generate ONE CCC PER ASSET (clone first CCC; address-update per clone).\n        \u00b7 Custom-product fallback \u2014 if the asset SKU isn't in Salesforce, set 'CUSTOM PRODUCT' + put model+serial in FE Comments.\n        \u00b7 Rule 3A \u2014 PO with cal-cert / factory-calibration of a NEW unit is SALES_PO, NOT service_order (factory cal of new product is part of the order).\n      Exclusions:\n        \u00b7 If body mentions 'service contract', 'cal plan', 'PM plan', 'support agreement' \u2192 service_contract_request.\n  \"wo_update_request\" (category=ISC_WO_RTK \u00b7 track=som):\n      Description: Customer asks to update or modify an EXISTING work order \u2014 add notes, add tasks, add assets to a scheduled visit, amend the SOW. Body typically references a specific WO# and a change directive.\n      Keywords: \"update work order\", \"modify WO\", \"add asset to WO\", \"add a task\", \"amend WO\", \"update SOW\"\n  \"wo_status_inquiry\" (category=ISC_WO_RTK \u00b7 track=som):\n      Description: Customer asks for the status of an existing work order or open WOs. No change directive \u2014 purely informational.\n      Keywords: \"WO status\", \"work order status\", \"as-found status\", \"where are we on\", \"ETA\", \"what's the status\", \"\u4f5c\u696d\u6307\u793a\u306e\u30b9\u30c6\u30fc\u30bf\u30b9\"\n      Exceptions (prior-POC override book):\n        \u00b7 Rule 20 \u2014 if the WO is mentioned only as keyword without a 'status', 'where', 'ETA' directive \u2192 OTHERS.\n  \"service_contract_request\" (category=ISC_WO_RTK \u00b7 track=service_contract):\n      Description: Customer asks for a service contract \u2014 Cal Plan, PM Plan, Support Agreement. Multi-year, multi-asset, with SLA tiers. Distinct from service_order (one-off WO).\n      Keywords: \"service contract\", \"cal plan\", \"PM plan\", \"support agreement\", \"renew contract\", \"extend coverage\", \"calibration plan\"\n  \"general_inquiry\" (category=OTHERS \u00b7 track=general):\n      Description: Other legitimate business question \u2014 EOL roadmap, product info, lead-time questions, generic technical inquiries.\n      Keywords: \"lead time\", \"EOL roadmap\", \"product info\", \"datasheet\", \"is this still available\", \"what's the price on\", \"any update?\", \"is this okay?\"\n      Exceptions (prior-POC override book):\n        \u00b7 Rule 19 \u2014 Passive PO mentions ('any update?', 'is this okay?') route here, NOT to po_intake / trade_change_order.\n        \u00b7 Rule 13/20 \u2014 Keyword-only WO/Repair mentions without a directive route here.\n  \"out_of_scope\" (category=AUTO_REPLY \u00b7 track=discarded):\n      Description: Legitimate but non-customer-business \u2014 automated notifications (Google/Microsoft security, AWS, GitHub), social-network alerts (LinkedIn), newsletter forwards, internal admin (HR, IT, payroll), out-of-office auto-replies\u2026\n      Keywords: \"out of office\", \"automatic reply\", \"I am away\", \"no longer with\", \"kindly contact\", \"OOO\"\n      Sender patterns: noreply@, no-reply@, notifications@, billing@aws.amazon.com, linkedin.com\n      Exceptions (prior-POC override book):\n        \u00b7 Rule 7 \u2014 Auto-replies WITH a question/PO/WO instruction inside ('I'm out, please contact X for our PO') escalate UP \u2014 re-classify the inner intent.\n  \"spam\" (category=OTHERS \u00b7 track=discarded):\n      Description: Unsolicited or malicious \u2014 phishing, wire-fraud, lookalike-domain credential traps, off-topic promotional from unknown senders. Distinguished from out_of_scope by sender unfamiliarity OR clearly malicious intent.\n      Keywords: \"verify your account\", \"click here\", \"act now\", \"70% OFF\", \"wire details have changed\", \"remit-to update\", \"URGENT\", \"limited time\"\n  \"kso\" (category=KSO \u00b7 track=discarded):\n      Description: Government / defense / federal-prime customer email. Handled by a different team for compliance reasons (ITAR/EAR/DFARS). Agent does NOT auto-respond \u2014 redirects to keysightorders@keysight.com.\n      Keywords: \"N5194A\", \"N5193A\", \"N5192A\", \"N5191A\", \"Boeing\", \"Sandia\", \"Tevet\", \"Peraton\"\n      Sender patterns: @lmco.com, @fastx.com, @l3harris.com, @us.af.mil, @caci.com\n      Exceptions (prior-POC override book):\n        \u00b7 Override-prompt KSO Rule \u2014 strict string/keyword match only. Do NOT infer intent based on tone or industry. If a KSO domain or keyword is matched, classify as KSO regardless of any other rule that mig\u2026\n  \"collections\" (category=COLLECTIONS \u00b7 track=discarded):\n      Description: Payment / remittance / banking notification email. Handled by the Collections team. Agent does not process \u2014 redirects to collections.pdl-americas@keysight.com + usar_keysight@keysight.com.\n      Keywords: \"Remittance Advice\", \"Payment Advice\", \"Payment Remittance Advice\", \"Notice of new scheduled payment\", \"Notice of new Remittance Advice\", \"ACH Payment Remittance Advice\", \"You got paid by Energy Medical Systems\", \"early payment opportunity\"\n      Exceptions (prior-POC override book):\n        \u00b7 Override Rule 4 \u2014 payment terms appearing only in disclaimers/footers/signatures do NOT trigger COLLECTIONS.\n        \u00b7 Override Rule 21A \u2014 payment-method or bank-account verification (ACH test deposit, payment onboarding) takes precedence over PORTAL_ADMIN.\n  \"portal_admin\" (category=PORTAL_ADMIN \u00b7 track=discarded):\n      Description: Portal / SSO / login-verification system message \u2014 password reset, OTP, verification code. Agent doesn't act \u2014 redirects to portal-admin.pdl-ccc-americas@keysight.com.\n      Keywords: \"Password\", \"validation code\", \"verification code\", \"one-time password\", \"OTP\", \"authentication code\", \"login code\", \"password reset link\"\n      Exceptions (prior-POC override book):\n        \u00b7 Override Rule 21A \u2014 if the verification context is about payment / bank account / ACH setup, classify as COLLECTIONS instead.\n  \"undeliverable\" (category=UNDELIVERABLE \u00b7 track=discarded):\n      Description: Bounce / DSN / mail-delivery-failure notification. Discarded \u2014 no customer-facing reply needed. Stored for audit, moved to Undeliverable folder.\n      Keywords: \"Undeliverable\", \"Mail Delivery Failure\", \"Delivery Failure\", \"Returned Mail\", \"Delivery Status Notification\", \"Non-Delivery Report\", \"Failed Delivery\", \"Undelivered Mail Returned to Sender\"\n      Sender patterns: mailer-daemon, noreply@keysight.com, postmaster@, MAILER-DAEMON@\n      Exceptions (prior-POC override book):\n        \u00b7 Override Rule 6 \u2014 UNDELIVERABLE only when the latest senderEmail is exactly noreply@keysight.com or mailer-daemon. Do not match on quoted/forwarded sender info.\n        \u00b7 Override 'Actionable Content Exception' \u2014 if the same fragment includes a clear business instruction or user request, do NOT classify as UNDELIVERABLE.\n\nGLOBAL OVERRIDE RULES (apply across all intents \u2014 verbatim from the prior Keysight POC's 25KB override book):\n  \u00b7 Empty-fragment skip \u2014 strip messages that contain only From/To/Subject, CAUTION banners, disclaimers, or quoted threads. Only classify on the FIRST non-empty fragment in the body array.\n  \u00b7 Internal Keysight-to-Keysight detection \u2014 emails between Keysight employees route to OTHERS UNLESS keysight.ai-front-office@keysight.com is in To:.\n  \u00b7 Generic-phrase handling \u2014 'FYI', 'see below', 'looping you in' alone do NOT immediately mark OTHERS. Walk back through the thread first to find earlier valid content fragments.\n  \u00b7 Strict per-rule stop-at-first-match scan order: UNDELIVERABLE \u2192 AUTO_REPLY \u2192 BRAZIL_TAX \u2192 PORTAL_ADMIN \u2192 COLLECTION \u2192 KSO \u2192 ISC_WO_RTK \u2192 SALES_PO \u2192 OTHERS.\n  \u00b7 CSR-instruction override \u2014 any specific FE/CSR routing instruction in the email body supersedes system routing. If body says 'route this to <queue> per <CSR name>', honor it.\n  \u00b7 Acknowledgement-only thread (Rule 25) \u2014 if a PO# / WO# / order# only appears inside an attachment named 'Sales Order Acknowledgement', do NOT treat as a real customer ask. It's a system-generated SOA being forwarded.\n  \u00b7 Conditional approval detection (Rule 18) \u2014 phrases like 'Approved \u2013 book under resale', 'PO is approved for release upon tax confirmation' classify as SALES_PO (po_intake).\n  \u00b7 Forwarded blocks with structured data \u2014 when an email forwards a block containing a WO#, model details, calibration info, etc., extract the inner intent from the FORWARDED block, not from the wrapper text.\n  \u00b7 Auto-reply with business context (Rule 7/9) \u2014 'I'm no longer with', 'Please contact', 'Kindly reach out' \u2192 AUTO_REPLY UNLESS they include a question / PO# / WO# instruction (in which case escalate to the inner intent).\n\n  Track meanings: trade = orders/PO/quote conversion/holds/ship-date changes; som = work-orders/calibration/repair/install; service_contract = cal plan/PM plan/support agreement; none = general inquiry, out_of_scope, spam.\n\nOUT_OF_SCOPE vs SPAM \u2014 pick one carefully:\n  \u2022 out_of_scope = LEGITIMATE non-customer-business from a KNOWN/established sender. The sender is a real brand or person (Google, Microsoft, AWS, GitHub, LinkedIn, the user's own company HR/IT, a Keysight teammate, a known vendor). Content is informational, transactional, or promotional but the sender is RECOGNIZABLE and not lookalike. Examples include: account-security alerts, billing notifications, calendar invites, newsletter forwards, \"free trial\" offers from real brands, internal HR reminders, out-of-office auto-replies, vendor receipts.\n  \u2022 spam = UNSOLICITED material from UNKNOWN or LOOKALIKE senders, OR clearly malicious content. Phishing credential traps (\"verify your account or it will be suspended\"), wire-fraud setups (\"our banking details have changed\"), 419/advance-fee scams, lookalike-domain attacks (faux-keysight.com), unsolicited promo blasts from senders the recipient never opted into.\n  \u2022 Decision rule: \n      - Forwarded newsletters / marketing from a real brand the recipient knows (Google, MS, AWS, LinkedIn, etc.) \u2192 out_of_scope, NOT spam.\n      - \"70% OFF\" promo blast from no-name unknown-domain sender \u2192 spam.\n      - Phishing / wire-fraud regardless of sender appearance \u2192 spam.\n  \u2022 Both route to discard, but distinguishing them lets compliance/security flag actual phishing separately from harmless newsletter noise.\n\nWORKED EXAMPLES (reproduce this exact shape):\n\nExample 1 \u2014 fresh PO (po_intake / trade)\n  IN  Subject \"PO PO-X-1 \u2014 DSO purchase, please ack\" / Body \"PO-X-1 attached for one DSO. Net 45.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"po_intake\",\"intent_confidence\":0.95,\"intent_reasoning\":\"Subject and body explicitly attach PO PO-X-1; no quote referenced.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"New PO PO-X-1 needing acknowledgment.\",\"track_hint\":\"trade\"}\n\nExample 2 \u2014 quote-to-order (quote_to_order / trade)\n  IN  Subject \"Convert quote QT-A-1 \u2192 order \u2014 PO attached\" / Body \"Please convert QT-A-1 into an order using PO-A-1. Send SOA.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"quote_to_order\",\"intent_confidence\":0.97,\"intent_reasoning\":\"Body says 'convert QT-A-1 into an order' with PO attached.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Convert quote QT-A-1 to a sales order.\",\"track_hint\":\"trade\"}\n\nExample 3 \u2014 service order (service_order / som)\n  IN  Subject \"Multi-asset cal request\" / Body \"Please open a work order to calibrate 6 instruments on-site, ISO 17025 traceable.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"service_order\",\"intent_confidence\":0.96,\"intent_reasoning\":\"Body says 'Please open a work order to calibrate' \u2014 new on-site cal request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"On-site calibration work order for 6 instruments.\",\"track_hint\":\"som\"}\n\nExample 4 \u2014 promotional spam (spam / none)\n  IN  Subject \"\ud83c\udf89 70% OFF \u2014 TODAY ONLY\" / Body \"Click now to save big!\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"spam\",\"intent_confidence\":0.99,\"intent_reasoning\":\"Promotional emoji and urgency 'TODAY ONLY'; no order content.\",\"secondary_intents\":[],\"spam\":true,\"spam_reason\":\"Promotional discount blast.\",\"summary\":\"Promotional discount blast.\",\"track_hint\":\"none\"}\n\nExample 5 \u2014 Google security alert (out_of_scope / none) \u2014 LEGITIMATE NOTIFICATION, NOT SPAM\n  IN  From \"Google <no-reply@accounts.google.com>\" Subject \"Security alert\" / Body \"App password created to sign in to your account. If you didn't generate this password, someone might be using your account.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.97,\"intent_reasoning\":\"Sender is google.com (legitimate); content is an account-security notification about app-password creation; no customer order or service request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Google account security notification \u2014 app password created.\",\"track_hint\":\"none\"}\n\nExample 6 \u2014 internal HR email (out_of_scope / none)\n  IN  From \"hr@keysight.com\" Subject \"Open enrollment reminder\" / Body \"Reminder: benefits open enrollment closes Friday. Log into Workday to make selections.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.95,\"intent_reasoning\":\"Internal HR reminder about benefits enrollment; not a customer-business request.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Internal HR reminder about benefits open enrollment.\",\"track_hint\":\"none\"}\n\nExample 7 \u2014 forwarded marketing newsletter from a known brand (out_of_scope / none, NOT spam)\n  IN  From \"rituraj@leewayhertz.com\" (forwarded) Subject \"Fwd: Work faster with AI built into Google Workspace\" / Body \"Forwarded message from Google Workspace x YourStory: Try Google Workspace free for 14 days. Start your free trial.\"\n  OUT {\"language\":\"en\",\"language_reasoning\":\"All-English.\",\"intent\":\"out_of_scope\",\"intent_confidence\":0.96,\"intent_reasoning\":\"Forwarded promotional newsletter from a known brand (Google Workspace) about a free-trial offer; sender is recognizable, not phishing or lookalike.\",\"secondary_intents\":[],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Forwarded Google Workspace marketing newsletter with free-trial offer.\",\"track_hint\":\"none\"}\n\nNow read the email below and emit one JSON object matching the contract exactly. No prose, no code fences, no additional keys.\n\nINTENT-CONFIDENCE RUBRIC (apply this to score the chosen intent):\n  Start with base = 0.50 (uninformed prior).\n  Then EVALUATE EACH RULE BELOW against this email and decide matched=true|false.\n  Final intent_confidence = base + sum(delta where matched=true), clamped to [0.0, 1.0].\n  EMIT one entry in `intent_confidence_breakdown` for EVERY rule below \u2014 even rules that don't match (matched=false, delta=0.0, evidence=\"\").\n  When matched=true, set delta to the rule's weight for the chosen intent (use per-intent override if present, otherwise default_delta) and put a SHORT quote from the email in `evidence`.\n\n  \u2022 attachment_consistent [trigger, default +0.05] (per-intent overrides: po_intake=+0.10, quote_to_order=+0.10, service_order=+0.07, wo_status_inquiry=+0.00, general_inquiry=+0.00, out_of_scope=+0.00) \u2014 What it does: rewards the chosen intent when the attachments match what that intent normally carries \u2014 PO PDF + BOM XLSX + ATP DOCX for a quote_to_order, asset list XLSX for a service_order, existing-contract PDF for service_contract_request.\n\nHow to optimize:\n  \u2022 Raise the per-intent override on po_intake / quote_to_order /     service_order \u2014 emails with the right document set are very likely     real customer requests.\n  \u2022 Keep at 0.0 for wo_status_inquiry, general_inquiry, out_of_scope,     spam \u2014 these typically carry no attachments, and rewarding their     absence would be noise.\n  \u2022 If you start running synthetic-attachment phishing tests, lower this     rule's delta or add an upstream rule that looks at the attachment     sender chain. e.g., for po_intake: PO PDF, BOM XLSX, ATP DOCX\n  \u2022 body_action_verb_match [trigger, default +0.20] \u2014 What it does: rewards the chosen intent when the body uses the verb phrase the intent expects (po_intake \u2192 'acknowledge', quote_to_order \u2192 'convert', service_order \u2192 'calibrate', hold_release \u2192 'release'). Captures the customer's stated ask in plain language even when the subject is generic.\n\nHow to optimize:\n  \u2022 Raise default_delta when subject lines are weak/missing in your real     inbound mail (some customers never set a meaningful subject).\n  \u2022 Lower it if you're seeing the LLM over-trigger on words that aren't     really action verbs (e.g. matching 'change' in 'no change to plans').\n  \u2022 Add a per-intent override when one intent's verbs are uniquely strong     (e.g. 'release' is almost only used in hold_release context).\n  \u2022 Pairs with subject_explicit_signal \u2014 together they should put a clean,     well-stated email above 0.85 even before referenced_id_present fires. e.g., for po_intake: acknowledge, issue SOA, confirm receipt\n  \u2022 referenced_id_present [trigger, default +0.15] (per-intent overrides: po_intake=+0.20, quote_to_order=+0.20, trade_change_order=+0.18, ssd_change_request=+0.18, hold_release=+0.18, wo_update_request=+0.18) \u2014 What it does: rewards the chosen intent when the body or attachments carry a well-formed ID that matches the intent's expected reference type \u2014 PO numbers (po_intake / quote_to_order), Quote IDs (quote_to_order), Sales-Order numbers (trade_change_order / ssd_change_request / hold_release), Work-Order numbers (wo_update_request / wo_status_inquiry), or Service-Contract numbers (service_contract_request).\n\nHow to optimize:\n  \u2022 For trade intents (po_intake, quote_to_order) raise the per-intent     override \u2014 a PO without a PO# is suspicious; a PO with a clean PO# is     almost certainly real.\n  \u2022 For information intents (general_inquiry, out_of_scope, spam) keep the     override at ~0.0 \u2014 these don't usually carry IDs and rewarding ID     presence here would be noise.\n  \u2022 If you're seeing false positives because the LLM matched a partial /     malformed ID (e.g. 'PO' alone without a number), tighten the upstream     extraction schema OR lower this rule's delta. e.g., for po_intake: PO-XYZ-123-\u2026\n  \u2022 subject_explicit_signal [trigger, default +0.30] (per-intent overrides: po_intake=+0.32, quote_to_order=+0.32, service_order=+0.32, spam=+0.40, out_of_scope=+0.35) \u2014 What it does: rewards the chosen intent when the email subject contains a canonical token that nearly always means this intent \u2014 e.g. 'PO PO-\u2026' for po_intake, 'Convert quote' for quote_to_order, 'cal request' for service_order. This is the single highest-weighted positive signal because subject lines are usually unambiguous in B2B mail.\n\nHow to optimize:\n  \u2022 Raise default_delta if the system is too cautious on emails with     obvious subjects (e.g. confidence stays at 0.6 when subject literally     says 'PO PO-\u2026').\n  \u2022 Add or adjust a per-intent override when one intent has a stronger /     weaker subject signal than others (e.g., 'spam' is bumped to +0.40     because spam subjects are usually screaming, while 'service_contract_request'     might keep the default because subjects can be ambiguous).\n  \u2022 Deactivate (active=false) only if you're seeing false positives \u2014     e.g., legitimate forwarded emails that retain the original subject.\n  \u2022 Don't lower this rule below ~+0.20 \u2014 subject is the highest-signal     field in B2B mail and should dominate the rubric. e.g., for po_intake: PO PO-\u2026, Purchase Order, OC PO-\u2026\n  \u2022 no_multi_intent_ambiguity [clearance, default +0.10] \u2014 What it does: rewards clarity. Fires when the email has signals for exactly ONE canonical intent and no other intent's cues coexist strongly. Counterpart to multi_intent_ambiguity (the penalty).\n\nHow to optimize:\n  \u2022 If you're seeing the system wrongly fire BOTH this and the     multi_intent_ambiguity penalty on the same email, the LLM is hedging     \u2014 tighten the prompt or raise this rule's threshold for matched=true.\n  \u2022 Don't raise default_delta beyond ~+0.15 \u2014 clearance is corroboration,     not the main signal. The triggers (subject / verb / id) should do the     primary work.\n  \u2022 Useful to keep this even at a small +0.05 default, because it gives     the LLM a way to express 'I see no contradicting signals' as a positive     rather than just the absence of a penalty.\n  \u2022 contradictory_attachment [penalty, default -0.10] (per-intent overrides: po_intake=-0.15, quote_to_order=-0.15) \u2014 What it does: drops confidence when the attachments are inconsistent with the chosen intent \u2014 quote_to_order intent without a quote reference in any attachment, PO PDF without line items, service_order without an asset list. Catches misrouted attachments and badly-scanned PDFs that confused the extractor.\n\nHow to optimize:\n  \u2022 Make MORE negative (e.g. -0.20) for po_intake / quote_to_order /     service_order \u2014 these MUST have consistent attachments to be     L4-eligible. The current overrides already bump these to -0.15.\n  \u2022 Keep at the default for inquiries / spam / out_of_scope \u2014 they     don't need attachment consistency.\n  \u2022 If you're seeing this fire on emails where the LLM simply missed     the reference (it WAS in the body but extraction missed it), the     fix isn't here \u2014 tune the extract_schema rule for that intent.\n  \u2022 multi_intent_ambiguity [penalty, default -0.20] \u2014 What it does: drops confidence when two or more canonical intents both score plausibly (e.g., body mentions both 'PO attached' and 'change order' for an existing order). Forces the pipeline to L2 / L3 HITL so a human can disambiguate.\n\nHow to optimize:\n  \u2022 Make this MORE negative (e.g. -0.30) if you're seeing the system     auto-process emails that should have routed to a CSR for clarification.\n  \u2022 Make it LESS negative (e.g. -0.10) if too many genuinely-clear emails     are being held in HITL because the LLM hedges on multi-intent.\n  \u2022 Pairs with no_multi_intent_ambiguity (the clearance reward). The two     should be mutually exclusive \u2014 if both fire on the same email, your     LLM is hedging.\n  \u2022 vague_or_generic_body [penalty, default -0.15] (per-intent overrides: general_inquiry=-0.05, out_of_scope=-0.05) \u2014 What it does: drops confidence when the body is too short / too generic to safely infer intent (e.g., 'please advise', 'see attached', three-line follow-ups). Forces longer, vaguer emails through human review.\n\nHow to optimize:\n  \u2022 Lower the magnitude (e.g. -0.05) for general_inquiry / out_of_scope \u2014     these intents are EXPECTED to have generic bodies, so penalizing them     makes too many of them go to HITL unnecessarily. The current overrides     already do this.\n  \u2022 Raise the magnitude (e.g. -0.25) for all other intents if you're seeing     L4 auto-processing of emails that turned out to be misclassified \u2014     forcing more HITL on short-body emails will catch those.\n  \u2022 The LLM decides 'matched' \u2014 define your bar in the rubric prompt by     putting examples in the rule's `examples` field.",
+  "user": "EMAIL THREAD (chronological \u2014 ROOT drives intent, replies are clarifying context):\n--- MESSAGE 1 [ROOT (primary intent source)] ---\nFrom: rfp.procurement@raytheon-elseg.com\nDate: 2026-05-13T17:39:51.630731\nSubject: [UC5-E1] Status check on WO-2026-0101\n\nHello, what is the current status on WO-2026-0101? Customer asked for an update. Thanks.\n\n--- MESSAGE 2 [REPLY 1] ---\nFrom: rfp.procurement@raytheon-elseg.com\nDate: 2026-05-13T17:53:21.513134\nSubject: [UC5-E1] Status check on WO-2026-0101\n\nHello, what is the current status on WO-2026-0101? Customer asked for an update. Thanks.\n\n--- MESSAGE 3 [REPLY 2] ---\nFrom: rfp.procurement@raytheon-elseg.com\nDate: 2026-05-14T05:29:44.194104\nSubject: [UC5-E1] Status check on WO-2026-0101\n\nHello,\n\nWhat is the current status on WO-2026-0101? Customer asked for an update \u2014 expected completion date and current activity would help. Thanks.\n\n--\nProcurement Team\nPurchasing & Operations\nRaytheon Aerospace - El Segundo Lab\n+1 555 0100\n\n----------------------------------------------------------------------\nThis message and any attachments may contain confidential information intended only for the addressee. If you are not the intended recipient, please notify the sender and delete this message.\n----------------------------------------------------------------------\n\nPRIMARY ENVELOPE OF THE LATEST MESSAGE THAT TRIGGERED THIS PIPELINE:\nFROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: [UC5-E1] Status check on WO-2026-0101\nLANGUAGE_HINT: en\n\nClassify the THREAD's intent (read from the ROOT message). The latest message may be a CSR confirmation or buyer follow-up that does not represent the original ask. Use the full chain to disambiguate. Output one JSON object only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "language_reasoning",
+      "intent",
+      "intent_confidence",
+      "intent_confidence_base",
+      "intent_confidence_breakdown",
+      "intent_reasoning",
+      "secondary_intents",
+      "spam",
+      "spam_reason",
+      "summary",
+      "track_hint"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ],
+        "description": "ISO 639-1 code from the canonical list"
+      },
+      "language_reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the language cue (script, vocabulary, idiom)"
+      },
+      "intent": {
+        "type": "string",
+        "enum": [
+          "po_intake",
+          "quote_to_order",
+          "trade_change_order",
+          "ssd_change_request",
+          "hold_release",
+          "delivery_change",
+          "service_order",
+          "wo_update_request",
+          "wo_status_inquiry",
+          "service_contract_request",
+          "general_inquiry",
+          "out_of_scope",
+          "spam",
+          "kso",
+          "collections",
+          "portal_admin",
+          "brazil_tax",
+          "undeliverable"
+        ],
+        "description": "Single canonical intent value \u2014 never an array, never invented"
+      },
+      "intent_confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Final confidence after applying the rubric, clamped to [0, 1]. MUST equal base + sum of matched deltas."
+      },
+      "intent_confidence_base": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "The starting prior from the KB rubric (typically 0.50). Echo it back as-is."
+      },
+      "intent_confidence_breakdown": {
+        "type": "array",
+        "description": "Per-rule breakdown of how the confidence was scored. EMIT ONE ENTRY FOR EVERY RUBRIC RULE \u2014 even rules that didn't match. Order: triggers first, then clearance, then penalties.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule_key",
+            "matched",
+            "delta",
+            "evidence"
+          ],
+          "properties": {
+            "rule_key": {
+              "type": "string",
+              "enum": [
+                "attachment_consistent",
+                "body_action_verb_match",
+                "referenced_id_present",
+                "subject_explicit_signal",
+                "no_multi_intent_ambiguity",
+                "contradictory_attachment",
+                "multi_intent_ambiguity",
+                "vague_or_generic_body"
+              ],
+              "description": "Identifier of the rubric rule being scored"
+            },
+            "matched": {
+              "type": "boolean",
+              "description": "True if the email satisfies this rule"
+            },
+            "delta": {
+              "type": "number",
+              "description": "Contribution to confidence \u2014 the rule's effective delta (0.0 when matched=false)"
+            },
+            "evidence": {
+              "type": "string",
+              "description": "Short quote from the email or attachment that justifies matched=true; empty string when matched=false"
+            }
+          }
+        }
+      },
+      "intent_reasoning": {
+        "type": "string",
+        "description": "1\u20132 sentences citing exact words from the email subject or body"
+      },
+      "secondary_intents": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "po_intake",
+            "quote_to_order",
+            "trade_change_order",
+            "ssd_change_request",
+            "hold_release",
+            "delivery_change",
+            "service_order",
+            "wo_update_request",
+            "wo_status_inquiry",
+            "service_contract_request",
+            "general_inquiry",
+            "out_of_scope",
+            "spam",
+            "kso",
+            "collections",
+            "portal_admin",
+            "brazil_tax",
+            "undeliverable"
+          ]
+        },
+        "description": "Other plausible intents beyond the primary; empty array if none"
+      },
+      "spam": {
+        "type": "boolean",
+        "description": "True iff the email is spam/phishing/promotional"
+      },
+      "spam_reason": {
+        "type": "string",
+        "description": "Why it's spam; empty string if not spam"
+      },
+      "summary": {
+        "type": "string",
+        "description": "One English sentence summarizing the primary request"
+      },
+      "track_hint": {
+        "type": "string",
+        "enum": [
+          "trade",
+          "som",
+          "service_contract",
+          "none"
+        ],
+        "description": "Workflow track: trade=orders/PO/holds; som=work-orders/cal/repair; service_contract=cal-plan/PM-plan; none=general/spam"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"language_reasoning\":\"The email is written in English (e.g., 'what is the current status').\",\"intent\":\"kso\",\"intent_confidence\":0.5,\"intent_confidence_base\":0.5,\"intent_confidence_breakdown\":[{\"rule_key\":\"attachment_consistent\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"body_action_verb_match\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"referenced_id_present\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"subject_explicit_signal\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"no_multi_intent_ambiguity\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"contradictory_attachment\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"multi_intent_ambiguity\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"},{\"rule_key\":\"vague_or_generic_body\",\"matched\":false,\"delta\":0.0,\"evidence\":\"\"}],\"intent_reasoning\":\"Sender domain indicates a government/defense customer (\\\"raytheon-elseg.com\\\"), which triggers KSO handling regardless of the request content.\",\"secondary_intents\":[\"wo_status_inquiry\"],\"spam\":false,\"spam_reason\":\"\",\"summary\":\"Defense customer requests the current status and expected completion date for WO-2026-0101.\",\"track_hint\":\"none\"}",
+  "parsed": {
+    "language": "en",
+    "language_reasoning": "The email is written in English (e.g., 'what is the current status').",
+    "intent": "kso",
+    "intent_confidence": 0.5,
+    "intent_confidence_base": 0.5,
+    "intent_confidence_breakdown": [
+      {
+        "rule_key": "attachment_consistent",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "body_action_verb_match",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "referenced_id_present",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "subject_explicit_signal",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "no_multi_intent_ambiguity",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "contradictory_attachment",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "multi_intent_ambiguity",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      },
+      {
+        "rule_key": "vague_or_generic_body",
+        "matched": false,
+        "delta": 0.0,
+        "evidence": ""
+      }
+    ],
+    "intent_reasoning": "Sender domain indicates a government/defense customer (\"raytheon-elseg.com\"), which triggers KSO handling regardless of the request content.",
+    "secondary_intents": [
+      "wo_status_inquiry"
+    ],
+    "spam": false,
+    "spam_reason": "",
+    "summary": "Defense customer requests the current status and expected completion date for WO-2026-0101.",
+    "track_hint": "none"
+  },
+  "error": null
+}

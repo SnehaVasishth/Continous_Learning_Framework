@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260507_154231_234976",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 839,
+  "user_prompt_chars": 817,
+  "raw_response_chars": 335,
+  "system": "You are a spam / phishing classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Given an email's subject, sender, and translated body, decide whether it is spam or phishing. Most legitimate inbound mail is from established customers asking about purchase orders, calibration, work orders, service contracts, or product information. Spam / phishing signals: unsolicited promo blasts, fake-discount language, urgency pressure ('act now', 'today only'), credential phishing ('verify your account'), payment-redirect scams ('our banking details have changed'), wire-fraud setups, and lookalike-domain senders. Return strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: Google <no-reply@accounts.google.com>\nSUBJECT: Security alert\nBODY (translated to English):\n[image: Google]\r\nApp password created to sign in to your account\r\n\r\n\r\norderinbox@leewayhertz.com\r\nIf you didn't generate this password for Application, someone might be\r\nusing your account. Check and secure your account now.\r\nCheck activity\r\n<https://accounts.google.com/AccountChooser?Email=orderinbox@leewayhertz.com&continue=https://myaccount.google.com/alert/nt/1778148650334?rfn%3D20%26rfnc%3D1%26eid%3D-4643087032193397348%26et%3D0>\r\nYou can also see security activity at\r\nhttps://myaccount.google.com/notifications\r\nYou received this email to let you know about important changes to your\r\nGoogle Account and services.\r\n\u00a9 2026 Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.9,\"reasoning\":\"Appears to be a standard Google security notification from no-reply@accounts.google.com about an app password creation; links point to accounts.google.com/myaccount.google.com with no request for credentials or payment info beyond normal account security action.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.9,
+    "reasoning": "Appears to be a standard Google security notification from no-reply@accounts.google.com about an app password creation; links point to accounts.google.com/myaccount.google.com with no request for credentials or payment info beyond normal account security action.",
+    "category": "legitimate"
+  },
+  "error": null
+}

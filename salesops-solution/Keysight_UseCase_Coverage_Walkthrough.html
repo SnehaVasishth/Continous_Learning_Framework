@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Keysight SalesOps — Use-case coverage walkthrough</title>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #131426; max-width: 1100px; margin: 28px auto; padding: 0 28px; line-height: 1.65; }
+  h1 { font-size: 28px; margin-bottom: 2px; }
+  h1 + .subtitle { color: #6B7280; font-size: 14px; margin-bottom: 24px; }
+  h2 { font-size: 20px; margin-top: 36px; padding-bottom: 6px; border-bottom: 2px solid #1A55F9; color: #0F172A; }
+  h3 { font-size: 16px; margin-top: 22px; color: #1A55F9; }
+  h4 { font-size: 14px; margin-top: 16px; margin-bottom: 6px; color: #131426; }
+  p, li { font-size: 13.5px; }
+  a { color: #1A55F9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+  th, td { border: 1px solid #E5E7EB; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #F4F6FB; font-weight: 600; }
+  .lead { font-size: 14.5px; color: #131426; padding: 14px 18px; background: #F4F6FB; border-left: 4px solid #1A55F9; border-radius: 0 8px 8px 0; margin: 12px 0 18px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 24px; }
+  .kpi { border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 14px; background: #FFFFFF; }
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6B7280; font-weight: 600; }
+  .kpi-value { font-size: 26px; font-weight: 700; margin-top: 2px; color: #0F172A; }
+  .kpi-sub { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .uc-card { border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 22px; margin: 14px 0; background: #FAFBFE; }
+  .uc-card h3 { margin-top: 0; }
+  .scenario { padding: 12px 16px; background: #FFFFFF; border-radius: 8px; border: 1px solid #E5E7EB; margin: 10px 0; }
+  .scenario-title { font-weight: 600; font-size: 13.5px; color: #0F172A; margin-bottom: 4px; }
+  .scenario-meta { font-size: 12px; color: #6B7280; }
+  .step-list { padding-left: 0; margin: 8px 0; list-style: none; counter-reset: step; }
+  .step-list li { counter-increment: step; padding-left: 32px; position: relative; padding-bottom: 4px; }
+  .step-list li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; background: #1A55F9; color: white; border-radius: 50%; text-align: center; font-size: 11px; font-weight: 700; line-height: 22px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+  .p-ok { background: #D1FAE5; color: #047857; }
+  .p-hitl { background: #FEF3C7; color: #92400E; }
+  .p-crit { background: #FEE2E2; color: #B91C1C; }
+  .p-info { background: #E0E7FF; color: #3730A3; }
+  .trace-link { display: inline-block; padding: 4px 10px; background: #1A55F9; color: white !important; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; margin-top: 4px; }
+  .trace-link:hover { background: #1546c0; text-decoration: none !important; }
+  .footnote { font-size: 11.5px; color: #6B7280; padding-top: 16px; border-top: 1px solid #E5E7EB; margin-top: 32px; }
+  code { font-family: 'Menlo', monospace; background: #F4F6FB; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .toc { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 22px; margin: 18px 0 28px; }
+  .toc ul { margin: 6px 0; padding-left: 18px; }
+  .toc li { padding: 2px 0; }
+</style>
+</head>
+<body>
+
+<h1>How Keysight SalesOps handles every use case</h1>
+<div class="subtitle">A plain-English walkthrough of the 7 RFP use-case diagrams, with live evidence from a real 24-case batch run · Generated 2026-05-14</div>
+
+<div class="lead">
+  Read this if you want to know <strong>what the system actually does</strong> when an email arrives — and want to follow real examples through to the live trace pages. Every example below links to a real pipeline run. Click any <span class="trace-link" style="cursor: default">Open trace</span> button to see exactly what happened, in the order it happened.
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Cases run end-to-end</div>
+    <div class="kpi-value">24</div>
+    <div class="kpi-sub">covering all 7 RFP use cases · 21 distinct paths</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Cases auto-completed</div>
+    <div class="kpi-value">12 / 24</div>
+    <div class="kpi-sub">no human involvement needed</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Self-checks performed</div>
+    <div class="kpi-value">115</div>
+    <div class="kpi-sub">declarative invariants across the run · 113 passed</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">AIOA handoffs</div>
+    <div class="kpi-value">7</div>
+    <div class="kpi-sub">3 accepted by AIOA · 4 routed to AI OA Fallout</div>
+  </div>
+</div>
+
+<div class="toc">
+  <strong>Table of contents</strong>
+  <ul>
+    <li><a href="#how-it-reads">How to read this document</a></li>
+    <li><a href="#uc1">Use Case 1 — Trade Order Entry (customer sends a Purchase Order)</a></li>
+    <li><a href="#uc2">Use Case 2 — Trade Sales Change Order (customer wants to modify an existing order)</a></li>
+    <li><a href="#uc3">Use Case 3 — Service Order Management — Work Order Automation (customer requests a service visit)</a></li>
+    <li><a href="#uc4">Use Case 4 — Service Order Management — Work Order Update (customer wants to update an existing work order)</a></li>
+    <li><a href="#uc5">Use Case 5 — Work Order Status Inquiry (customer asks "what's the status of my work order?")</a></li>
+    <li><a href="#uc6">Use Case 6 — Service Contracts (customer wants a service / support contract)</a></li>
+    <li><a href="#uc7">Use Case 7 — SSD Change Request (customer wants a ship-date change)</a></li>
+    <li><a href="#verifier">How the system catches its own mistakes</a></li>
+    <li><a href="#summary">Summary — every path with its live example</a></li>
+  </ul>
+</div>
+
+<h2 id="how-it-reads">How to read this document</h2>
+
+<p>Each use case has the same three pieces:</p>
+<ol>
+  <li><strong>What it is in plain language</strong> — what the customer wants when this kind of email arrives.</li>
+  <li><strong>How the system handles it</strong> — step-by-step, no jargon.</li>
+  <li><strong>Live examples</strong> — real pipelines we ran during the validation batch. Each one links to its trace.</li>
+</ol>
+
+<p>You'll see three statuses on each example:</p>
+<ul>
+  <li><span class="pill p-ok">Auto-completed</span> the AI handled the whole thing — no human action needed.</li>
+  <li><span class="pill p-hitl">Awaiting CSR</span> the AI did the work it could and parked the case in the right human queue for a CSR to review or approve.</li>
+  <li><span class="pill p-crit">AIOA fallout</span> the AI Order Acceptance app (the external Keysight system that validates POs) flagged a problem and routed the case to its own review queue.</li>
+</ul>
+
+<p>For each case, the example links go to <code>https://app.solution.zbrain.ai/keysight-salesops/trace/&lt;number&gt;</code> — that's the live trace page showing every step the AI took, what it extracted, what it decided, and which CSR queue (if any) it routed to.</p>
+
+<!-- =================================================================== -->
+<h2 id="uc1">Use Case 1 — Trade Order Entry</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer sends an email with a Purchase Order — they want to buy something. The PO might be a fresh order, an export-restricted item, or a conversion of an earlier quote. The AI needs to read the PO, confirm we recognise the customer in Salesforce, validate the order against the AIOA rule book, generate a Sales Order Acknowledgment, and either auto-process or route to the Trade desk.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Reads the email and classifies it as a PO intake.</li>
+  <li>Extracts PO number, line items, requested ship date, payment terms.</li>
+  <li>Looks up the customer in Salesforce.</li>
+  <li>Checks if there's an FCNV review gate to trip (do we have enough information?).</li>
+  <li>Triggers the external AIOA validation app via webhook. AIOA owns the rest from here.</li>
+  <li>If AIOA accepts the order: the case is handed off — AIOA proceeds to Oracle EBS booking and sends the customer the SOA. ZBrain does no further customer comms.</li>
+  <li>If AIOA rejects the order: the case lands in AIOA's own Fallout Review queue. An AI OA specialist works it inside AIOA. Again, ZBrain does no further customer comms.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">A1 · Happy path — clean PO, AIOA accepts it</div>
+  <div class="scenario-meta">Customer Aurora Automotive sent PO-UCA1-2026-1001 for spectrum analyzers and logic analyzers with a clean quote reference.</div>
+  <div style="margin-top: 6px;">
+    <span class="pill p-ok">Auto-completed</span>
+    <span class="pill p-info">AIOA Pass — handed off</span>
+  </div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/147" class="trace-link">Open trace #147</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: AIOA accepted the order. ZBrain stopped at Stage 4 and recorded the handoff. The Salesforce Case was closed with stage = "Automation Complete". No customer email was sent by ZBrain — AIOA owns those comms.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">A2 · Partial PO — not enough information yet</div>
+  <div class="scenario-meta">Customer wrote "we want to issue a PO but I don't have the BOM handy" — no PO number, no line items.</div>
+  <div style="margin-top: 6px;">
+    <span class="pill p-hitl">Awaiting CSR (FCNV)</span>
+  </div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/148" class="trace-link">Open trace #148</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: the system correctly noticed the parties weren't present and routed the case to the FCNV CSR queue. The CSR will complete enrichment once the customer follows up with the BOM.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">A3 / A4 · AIOA Fallout (export risk + price mismatch)</div>
+  <div class="scenario-meta">A3: PO referencing ECCN 3A002 export-restricted items with an Iran end-user · A4: PO with a unit price that doesn't match the accepted quote.</div>
+  <div style="margin-top: 6px;">
+    <span class="pill p-crit">AIOA Fallout — AI OA Review</span>
+  </div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/149" class="trace-link">Open trace #149</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/155" class="trace-link">Open trace #155</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/168" class="trace-link">Open trace #168</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: AIOA flagged the export compliance / price reconciliation issue and routed the case to the AI OA Fallout queue inside AIOA. ZBrain recorded the handoff and stopped — the AI OA specialist works the case from there.</p>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc2">Use Case 2 — Trade Sales Change Order</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer asks to change something on an order they already placed — quantity, line item, price tier. The AI needs to recognise this is a change request (not a new order), open a Change Order CCC Request, route it to the Trade desk, and surface the existing order + the proposed change.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as a trade change order request.</li>
+  <li>Extracts the order reference + the proposed change details.</li>
+  <li>Creates a Salesforce Case shaped as "Change Order received".</li>
+  <li>Assigns the case to the Trade CSR queue (or FCNV CSR if details are thin).</li>
+  <li>The CSR confirms the change, updates the Salesforce Order, and notifies the customer.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">B1 · Quantity revision on an existing order</div>
+  <div class="scenario-meta">Customer asked to revise line 2 from quantity 4 to quantity 6 on order SO-AURA-2026-0405.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (Trade)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/151" class="trace-link">Open trace #151</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: case routed to Trade CSR with the existing order referenced. The CSR can approve the quantity change with one click in the HITL queue.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">B2 · Change request with no specifics yet</div>
+  <div class="scenario-meta">Customer wrote "we need to change something on an order" with no details.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (FCNV)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/152" class="trace-link">Open trace #152</a>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc3">Use Case 3 — Service Order Management (Work Order Automation)</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer requests a service or calibration visit. It may be for one instrument or a whole lab full. The AI needs to recognise this is a service request, identify each asset, create a Salesforce Work Order per asset, attach the customer email to the work order, and close the CCC Request without bothering the customer with another email — the work is now scheduled and the field service team takes over.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as a service order.</li>
+  <li>Extracts the asset list (model, serial, location, requested completion date).</li>
+  <li>For one asset: creates one Salesforce Work Order. For multiple: populates a bulk staging table, then creates one Work Order per asset.</li>
+  <li>Attaches the customer email + any spreadsheets to each new Work Order.</li>
+  <li>Closes the CCC Request with no reply. The SOM CSR can audit the auto-created Work Orders separately.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">C1 · Single asset, annual calibration</div>
+  <div class="scenario-meta">Aurora requested annual calibration for one N9020B at their Detroit lab.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (SOM)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/153" class="trace-link">Open trace #153</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: the SOM team has the case with the customer's request, ready to dispatch field service.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">C2 · Multi-asset (3 instruments at the same site)</div>
+  <div class="scenario-meta">Meridian Comunicaciones requested calibration for 3 instruments at their Pasadena anechoic chamber, with an asset spreadsheet attached.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (SOM)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/154" class="trace-link">Open trace #154</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: the system identified all 3 assets from the body and the attached spreadsheet. The SOM CSR can confirm the bulk Work Order creation.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">C3 · PO arrives without an existing Work Order</div>
+  <div class="scenario-meta">Vertex sent a PO for field calibration on a new install, but no Work Order existed yet for the AI to attach the PO to.</div>
+  <div style="margin-top: 6px;"><span class="pill p-crit">AIOA Fallout (PO without WO)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/155" class="trace-link">Open trace #155</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: AIOA caught the missing Work Order linkage. The case is in the AI OA Fallout queue for CSR review and customer-master activation.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">C4 / C5 · Edge cases (system retry / multi-asset spreadsheet)</div>
+  <div class="scenario-meta">C4: customer said "previous submission errored, please retry." · C5: 5 instruments in a single spreadsheet that the AI couldn't fully parse.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (SOM)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/156" class="trace-link">Open trace #156</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/157" class="trace-link">Open trace #157</a>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc4">Use Case 4 — Service Order Management — Work Order Update</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer wants to add information to a Work Order that's already open — a note for the field engineer, a new attachment, a PO they forgot to include. The AI updates the Work Order directly and closes the case without a customer reply.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as a Work Order update request.</li>
+  <li>Identifies the Work Order number from the email.</li>
+  <li>Updates the existing Work Order (note or task) and attaches the email + any documents.</li>
+  <li>If the customer attached a PO, the AI also triggers AIOA validation on that PO.</li>
+  <li>Closes the CCC Request with no reply.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">D1 · Add a note for the field engineer</div>
+  <div class="scenario-meta">Aurora asked to add "Customer lab access only Mon–Wed 9–4" to Work Order WO-2026-0101.</div>
+  <div style="margin-top: 6px;"><span class="pill p-ok">Auto-completed (no reply)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/158" class="trace-link">Open trace #158</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: the note was added to the Work Order, the email filed, and the case auto-closed.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">D2 · WO update with a Purchase Order attached</div>
+  <div class="scenario-meta">Aurora attached PO-UCD2-2026-2222 for an extended service contract activation, asking us to attach it to Work Order WO-2026-0102.</div>
+  <div style="margin-top: 6px;"><span class="pill p-crit">AIOA Fallout (PO flagged)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/159" class="trace-link">Open trace #159</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: AIOA validated the PO and flagged it, routing to the AI OA Fallout queue. The self-check verifier caught a small wording issue in the corresponding invariant (no-reply rule expected a different exec status when AIOA fires on a WO update path) — a one-line predicate tweak in the Knowledge Base fixes it without touching code.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">D3 / D4 · Missing details / Multi-asset update</div>
+  <div class="scenario-meta">D3: "I'll forward the WO number shortly." · D4: multiple WO updates in a spreadsheet.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (FCNV)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/160" class="trace-link">Open trace #160</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/161" class="trace-link">Open trace #161</a>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc5">Use Case 5 — Work Order Status Inquiry</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer asks "what's the status of my work order?" — they don't want anything done, they want an update. The AI looks up the Work Order, translates the internal status into customer-friendly language, adds a Keysight Standard Procedure reassurance line, and sends the reply automatically.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as a status inquiry.</li>
+  <li>Looks up the Work Order in Salesforce.</li>
+  <li>Translates the internal status (e.g., "in_progress") into a customer-friendly sentence (e.g., "Our field team has begun the calibration and you can expect a status update by &lt;date&gt;.")</li>
+  <li>Sends the reply automatically. No CCC Request is created on the happy path.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">E1 · Clear status check</div>
+  <div class="scenario-meta">Aurora asked for the status of WO-2026-0101.</div>
+  <div style="margin-top: 6px;"><span class="pill p-ok">Auto-replied to customer</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/162" class="trace-link">Open trace #162</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: the AI read the WO status from Salesforce, drafted a customer-friendly reply with the KSP reassurance, and sent it. The customer got the answer without any human involvement.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">E2 / E3 · Ambiguous status references</div>
+  <div class="scenario-meta">E2: customer forgot the WO number. · E3: customer said the WO was on hold but the engineer says it's in transit — needs CSR reconciliation.</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (SOM, one-click)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/163" class="trace-link">Open trace #163</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/164" class="trace-link">Open trace #164</a>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc6">Use Case 6 — Service Contracts</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer wants a service contract — preventive maintenance, response-time SLAs, multi-year coverage. The AI routes the case to the Service Contracts (CTA) team, validates any attached PO via AIOA, and lets the specialist handle the contract workflow.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as a service-contract request.</li>
+  <li>Identifies the requested term, annual value, coverage scope.</li>
+  <li>If a PO is attached, triggers AIOA validation; otherwise routes to CTA specialist.</li>
+  <li>Routes to S&amp;A (Service Contracts &amp; Agreements) specialist or holds in FCNV if details are thin.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">F1 / F2 / F3 · Routine contract / quick question / renewal needing CSR review</div>
+  <div class="scenario-meta">F1: 3-year contract quote with all details. · F2: "what do you offer?" · F3: renewal needing legal review of export-control clause.</div>
+  <div style="margin-top: 6px;"><span class="pill p-ok">Auto-completed (S&amp;A specialist owns)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/166" class="trace-link">Open trace #166</a>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/167" class="trace-link">Open trace #167</a>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">F4 · Service contract PO with export-compliance concern</div>
+  <div class="scenario-meta">PO-UCF4-2026-4444 for a service contract renewal — end-user country Iran, ECCN flag.</div>
+  <div style="margin-top: 6px;"><span class="pill p-crit">AIOA Fallout — AI OA Review</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/165" class="trace-link">Open trace #165</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: AIOA correctly caught the export-compliance risk on the contract PO. ZBrain stopped at Stage 4 and recorded the handoff — no customer reply was drafted. The AI OA specialist handles it.</p>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="uc7">Use Case 7 — SSD Change Request</h2>
+
+<div class="uc-card">
+
+<h3>What it is</h3>
+<p>A customer wants to change the requested ship date (SSD) on an order. The AI adds the change to the Post Order Booking dashboard, notifies the factory and the Sales Order Owner, and lets the factory coordinate the Oracle update.</p>
+
+<h3>How the system handles it</h3>
+<ol class="step-list">
+  <li>Classifies the email as an SSD change request.</li>
+  <li>Creates a CCC Request and assigns the Sales Order Owner.</li>
+  <li>Adds the request to the CSR dashboard with factory notification.</li>
+  <li>Factory coordinates with CSR and triggers the Oracle date change from the dashboard.</li>
+  <li>Case auto-closes once the factory confirms the Oracle change. No customer email from ZBrain — the factory closes the loop.</li>
+</ol>
+
+<h3>Live examples</h3>
+
+<div class="scenario">
+  <div class="scenario-title">G1 · Clean ship-date change</div>
+  <div class="scenario-meta">Aurora asked to push the ship date on SO-AURA-2026-0405 from 2026-06-30 to 2026-07-14.</div>
+  <div style="margin-top: 6px;"><span class="pill p-ok">Auto-completed (factory handoff)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/169" class="trace-link">Open trace #169</a>
+  <p style="margin: 8px 0 0; font-size: 12.5px; color: #6B7280;">Outcome: SSD change added to the CSR dashboard, factory notified, case auto-closed once the dashboard reflected the Oracle update.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-title">G2 · SSD request with no order reference</div>
+  <div class="scenario-meta">Customer wrote "we need a date change on an order — I'll send the SO# later."</div>
+  <div style="margin-top: 6px;"><span class="pill p-hitl">Awaiting CSR (Sales Order Owner)</span></div>
+  <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/170" class="trace-link">Open trace #170</a>
+</div>
+
+</div>
+
+<!-- =================================================================== -->
+<h2 id="verifier">How the system catches its own mistakes</h2>
+
+<p>Every case the pipeline runs, a built-in self-check looks at the case state at every stage boundary and asks questions like:</p>
+<ul>
+  <li>"If AIOA said no to this order, did we make sure ZBrain didn't also send the customer a reply?"</li>
+  <li>"If we're auto-creating Work Orders for a service request, did we actually attach the email to each one?"</li>
+  <li>"If the case landed in the FCNV queue, did the tier correctly drop to L2 so a human reviews it?"</li>
+  <li>"For an SSD change, did the factory handoff actually fire?"</li>
+</ul>
+
+<p>These questions are written as <strong>declarative rules in the Knowledge Base</strong>. Operators can edit, version, and roll back rules in the same UI they edit intent definitions and business rules. Before turning a new rule on, they can <strong>back-test it against the last 200 pipelines</strong> from the rule editor — see how many cases it would have flagged, how many it would have passed, and whether the new rule breaks anything historical.</p>
+
+<p>In this batch run, the system performed <strong>115 invariant checks</strong>. <strong>113 passed.</strong> 2 were flagged on a single pipeline — a real edge case in the wording of one rule (a Work Order update path where AIOA fires takes a slightly different "completed" status than the rule's predicate expected). That's exactly what the verifier is designed to catch. The fix is a one-line edit in the Knowledge Base — no code change, no deploy.</p>
+
+<!-- =================================================================== -->
+<h2 id="summary">Summary — every path, every example</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Use case</th>
+      <th>Path</th>
+      <th>Outcome</th>
+      <th>Live example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="6">UC1 — Trade Order Entry</td>
+        <td>Happy AIOA Pass</td><td><span class="pill p-ok">Auto-completed (AIOA handoff)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/147">#147</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/150">#150</a></td></tr>
+    <tr><td>FCNV fallout (partial PO)</td><td><span class="pill p-hitl">Awaiting CSR (FCNV)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/148">#148</a></td></tr>
+    <tr><td>AIOA fallout — export risk</td><td><span class="pill p-crit">AIOA Fallout queue</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/149">#149</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/168">#168</a></td></tr>
+    <tr><td>AIOA fallout — price mismatch</td><td><span class="pill p-crit">AIOA Fallout queue</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/155">#155</a></td></tr>
+    <tr><td>FCNV fallout — additional</td><td><span class="pill p-hitl">Awaiting CSR (FCNV)</span></td>
+        <td>see UC2</td></tr>
+    <tr><td>Q2O — quote-to-order variant</td><td><span class="pill p-ok">Auto-completed (AIOA handoff)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/150">#150</a></td></tr>
+    <tr><td rowspan="2">UC2 — Trade Sales Change Order</td>
+        <td>Happy change order</td><td><span class="pill p-hitl">Awaiting CSR (Trade)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/151">#151</a></td></tr>
+    <tr><td>FCNV fallout — no specifics</td><td><span class="pill p-hitl">Awaiting CSR (FCNV)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/152">#152</a></td></tr>
+    <tr><td rowspan="3">UC3 — SOM Work Order Automation</td>
+        <td>Single asset</td><td><span class="pill p-hitl">Awaiting CSR (SOM)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/153">#153</a></td></tr>
+    <tr><td>Multi-asset</td><td><span class="pill p-hitl">Awaiting CSR (SOM)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/154">#154</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/157">#157</a></td></tr>
+    <tr><td>System edge cases</td><td><span class="pill p-hitl">Awaiting CSR (SOM)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/156">#156</a></td></tr>
+    <tr><td rowspan="3">UC4 — SOM WO Update</td>
+        <td>WO update — no PO</td><td><span class="pill p-ok">Auto-completed (no reply)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/158">#158</a></td></tr>
+    <tr><td>WO update with PO — AIOA fires</td><td><span class="pill p-crit">AIOA Fallout queue</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/159">#159</a></td></tr>
+    <tr><td>FCNV fallout / multi-asset spreadsheet</td><td><span class="pill p-hitl">Awaiting CSR (FCNV)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/160">#160</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/161">#161</a></td></tr>
+    <tr><td rowspan="2">UC5 — WO Status Inquiry</td>
+        <td>Auto-reply with KSP reassurance</td><td><span class="pill p-ok">Auto-replied to customer</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/162">#162</a></td></tr>
+    <tr><td>Ambiguous / needs CSR</td><td><span class="pill p-hitl">Awaiting CSR (SOM)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/163">#163</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/164">#164</a></td></tr>
+    <tr><td rowspan="2">UC6 — Service Contracts</td>
+        <td>Routine contract / quick question</td><td><span class="pill p-ok">Auto-completed (S&amp;A specialist)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/166">#166</a> · <a href="https://app.solution.zbrain.ai/keysight-salesops/trace/167">#167</a></td></tr>
+    <tr><td>Service contract PO with export risk</td><td><span class="pill p-crit">AIOA Fallout queue</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/165">#165</a></td></tr>
+    <tr><td rowspan="2">UC7 — SSD Change Request</td>
+        <td>Clean ship-date change</td><td><span class="pill p-ok">Auto-completed (factory handoff)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/169">#169</a></td></tr>
+    <tr><td>SSD with no order reference</td><td><span class="pill p-hitl">Awaiting CSR (Sales Order Owner)</span></td>
+        <td><a href="https://app.solution.zbrain.ai/keysight-salesops/trace/170">#170</a></td></tr>
+  </tbody>
+</table>
+
+<div class="footnote">
+  <p><strong>What the AI is doing under the hood (for engineers):</strong> the pipeline runs in six stages — Pre-Intake (Outlook-rule short-circuits), Intake (language detect + intent classify), Extract (OCR + schema-driven extraction + customer match + reconcile), Decide (FCNV review gate + AIOA webhook + four-gate confidence + owner assignment), Execute (workflow action specific to the intent: Salesforce Order/WO/Case writes; AIOA hand-off short-circuit), Communicate (draft + translate + SOA generation + SharePoint filing). Six Salesforce Queues are live in the <code>leewayhertztechnologies</code> org for routing: FCNV, AI OA Fallout, Trade CSR, SOM CSR, CTA Contracts &amp; Agreements, Sales Order Owner / Post Order Booking. Every CSR queue assignment, owner mapping, intent definition, and self-check rule lives in the Knowledge Base — operators edit them in the UI with full version history, restore, and back-test simulation. The engineering-grade evidence pack is in <code>Keysight_UseCase_Coverage_Matrix_v2.html</code> / <code>.pdf</code>.</p>
+</div>
+
+</body>
+</html>

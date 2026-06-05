@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260508_171840_144119",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1742,
+  "user_prompt_chars": 667,
+  "raw_response_chars": 1174,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.",
+  "user": "SOURCE_LANGUAGE_HINT: ja\nTEXT:\n\u685c\u30bb\u30df\u30b3\u30f3\u30c0\u30af\u30bf\u30fc\n\u3054\u6ce8\u6587\u3054\u62c5\u5f53\u8005\u69d8\n\n\u3044\u3064\u3082Keysight\u3092\u3054\u5229\u7528\u3044\u305f\u3060\u304d\u3001\u8aa0\u306b\u3042\u308a\u304c\u3068\u3046\u3054\u3056\u3044\u307e\u3059\u3002\n\n\u3053\u306e\u5ea6\u306f\u3001\u30aa\u30f3\u30b5\u30a4\u30c8\u6821\u6b63\u306e\u3054\u4f9d\u983c\u3092\u8cdc\u308a\u3042\u308a\u304c\u3068\u3046\u3054\u3056\u3044\u307e\u3057\u305f\u3002\u4ee5\u4e0b\u306e\u901a\u308a\u30013\u53f0\u306e\u88c5\u7f6e\u306b\u3064\u3044\u3066\u4f5c\u696d\u30aa\u30fc\u30c0\u30fc\u3092\u767a\u884c\u3044\u305f\u3057\u307e\u3057\u305f\u306e\u3067\u3054\u5831\u544a\u7533\u3057\u4e0a\u3052\u307e\u3059\u3002\n\n\u25a0 \u767a\u884c\u6e08\u307f\u4f5c\u696d\u30aa\u30fc\u30c0\u30fc\n\u30fbWO-SAKURA-SEM-13905 \u2014 KS-SMU-989545 (KS-SMU)\n\u30fbWO-SAKURA-SEM-22280 \u2014 KS-SCOPE-666390 (KS-SCOPE)\n\u30fbWO-SAKURA-SEM-38657 \u2014 KS-SA-260227 (KS-SA)\n\n\u25a0 \u30b5\u30fc\u30d3\u30b9\u5185\u5bb9\n\u30fb\u30b5\u30fc\u30d3\u30b9\u7a2e\u5225: \u30aa\u30f3\u30b5\u30a4\u30c8\u6821\u6b63 (as-found / as-left \u4e21\u65b9)\n\u30fb\u53c2\u7167\u898f\u683c: ANSI/NCSL Z540.3\n\u30fb\u5b9f\u65bd\u5834\u6240: Sakura Semiconductor \u30e1\u30a4\u30f3\u30e9\u30dc (3\u968e)\n\u30fb\u3054\u5e0c\u671b\u5b8c\u4e86\u65e5: 2026\u5e745\u670831\u65e5\n\n\u5404\u4f5c\u696d\u30aa\u30fc\u30c0\u30fc\u306f\u73fe\u5728\u300copen(\u53d7\u4ed8\u6e08)\u300d\u306e\u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u5f0a\u793e\u30b7\u30b9\u30c6\u30e0\u306b\u767b\u9332\u3055\u308c\u3066\u304a\u308a\u307e\u3059\u3002Keysight\u6a19\u6e96\u624b\u9806 (KSP) \u306b\u57fa\u3065\u304d\u30011\u55b6\u696d\u65e5\u4ee5\u5185\u306b\u62c5\u5f53\u30c1\u30fc\u30e0\u3078\u30a2\u30b5\u30a4\u30f3\u3055\u308c\u3001\u305d\u306e\u5f8c\u3001\u65e5\u7a0b\u30fb\u30a2\u30af\u30bb\u30b9\u624b\u7d9a\u304d\u306e\u4e8b\u524d\u3054\u9023\u7d61\u3092\u542b\u3081\u3066\u62c5\u5f53\u8005\u3088\u308a\u3054\u9023\u7d61\u3092\u5dee\u3057\u4e0a\u3052\u307e\u3059\u3002\n\n\u3054\u4e0d\u660e\u306a\u70b9\u304c\u3054\u3056\u3044\u307e\u3057\u305f\u3089\u3001\u672c\u30e1\u30fc\u30eb\u306b\u3054\u8fd4\u4fe1\u304f\u3060\u3055\u3044\u3002\n\n\u4f55\u5352\u3088\u308d\u3057\u304f\u304a\u9858\u3044\u7533\u3057\u4e0a\u3052\u307e\u3059\u3002\n\nKeysight SalesOps \u30c1\u30fc\u30e0\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"Sakura Semiconductor\\nTo the person in charge of ordering,\\n\\nThank you very much for your continued patronage of Keysight.\\n\\nThank you for your request for onsite calibration. We would like to inform you that we have issued work orders for the following three instruments, as detailed below.\\n\\n\u25a0 Issued work orders\\n\u2022 WO-SAKURA-SEM-13905 \u2014 KS-SMU-989545 (KS-SMU)\\n\u2022 WO-SAKURA-SEM-22280 \u2014 KS-SCOPE-666390 (KS-SCOPE)\\n\u2022 WO-SAKURA-SEM-38657 \u2014 KS-SA-260227 (KS-SA)\\n\\n\u25a0 Service details\\n\u2022 Service type: Onsite calibration (both as-found / as-left)\\n\u2022 Reference standard: ANSI/NCSL Z540.3\\n\u2022 Location: Sakura Semiconductor Main Lab (3rd floor)\\n\u2022 Requested completion date: May 31, 2026\\n\\nEach work order is currently registered in our system with the status \u201copen (received).\u201d In accordance with Keysight standard procedures (KSP), it will be assigned to the responsible team within one business day. After that, the person in charge will contact you, including advance notice regarding scheduling and access procedures.\\n\\nIf you have any questions, please reply to this email.\\n\\nSincerely,\\n\\nKeysight SalesOps Team\",\"source_language\":\"ja\",\"notes\":\"\"}",
+  "parsed": {
+    "translated_text": "Sakura Semiconductor\nTo the person in charge of ordering,\n\nThank you very much for your continued patronage of Keysight.\n\nThank you for your request for onsite calibration. We would like to inform you that we have issued work orders for the following three instruments, as detailed below.\n\n\u25a0 Issued work orders\n\u2022 WO-SAKURA-SEM-13905 \u2014 KS-SMU-989545 (KS-SMU)\n\u2022 WO-SAKURA-SEM-22280 \u2014 KS-SCOPE-666390 (KS-SCOPE)\n\u2022 WO-SAKURA-SEM-38657 \u2014 KS-SA-260227 (KS-SA)\n\n\u25a0 Service details\n\u2022 Service type: Onsite calibration (both as-found / as-left)\n\u2022 Reference standard: ANSI/NCSL Z540.3\n\u2022 Location: Sakura Semiconductor Main Lab (3rd floor)\n\u2022 Requested completion date: May 31, 2026\n\nEach work order is currently registered in our system with the status \u201copen (received).\u201d In accordance with Keysight standard procedures (KSP), it will be assigned to the responsible team within one business day. After that, the person in charge will contact you, including advance notice regarding scheduling and access procedures.\n\nIf you have any questions, please reply to this email.\n\nSincerely,\n\nKeysight SalesOps Team",
+    "source_language": "ja",
+    "notes": ""
+  },
+  "error": null
+}

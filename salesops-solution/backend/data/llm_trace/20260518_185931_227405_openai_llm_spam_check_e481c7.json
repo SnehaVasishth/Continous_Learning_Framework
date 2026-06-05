@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260518_185931_227405",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 2827,
+  "user_prompt_chars": 420,
+  "raw_response_chars": 293,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email \u2014 not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these \u2014 the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nCRITICAL \u2014 DOMAIN UNFAMILIARITY ALONE IS NOT SPAM. Keysight is a B2B vendor with thousands of enterprise customers worldwide. Most legitimate sender domains will be UNFAMILIAR to you (raytheon-elseg.com, tesserasemiconductor.com.tw, auroraauto.com, meridiancomms.es, sakurasemi.co.jp, nordstern-telecom.de, etc.). These look unfamiliar but they are real customers' actual corporate domains. \n\nWhen the BODY CONTENT is a coherent customer business request \u2014 purchase order, quote-to-order conversion, ship-date change, hold release, calibration / repair / work-order request, service contract / renewal / cal-plan / PM-plan inquiry, or status question on an existing order/WO \u2014 the email is NOT spam, regardless of how unfamiliar the sender's domain looks to you. Set is_spam=False with category='legitimate' in those cases. \n\nReal lookalike-domain phishing requires BOTH (a) a domain that's clearly impersonating a known trusted brand (e.g., faux-keysight.com mimicking keysight.com, suspicious capital letters or homoglyphs, IP literal in URL) AND (b) a phishing pattern in the BODY (credential prompt, banking details change, urgent action click, executive-impersonation wire request, fake-invoice attachment from an unfamiliar sender). One signal alone \u2014 domain unfamiliarity OR business urgency \u2014 is NEVER sufficient. Both must be present. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: [UC3-C2] Service request \u2014 multi-asset calibration (3 instruments)\nBODY (translated to English):\nPlease schedule calibration for the following at our Pasadena anechoic chamber by 2026-07-15:\n - Model E5071C Serial KEY-2202-0011\n - Model N5247B Serial KEY-2202-0034\n - Model 8975A  Serial KEY-2202-0099\nSame site for all three. Field service preferred.\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.96,\"reasoning\":\"Coherent customer business request to schedule calibration for specific instrument models/serials with a target date and site details; no credential prompts, payment/bank change, suspicious links, or impersonation cues.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.96,
+    "reasoning": "Coherent customer business request to schedule calibration for specific instrument models/serials with a target date and site details; no credential prompts, payment/bank change, suspicious links, or impersonation cues.",
+    "category": "legitimate"
+  },
+  "error": null
+}

@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260508_084532_434471",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1481,
+  "user_prompt_chars": 2691,
+  "raw_response_chars": 267,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email \u2014 not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these \u2014 the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: Rituraj Shrivastava <rituraj@leewayhertz.com>\nSUBJECT: Fwd: Work faster with AI built into Google Workspace\nBODY (translated to English):\nRegards,\r\nRituraj | VP of Product\r\nLeewayHertz, A Hackett Group Company\r\nhttps://calendly.com/riturajs/\r\n\r\n\r\n---------- Forwarded message ---------\r\nFrom: Google Workspace x YourStory <Info@yourstory.com>\r\nDate: Thu, May 7, 2026 at 4:32\u202fPM\r\nSubject: Work faster with AI built into Google Workspace\r\nTo: <rituraj@leewayhertz.com>\r\n\r\n\r\nSmarter emails, docs, and collaboration \u2014 now powered by Gemini AI\r\n\r\n07 May 2026 View in Browser\r\n<https://api-esp-ap.piano.io/story/estored/161/50275/632687/9508145/290472/vib-cmovdmw2z00q401kj7dfb6hpq?sig=11b5e828eb527ccbd77b4c79917d513c9d3db7d578a7a369693409fab4cde87f&order=0>\r\n\r\n\r\n<https://api-esp-ap.piano.io/-c/161/50275/632693/9508145/290472/5db9e6dbe51a9837552527ed3c15bd44/-1/-1?attrs=0&order=0>\r\n\r\n\r\nHello ,\r\n\r\n\r\n\r\nWork slows down in small, often invisible ways.\r\n\r\n\r\n\r\nNot because teams lack capability, but because too much time is spent\r\nnavigating emails, coordinating schedules, and piecing together information\r\nacross tools.\r\nOver time, that friction adds up.\r\n\r\n\r\n\r\nGoogle Workspace with Gemini helps reduce that friction by bringing AI\r\ndirectly into the tools your team already uses.\r\n\r\n\r\n\r\n*With Google Workspace, your team can:*\r\n\r\n   - Quickly understand long email threads with AI-powered summaries\r\n   - Draft responses with context and keep conversations moving\r\n   - Organise ideas, analyse inputs, and create structured outputs faster\r\n   - Let clients and partners book time directly into your calendar\r\n\r\nAll of this happens within one workspace without adding new tools or\r\ncomplexity.\r\n\r\n\r\n\r\nGoogle Workspace already brings your team together. With Gemini, it makes\r\neveryday work more efficient, quietly, and where it matters most.\r\n\r\n\r\n\r\n*New customers can try Google Workspace free for 14 days.*\r\n\r\nStart your free trial\r\n<https://api-esp-ap.piano.io/tracker/dirsub/632696/9508145/e6be41e46e3094a0345e70f39aca3306db6573faf6b2df20fa8be307ba1216d0?order=0>\r\n\r\n\r\nBest regards,\r\nTeam YourStory\r\n\r\n<https://api-esp-ap.piano.io/publicpages/faq-and-feedback/en?userData=.mftd3r7TasXg7IFvgwy0il8zsfzu6NvtJPY8vxngixl6fG9Id6UeZ0WHItdHMRcGfoXiZvI9lfTe1kbce9jl.n1olTzmAup1pzELnEsW2IjvMx6T72qYFq.zVRxgq.nMw9c.fyH&order=0>\r\nUnsubscribe\r\n<https://api-esp-ap.piano.io/tracker/listsub/publicpages/unsub/campaign/50275/user/9508145/sb/290472?sig=435b7fc61566aae6d6f8710a9b6c551882b938666c8d01852d25b4c3fd83b25e&order=1>\r\n<https://api-esp-ap.piano.io/-c/161/50275/632689/9508145/290472/7c008ff75467a1f683e107ec04193451/-1/-1?attrs=0&order=2>\r\n\r\nSent with \u2764 from Team YourStory\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.86,\"reasoning\":\"Forwarded marketing newsletter about Google Workspace/Gemini from a known publisher (YourStory) with standard unsubscribe links; no credential-harvest, payment redirect, or impersonation cues.\",\"category\":\"promotional\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.86,
+    "reasoning": "Forwarded marketing newsletter about Google Workspace/Gemini from a known publisher (YourStory) with standard unsubscribe links; no credential-harvest, payment redirect, or impersonation cues.",
+    "category": "promotional"
+  },
+  "error": null
+}

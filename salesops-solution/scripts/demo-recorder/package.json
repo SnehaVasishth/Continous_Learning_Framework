@@ -1,0 +1,20 @@
+{
+  "name": "salesops-demo-recorder",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Records a narrated 60s walkthrough of the SalesOps main app + governance app.",
+  "scripts": {
+    "scan": "node scan.mjs",
+    "record": "node record.mjs",
+    "narrate": "node narrate.mjs",
+    "mux": "node mux.mjs",
+    "all": "node run.mjs"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "openai": "^4.73.0",
+    "playwright": "^1.49.0"
+  }
+}

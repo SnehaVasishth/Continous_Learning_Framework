@@ -1,0 +1,141 @@
+{
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "targetSeconds": 145
+  },
+  "narration": {
+    "model": "tts-1-hd",
+    "voice": "alloy",
+    "format": "mp3",
+    "speed": 1.0
+  },
+  "scenes": [
+    {
+      "id": "01-dashboard",
+      "path": "/keysight-salesops/dashboard",
+      "narration": "Keysight SalesOps is the operational workspace where the team handles every inbound customer request, with full visibility into status, throughput, and queue health.",
+      "preActionsMs": 1200,
+      "settleMs": 1800,
+      "actions": [
+        { "type": "wait", "ms": 2200 },
+        { "type": "scroll", "deltaY": 220 },
+        { "type": "wait", "ms": 2200 }
+      ]
+    },
+    {
+      "id": "02-inbox",
+      "path": "/keysight-salesops/inbox",
+      "narration": "Every connected mailbox feeds the inbox. Each incoming email becomes a case, automatically classified by intent, language, and customer match.",
+      "preActionsMs": 2200,
+      "settleMs": 800,
+      "actions": [
+        { "type": "wait", "ms": 800 },
+        { "type": "hoverFirst", "selector": "button.flex.items-center.gap-2.flex-1" },
+        { "type": "wait", "ms": 1200 }
+      ]
+    },
+    {
+      "id": "03-activity",
+      "path": "/keysight-salesops/trace/357",
+      "narration": "Every customer case flows through five governed stages. The application covers six business use cases out of the box: purchase order intake, quote to order, work order status, work order update, service order, and trade change order. Each stage breaks down into named substeps. Clicking any stage opens its substep timeline, showing what ran, what knowledge base content it consulted, how long it took, and the exact decision recorded. Every step is reproducible and reviewable after the fact.",
+      "preActionsMs": 2500,
+      "settleMs": 1500,
+      "actions": [
+        { "type": "wait", "ms": 2500 },
+        { "type": "scroll", "deltaY": 220 },
+        { "type": "wait", "ms": 7500 },
+        { "type": "clickText", "text": "Stage 1" },
+        { "type": "wait", "ms": 2200 },
+        { "type": "clickText", "text": "Stage 2" },
+        { "type": "wait", "ms": 2200 },
+        { "type": "clickText", "text": "Stage 3" },
+        { "type": "wait", "ms": 2500 },
+        { "type": "scroll", "deltaY": 700 },
+        { "type": "wait", "ms": 2800 },
+        { "type": "scroll", "deltaY": 500 },
+        { "type": "wait", "ms": 2200 }
+      ]
+    },
+    {
+      "id": "06-kb",
+      "path": "/keysight-salesops/kb?ns=pipeline_verification_rules",
+      "narration": "All operating logic lives in the Knowledge Base. Prompts, thresholds, glossaries, routing rules, and stage invariants are edited here by functional administrators, with no code change required.",
+      "preActionsMs": 1500,
+      "settleMs": 1500,
+      "actions": [
+        { "type": "wait", "ms": 2000 },
+        { "type": "scroll", "deltaY": 300 },
+        { "type": "wait", "ms": 2500 },
+        { "type": "scroll", "deltaY": 250 },
+        { "type": "wait", "ms": 2000 }
+      ]
+    },
+    {
+      "id": "07-hitl",
+      "path": "/keysight-salesops/hitl",
+      "narration": "When confidence falls below the configured threshold, the case routes to the Human in the Loop queue. The reviewer opens any task, sees the full trace and the proposed action, and approves, edits, or rejects with one click.",
+      "preActionsMs": 1800,
+      "settleMs": 2500,
+      "actions": [
+        { "type": "wait", "ms": 1800 },
+        { "type": "hoverFirst", "selector": "button.w-full.text-left.px-5" },
+        { "type": "wait", "ms": 900 },
+        { "type": "click", "selector": "button.w-full.text-left.px-5" },
+        { "type": "wait", "ms": 2500 },
+        { "type": "scroll", "deltaY": 350 },
+        { "type": "wait", "ms": 2000 }
+      ]
+    },
+    {
+      "id": "08-governance-overview",
+      "path": "/keysight-salesops-governance/governance/overview",
+      "narration": "Behind the operational view sits the ZBrain Orchestrator and Governance platform. Every agent, model, integration, and policy active across the application is administered here.",
+      "preActionsMs": 1500,
+      "settleMs": 1500,
+      "actions": [
+        { "type": "wait", "ms": 1500 },
+        { "type": "scroll", "deltaY": 250 },
+        { "type": "wait", "ms": 1800 },
+        { "type": "scroll", "deltaY": 200 },
+        { "type": "wait", "ms": 1500 }
+      ]
+    },
+    {
+      "id": "09-governance-policies",
+      "path": "/keysight-salesops-governance/governance/overview",
+      "narration": "Application Level Governance wraps every workflow in eleven enforcement layers. Identity, policy verdicts, confidence threshold gates, per-agent token quotas, kill-switch rollback, and a tamper-evident audit trail are enforced in the runtime, not bolted on as a checklist.",
+      "preActionsMs": 1500,
+      "settleMs": 1800,
+      "actions": [
+        { "type": "wait", "ms": 1200 },
+        { "type": "clickText", "text": "Audit Trail" },
+        { "type": "wait", "ms": 2400 },
+        { "type": "clickText", "text": "Agent Fleet" },
+        { "type": "wait", "ms": 2400 },
+        { "type": "clickText", "text": "Policy Engine" },
+        { "type": "wait", "ms": 2400 },
+        { "type": "clickText", "text": "SLO Monitor" },
+        { "type": "wait", "ms": 1800 }
+      ]
+    },
+    {
+      "id": "10-learning-hub",
+      "path": "/keysight-salesops-governance/learning",
+      "narration": "Continuous Learning closes the quality loop end to end. The overview ranks every active opportunity. Admin-defined baselines set the quality targets. Drift signals fire the moment an observation breaches its tolerance band, and validated tuning candidates are promoted live with a one-click rollback always armed.",
+      "preActionsMs": 4000,
+      "settleMs": 2500,
+      "trimStartMs": 2800,
+      "actions": [
+        { "type": "wait", "ms": 2500 },
+        { "type": "clickText", "text": "Baselines" },
+        { "type": "wait", "ms": 3500 },
+        { "type": "clickText", "text": "Detect" },
+        { "type": "wait", "ms": 3500 },
+        { "type": "clickText", "text": "Promote" },
+        { "type": "wait", "ms": 3000 }
+      ]
+    }
+  ]
+}

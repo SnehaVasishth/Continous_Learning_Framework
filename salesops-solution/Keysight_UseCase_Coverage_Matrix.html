@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Keysight SalesOps — Use-case coverage matrix</title>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #131426; max-width: 1100px; margin: 28px auto; padding: 0 28px; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px; }
+  h3 { font-size: 14px; margin-top: 20px; color: #1A55F9; }
+  p, li { font-size: 13px; line-height: 1.55; color: #2A2A2A; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+  th, td { border: 1px solid #E5E7EB; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #F4F6FB; font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .ok { background: #D1FAE5; color: #047857; }
+  .upcoming { background: #DBEAFE; color: #1D4ED8; }
+  .hitl { background: #FEF3C7; color: #92400E; }
+  .external { background: #E5E7EB; color: #374151; }
+  .pre { font-family: 'Menlo', monospace; font-size: 11px; background: #F9FAFB; padding: 4px 6px; border-radius: 3px; }
+  .meta { color: #6B7280; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Keysight SalesOps — Use-case coverage matrix</h1>
+<p class="meta">Generated 2026-05-13 · audits every intent × gate × edge-case path the demo currently exercises.</p>
+
+<p>This is the single-source reference the Keysight review team can use to confirm what the SalesOps automation does end-to-end, where the autonomy gates sit, and where every edge case lands. It is built from the live pipeline taxonomy, the four-gate confidence model, the AIOA webhook handoff, and the per-intent action matrix. Each row names the trigger, the gates the case passes through, the action ZBrain proposes, the downstream system that owns the work, and the failure / HITL path.</p>
+
+<h2>1. Pipeline-level coverage</h2>
+
+<table>
+  <thead>
+    <tr><th>Stage</th><th>Sub-process</th><th>What ZBrain does</th><th>Tier outcomes</th><th>Owning system</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="4">Pre-Intake (Outlook rules)</td><td>Bounce / DSN detection</td><td>Deterministic regex on subject / from / body. Skips all six stages.</td><td>L4 discard</td><td>ZBrain</td></tr>
+    <tr><td>Out-of-office reply</td><td>Pattern match on OOO phrases in EN/ES/JA.</td><td>L4 discard</td><td>ZBrain</td></tr>
+    <tr><td>Brazil tax / Collections / Portal admin / KSO</td><td>Keyword + sender allowlist; routes to named team.</td><td>L4 redirect (CommunicationLog only)</td><td>Keysight team (forward)</td></tr>
+    <tr><td>Fall-through</td><td>No rule matched — continues to Stage 1 LLM classifier.</td><td>n/a</td><td>ZBrain</td></tr>
+
+    <tr><td rowspan="4">Stage 1 — Intake & Classification</td><td>Language detect</td><td>EN / ES / JA detection on inbound body.</td><td>Always succeeds (defaults to EN)</td><td>ZBrain</td></tr>
+    <tr><td>Intent classification (LLM, two-pass)</td><td>Context-pass + override-pass; CSR-typed do-not-auto / force-HITL recognised.</td><td>L4 / L3 / L2 governed by Gate 1 confidence</td><td>ZBrain</td></tr>
+    <tr><td>Spam / phishing screen</td><td>LLM screen + heuristic redundancy.</td><td>L4 discard on agreement</td><td>ZBrain</td></tr>
+    <tr><td>Multi-intent split</td><td>Sub-intents recorded for downstream branching (po_intake + wo_status_inquiry, etc.).</td><td>Primary drives action; secondary surfaces in trace</td><td>ZBrain</td></tr>
+
+    <tr><td rowspan="5">Stage 2 — Extraction & Enrichment</td><td>OCR / document intelligence</td><td>Vision OCR for PDFs / XLSX / DOCX / images.</td><td>Gate 2 (extraction)</td><td>ZBrain</td></tr>
+    <tr><td>Intent-aware schema extraction</td><td>Required fields per intent driven by KB extract_schema namespace.</td><td>Gate 2 (extraction)</td><td>ZBrain</td></tr>
+    <tr><td>Salesforce customer match</td><td>Full SOQL match using extracted JSON; local-DB fallback for the demo when no SF connection.</td><td>Gate 3 (entity resolution)</td><td>Salesforce</td></tr>
+    <tr><td>CMD activation request</td><td>When SF customer not found, emit "CMD activation needed" event for the operator.</td><td>L2 HITL — unknown_customer_in_salesforce</td><td>Salesforce CMD</td></tr>
+    <tr><td>Cross-system reconcile (Stage 2.5)</td><td>PO ↔ matched quote line-item check.</td><td>Findings feed Action Feasibility (Gate 4)</td><td>ZBrain</td></tr>
+
+    <tr><td rowspan="4">Stage 3 — Decision & Confidence</td><td>Existing-CCC lookup (3.0a)</td><td>SF Case lookup by PO# / WO# — routes to update / clone change order / new.</td><td>Branches downstream</td><td>Salesforce</td></tr>
+    <tr><td>Routing resolver (3.0b)</td><td>Distributor + magic-SKU rules pick the right queue.</td><td>Routing_target attached</td><td>ZBrain</td></tr>
+    <tr><td>AIOA webhook handoff (3.0c)</td><td>POST to Keysight AIOA endpoint for po_intake / quote_to_order / trade_change_order / wo_update_request / service_contract_request when a PO is attached.</td><td>AIOA owns validation + downstream work; ZBrain records outcome</td><td><span class="tag external">AIOA (external)</span></td></tr>
+    <tr><td>Four-gate confidence + business rules (3.1–3.3)</td><td>Composite = min(Classification, Extraction, Entity Resolution, Action Feasibility); KB rule caps applied; CSR override forces L2_HITL.</td><td>L4 ≥ 0.95 / L3 0.80–0.94 / L2 &lt; 0.80</td><td>ZBrain</td></tr>
+
+    <tr><td rowspan="4">Stage 4 — Workflow Execution</td><td>AIOA handoff short-circuit</td><td>If AIOA fired, ZBrain skips its own SF Order write — AIOA owns it.</td><td>handed_off_to_aioa / aioa_fallout_queue</td><td><span class="tag external">AIOA</span></td></tr>
+    <tr><td>Customer-match guardrail (4.1)</td><td>Refuse SF write when Stage 2.3 didn't resolve an Account.</td><td>L2 HITL</td><td>Salesforce</td></tr>
+    <tr><td>Idempotency check (4.2)</td><td>SOQL lookup for existing Order with same PoNumber on the Account.</td><td>Skip duplicate write; mark idempotent</td><td>Salesforce</td></tr>
+    <tr><td>Workflow execution (4.3)</td><td>Per-action write: Salesforce Order / WO / Status update / Contract draft.</td><td>L4 applies, L3 stages draft + one-click, L2 HITL preview</td><td>Salesforce (Oracle EBS / DocuNet via Jitterbit is <span class="tag upcoming">upcoming</span>)</td></tr>
+
+    <tr><td rowspan="4">Stage 5 — Communication & Close-out</td><td>Draft customer reply (5.1)</td><td>LLM-drafted reply in customer language; deterministic template fallback if the LLM fails.</td><td>Always produces a draft</td><td>ZBrain</td></tr>
+    <tr><td>Translate to customer language (5.2)</td><td>Skipped when language is EN; otherwise EN preview generated for CSR review.</td><td>Tool-result feed</td><td>ZBrain</td></tr>
+    <tr><td>Attach SOA / file in SharePoint (5.3)</td><td>SOA PDF generated for po_intake / quote_to_order / trade_change_order. Upload to SharePoint when active connection; DocuNet handoff queued if the placeholder integration is enabled.</td><td>L4 autosend / L3 awaiting click / L2 HITL preview</td><td>SharePoint (DocuNet via Jitterbit <span class="tag upcoming">upcoming</span>)</td></tr>
+    <tr><td>Communication log (5.4)</td><td>CommunicationLog row written on L4_AUTO; outbound SMTP send (demo lock blocks the actual send).</td><td>Visible in Dashboard → Autonomous replies (L4)</td><td>ZBrain</td></tr>
+
+    <tr><td rowspan="3">Stage 6 — Continuous Learning</td><td>Signal capture (Loop A)</td><td>CSR 👍 / 👎 / edit feedback persisted on the trace.</td><td>Feedback rows</td><td>ZBrain</td></tr>
+    <tr><td>Opportunity / promotion (Loops B + C)</td><td>Drift detection, A/B-promoted KB rules, operator-tunable thresholds.</td><td>Surfaced on /learning</td><td>ZBrain</td></tr>
+    <tr><td>Drift & anomaly detection (Loop E)</td><td>Per-intent confidence drift watchdog.</td><td>Alerting hooks</td><td>ZBrain</td></tr>
+  </tbody>
+</table>
+
+<h2>2. Intent × action × downstream system</h2>
+
+<table>
+  <thead>
+    <tr><th>Intent</th><th>Primary action</th><th>Action_required fields the CSR signs off</th><th>Downstream systems</th><th>AIOA webhook?</th><th>SOA generated?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>po_intake</td><td>create_order_acknowledgment</td><td>customer_name, po_number, quote_number, currency, total, line_item_count, requested_ship_date, ship_to</td><td>Salesforce Order, SharePoint (SOA), customer email</td><td><span class="tag ok">Yes</span> (when PO attached)</td><td><span class="tag ok">Yes</span></td></tr>
+    <tr><td>quote_to_order</td><td>convert_quote_to_order</td><td>customer_name, quote_number, currency, total</td><td>Salesforce Order, customer email</td><td><span class="tag ok">Yes</span> (when PO attached)</td><td><span class="tag ok">Yes</span></td></tr>
+    <tr><td>trade_change_order</td><td>trade_change_order</td><td>source_case_id, change_summary, po_reference</td><td>Salesforce Case clone, Salesforce Order (CO), customer email</td><td><span class="tag ok">Yes</span> (when PO attached)</td><td><span class="tag ok">Yes</span></td></tr>
+    <tr><td>ssd_change_request</td><td>reschedule_order</td><td>order_number, new_ship_date, reason</td><td>Salesforce Order, customer email</td><td>No</td><td>No</td></tr>
+    <tr><td>hold_release</td><td>release_hold</td><td>order_number, hold_type, release_reason</td><td>Salesforce Order, customer email</td><td>No</td><td>No</td></tr>
+    <tr><td>delivery_change</td><td>reschedule_order</td><td>order_number, new_ship_date</td><td>Salesforce Order, customer email</td><td>No</td><td>No</td></tr>
+    <tr><td>service_order</td><td>create_work_order</td><td>customer_name, service_type, site_location, asset_count, requested_completion_date, po_reference</td><td>Salesforce Service WorkOrder, field dispatch, customer email</td><td>No</td><td>No</td></tr>
+    <tr><td>wo_update_request</td><td>update_work_order</td><td>work_order_number, update_instruction</td><td>Salesforce WorkOrder, customer email</td><td><span class="tag ok">Yes</span> (when PO attached)</td><td>No</td></tr>
+    <tr><td>wo_status_inquiry</td><td>answer_wo_status</td><td>work_order_number, current_status</td><td>Customer email only</td><td>No</td><td>No</td></tr>
+    <tr><td>service_contract_request</td><td>create_service_contract</td><td>customer_name, contract_term_years, annual_value, currency, coverage_summary</td><td>Salesforce contract draft, finance review, customer email</td><td><span class="tag ok">Yes</span> (when PO attached)</td><td>No</td></tr>
+    <tr><td>general_inquiry</td><td>(reply only)</td><td>—</td><td>Customer email</td><td>No</td><td>No</td></tr>
+    <tr><td>kso / collections / portal_admin / brazil_tax</td><td>redirect (Pre-Intake)</td><td>—</td><td>Forwarded to named team (demo lock blocks SMTP)</td><td>No</td><td>No</td></tr>
+    <tr><td>out_of_scope / spam / undeliverable</td><td>discard</td><td>—</td><td>None</td><td>No</td><td>No</td></tr>
+  </tbody>
+</table>
+
+<h2>3. Edge-case paths the demo exercises</h2>
+
+<table>
+  <thead>
+    <tr><th>Edge case</th><th>Where it surfaces</th><th>What happens</th><th>UI surface</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>AIOA Pass → automation complete</td><td>Stage 3.0c → Stage 4 short-circuit</td><td>ZBrain trace records the handoff; downstream order acceptance is owned by AIOA. No SF Order write from ZBrain.</td><td>Trace, Dashboard AIOA tile</td></tr>
+    <tr><td>AIOA Fail → fallout queue</td><td>Stage 3.0c → Stage 4 short-circuit</td><td>Case routed to AI OA Fallout queue (in AIOA's surface). ZBrain records the reason.</td><td>Trace, Dashboard AIOA tile</td></tr>
+    <tr><td>Unknown customer (CMD activation needed)</td><td>Stage 2.3 entity resolution gate</td><td>Pipeline drops to L2 HITL with reason <span class="pre">unknown_customer_in_salesforce</span>. CMD activation event emitted.</td><td>HITL queue, Dashboard CMD tile</td></tr>
+    <tr><td>Magic SKU (CUSTOM-PRODUCT, SOWDUMMY, EXPORTDUMMY)</td><td>Routing resolver (3.0b) + AIOA findings</td><td>Routes to engineering / SOW / export-compliance queue depending on the SKU.</td><td>Trace, routing target field</td></tr>
+    <tr><td>Multi-asset fan-out</td><td>service_order with multiple Model/Serial pairs</td><td>One CCC Case per asset.</td><td>Trace + execution.applied.work_orders</td></tr>
+    <tr><td>Two-pass classifier override</td><td>Stage 1 override-pass</td><td>LLM context pass + an explicit override pass; visible in trace if it flipped the intent.</td><td>Trace intake substeps</td></tr>
+    <tr><td>CSR-typed override (do_not_auto / force_hitl / route_to_team)</td><td>Stage 3 final tier decision</td><td>Tier forced to L2_HITL regardless of computed confidence; the typed instruction stored on the cap record.</td><td>Trace, Decision panel</td></tr>
+    <tr><td>Thread walk-back (10–40 message threads)</td><td>Stage 1 + Stage 2</td><td>Thread context carried back so classification + extraction use the latest customer state.</td><td>Trace, thread view</td></tr>
+    <tr><td>Mailbox-door triage (Outlook rules)</td><td>Pre-Intake</td><td>~25% of mail short-circuited without an LLM call; Dashboard tile shows the savings.</td><td>Dashboard mailbox-door tile</td></tr>
+    <tr><td>Idempotent SF Order detection</td><td>Stage 4.2</td><td>Duplicate PO write is skipped; trace surfaces the existing OrderNumber.</td><td>Trace 4.2 substep</td></tr>
+    <tr><td>Reconcile blocking finding</td><td>Stage 2.5 → Stage 3 Gate 4 cap</td><td>Action Feasibility gate caps at 0.30 (hard_block); displayed as L2_HITL with the reason.</td><td>Trace 3.2, HITL preview</td></tr>
+    <tr><td>Region overlay (AMS / EMEA / APAC / JP)</td><td>Stage 1 + KB region rules</td><td>Per-region intent filters and routing rules; visible in trace as guardrails.</td><td>Trace guardrails list</td></tr>
+    <tr><td>Stage 5 LLM failure</td><td>Stage 5.1</td><td>Deterministic template draft generated in customer language; trace flags template_fallback=true.</td><td>HITL preview, Trace 5.1</td></tr>
+    <tr><td>SOA SharePoint upload</td><td>Stage 5.3</td><td>Uploaded to <span class="pre">/SalesOps/SOA</span> when SharePoint is connected; otherwise kept in local outputs/ with simulated=true.</td><td>Trace 5.3 sharepoint block</td></tr>
+    <tr><td>DocuNet handoff queued (placeholder enabled)</td><td>Stage 5.3</td><td>When DocuNet placeholder is enabled in Settings → Integrations, the trace records the queued FCNV file with the configured endpoint.</td><td>Trace 5.3 docunet block</td></tr>
+    <tr><td>Existing-CCC update / clone change order</td><td>Stage 3.0a → Stage 4.0a/4.0b</td><td>Email attached + Chatter notify + status flip (update) or clone scaffold (closed cases).</td><td>Trace 4.0a / 4.0b</td></tr>
+  </tbody>
+</table>
+
+<h2>4. Gate-by-gate failure routing</h2>
+
+<table>
+  <thead>
+    <tr><th>Gate</th><th>What it measures</th><th>Fail mode</th><th>Action when capped</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Gate 1 — Classification</td><td>Intent confidence from the LLM (with override-pass)</td><td>Low confidence (&lt; 0.80)</td><td>Composite drops; tier defaults to L2 HITL</td></tr>
+    <tr><td>Gate 2 — Extraction</td><td>Fraction of KB-required fields populated</td><td>Required fields missing</td><td>Composite drops; <span class="pre">missing_required_fields</span> exposed on the decision</td></tr>
+    <tr><td>Gate 3 — Entity Resolution</td><td>Salesforce customer match score</td><td>No match / weak match</td><td>L2 HITL with <span class="pre">unknown_customer_in_salesforce</span>; CMD activation event</td></tr>
+    <tr><td>Gate 4 — Action Feasibility</td><td>Can the action actually execute? Includes reconcile findings + AIOA outcome</td><td>Blocking reconcile finding / AIOA_FAIL / hard_block business rule</td><td>Composite capped at 0.30 (deep L2); reason quoted on the trace</td></tr>
+  </tbody>
+</table>
+
+<h2>5. What ZBrain does NOT own</h2>
+
+<ul>
+  <li><strong>AIOA validation work</strong> — ZBrain triggers the webhook with the extracted PO context; AIOA executes the rule book and reports back. ZBrain never replicates AIOA's checks; the local mock simulates the round-trip for the demo.</li>
+  <li><strong>Oracle EBS write</strong> — owned by AIOA today (when AIOA fires) and by Jitterbit for the non-AIOA flows once the middleware bridge is enabled from Settings → Integrations.</li>
+  <li><strong>DocuNet filing</strong> — handed off to Keysight's document-classification overlay through Jitterbit. SharePoint is the active document store today; DocuNet is enabled from Settings → Integrations when the bridge is provisioned.</li>
+  <li><strong>ServiceNow case lifecycle</strong> — owned by the Keysight dev team. ZBrain integration is read-only / write-on-handshake; we do not run Stage 4 substeps for ServiceNow.</li>
+  <li><strong>Outbound SMTP send (under demo lock)</strong> — replies are drafted, attached, and logged as CommunicationLog rows; the actual SMTP transmission is suppressed during the demo to keep mailbox state stable.</li>
+</ul>
+
+<h2>6. Where to look in the UI</h2>
+
+<table>
+  <thead>
+    <tr><th>Surface</th><th>What it shows</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Dashboard</td><td>Throughput, mailbox-door triage, AIOA webhook outcomes, CMD activation, four-gate confidence, autonomous replies (L4).</td></tr>
+    <tr><td>Inbox → Trace</td><td>Per-pipeline step-by-step with every substep, every guardrail, every tool result.</td></tr>
+    <tr><td>HITL queue</td><td>Per-case proposed action with the structured action_required block (prefilled fields, downstream systems, next-steps checklist).</td></tr>
+    <tr><td>Analytics → End-to-end case flow</td><td>Per-stage Celonis-style sub-process diagram + top-paths panel showing the highest-volume sequences.</td></tr>
+    <tr><td>Analytics → Pipeline diagnostics</td><td>Compact tiles for stage timing / tool invocations / KB rule fires / normalizer; click to expand.</td></tr>
+    <tr><td>Analytics → AI infrastructure cost</td><td>Real CostEvent metering of every LLM / OCR / translation call, attributed to the pipeline that produced it.</td></tr>
+    <tr><td>Settings → Integrations</td><td>Salesforce, ServiceNow, SharePoint, mailboxes, and the placeholder integrations (Jitterbit, DocuNet) that can be enabled with operator-supplied endpoints.</td></tr>
+    <tr><td>Continuous Learning</td><td>CSR feedback, drift detection, A/B-promoted KB rule updates.</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

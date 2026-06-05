@@ -1,0 +1,61 @@
+{
+  "timestamp": "20260508_084831_003097",
+  "system_prompt_chars": 418,
+  "user_prompt_chars": 335,
+  "raw_response_chars": 1276,
+  "system": "You are a document-intelligence vision agent. Read every attached image and return strict JSON: {\"text\": full extracted text, \"tables\": [{\"caption\": str|null, \"rows\": [[str,...]]}], \"fields\": {key:value}, \"notes\": str|null}. Pull every visible field \u2014 PO numbers, line items, totals, dates, addresses, signatures. If the image is a BOM or table, fill the tables[] array. Use null where information is genuinely absent.",
+  "user": "Extract all visible text, tables, and structured fields from the attached image(s). JSON only.\n\nIMAGE ATTACHMENTS \u2014 read each via the Read tool for OCR:\n- C:/Users/Rituraj/keysight-salesops-demo/backend/data/uploads/PO_PO-SAKURA-SEMI-101-61612_scan.png\n\nRespond with a single JSON object only. No code fences. No prose before or after.",
+  "raw_response": "{\"text\":\"PURCHASE ORDER\\nSAKURA SEMICONDUCTOR KK\\nSemiconductor \u00b7 Asia-Pacific Operations\\n\\nPO NUMBER\\nPO-SAKURA-SEMI-101-61612\\nISSUE DATE\\n2026-05-07\\nREQUESTED SHIP DATE\\n2026-05-28\\nPAYMENT TERMS\\nNet 45\\n\\nSKU  DESCRIPTION  QTY  UNIT PRICE  EXTENDED\\nN9040B-550  UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth  1  $196,000.00  $196,000.00\\n\\nTOTAL  $196,000.00\\n\\nscanned copy \u2014 please OCR\",\"tables\":[{\"caption\":\"Line Items\",\"rows\":[[\"SKU\",\"DESCRIPTION\",\"QTY\",\"UNIT PRICE\",\"EXTENDED\"],[\"N9040B-550\",\"UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth\",\"1\",\"$196,000.00\",\"$196,000.00\"],[\"\",\"\",\"\",\"TOTAL\",\"$196,000.00\"]]}],\"fields\":{\"document_type\":\"Purchase Order\",\"buyer\":\"SAKURA SEMICONDUCTOR KK\",\"buyer_division\":\"Semiconductor \u00b7 Asia-Pacific Operations\",\"po_number\":\"PO-SAKURA-SEMI-101-61612\",\"issue_date\":\"2026-05-07\",\"requested_ship_date\":\"2026-05-28\",\"payment_terms\":\"Net 45\",\"sku\":\"N9040B-550\",\"description\":\"UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth\",\"qty\":\"1\",\"unit_price\":\"$196,000.00\",\"extended\":\"$196,000.00\",\"total\":\"$196,000.00\",\"currency\":\"USD\",\"ship_to\":null,\"bill_to\":null,\"signature\":null},\"notes\":\"Footer reads 'scanned copy \u2014 please OCR'. No ship-to/bill-to addresses, contact info, or signature visible on the document.\"}",
+  "parsed": {
+    "text": "PURCHASE ORDER\nSAKURA SEMICONDUCTOR KK\nSemiconductor \u00b7 Asia-Pacific Operations\n\nPO NUMBER\nPO-SAKURA-SEMI-101-61612\nISSUE DATE\n2026-05-07\nREQUESTED SHIP DATE\n2026-05-28\nPAYMENT TERMS\nNet 45\n\nSKU  DESCRIPTION  QTY  UNIT PRICE  EXTENDED\nN9040B-550  UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth  1  $196,000.00  $196,000.00\n\nTOTAL  $196,000.00\n\nscanned copy \u2014 please OCR",
+    "tables": [
+      {
+        "caption": "Line Items",
+        "rows": [
+          [
+            "SKU",
+            "DESCRIPTION",
+            "QTY",
+            "UNIT PRICE",
+            "EXTENDED"
+          ],
+          [
+            "N9040B-550",
+            "UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth",
+            "1",
+            "$196,000.00",
+            "$196,000.00"
+          ],
+          [
+            "",
+            "",
+            "",
+            "TOTAL",
+            "$196,000.00"
+          ]
+        ]
+      }
+    ],
+    "fields": {
+      "document_type": "Purchase Order",
+      "buyer": "SAKURA SEMICONDUCTOR KK",
+      "buyer_division": "Semiconductor \u00b7 Asia-Pacific Operations",
+      "po_number": "PO-SAKURA-SEMI-101-61612",
+      "issue_date": "2026-05-07",
+      "requested_ship_date": "2026-05-28",
+      "payment_terms": "Net 45",
+      "sku": "N9040B-550",
+      "description": "UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth",
+      "qty": "1",
+      "unit_price": "$196,000.00",
+      "extended": "$196,000.00",
+      "total": "$196,000.00",
+      "currency": "USD",
+      "ship_to": null,
+      "bill_to": null,
+      "signature": null
+    },
+    "notes": "Footer reads 'scanned copy \u2014 please OCR'. No ship-to/bill-to addresses, contact info, or signature visible on the document."
+  },
+  "error": null
+}

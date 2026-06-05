@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Keysight SalesOps Web App · Gap Analysis vs RFP Deliverables · The Hackett Group on ZBrain</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #131426; --muted: #6B7280; --rule: #E5E7EB; --surface: #F8FAFC;
+    --accent: #1A55F9; --accent-soft: #1A55F910;
+    --ok: #1F8A4C; --ok-soft: #E1F4E8; --warn: #C77700; --warn-soft: #FEF3C7;
+    --danger: #B91C1C; --danger-soft: #FEE2E2;
+    --slate: #475569;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", Roboto, sans-serif;
+         margin: 0; padding: 0; background: white; color: var(--ink);
+         line-height: 1.55; font-size: 11.5pt; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 44px 64px; }
+
+  .cover {
+    background: linear-gradient(135deg, #0E1230 0%, #1E2A4D 100%);
+    color: white; border-radius: 14px; padding: 32px 36px; margin-bottom: 28px;
+    border-top: 4px solid #1A55F9;
+    position: relative; overflow: hidden;
+  }
+  .cover::after {
+    content: ""; position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,85,249,.18) 0%, transparent 70%);
+  }
+  .cover .eyebrow { font-size: 11px; font-weight: 700; color: #6E8AE8;
+                    letter-spacing: 0.16em; text-transform: uppercase; }
+  .cover h1 { font-size: 30px; margin: 8px 0 10px; font-weight: 600;
+              letter-spacing: -0.02em; color: #F5F7FB; position: relative; z-index: 1; }
+  .cover p { font-size: 14px; max-width: 920px; color: #C7CEE2; margin: 0;
+             line-height: 1.6; position: relative; z-index: 1; }
+  .cover .meta { font-size: 11px; margin-top: 14px; color: #8794B8;
+                 letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+                 position: relative; z-index: 1; }
+
+  h2 { font-size: 21px; margin-top: 36px; margin-bottom: 12px;
+       color: var(--ink); letter-spacing: -0.01em; border-bottom: 2px solid var(--accent);
+       padding-bottom: 6px; }
+  h3 { font-size: 16px; margin-top: 22px; margin-bottom: 8px; color: var(--ink); }
+  h4 { font-size: 13px; margin-top: 18px; margin-bottom: 6px; color: var(--slate);
+       text-transform: uppercase; letter-spacing: 0.08em; }
+
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+
+  strong { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0;
+          font-size: 11pt; }
+  th, td { padding: 9px 11px; text-align: left; vertical-align: top;
+           border-bottom: 1px solid var(--rule); }
+  th { background: var(--surface); font-weight: 600;
+       font-size: 10.5pt; color: var(--slate); }
+  th:first-child { border-top-left-radius: 6px; }
+  th:last-child { border-top-right-radius: 6px; }
+  tbody tr:hover { background: #FAFBFC; }
+
+  .callout {
+    background: var(--accent-soft); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 14px 0;
+    font-size: 11pt; line-height: 1.6;
+  }
+  .callout.danger { background: var(--danger-soft); border-left-color: var(--danger); }
+  .callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+  .callout strong { color: var(--ink); }
+
+  .category-head {
+    background: var(--surface); padding: 10px 16px; border-radius: 8px;
+    margin-top: 26px; border: 1px solid var(--rule);
+  }
+  .category-head h2 { margin: 0; border: none; padding: 0;
+                       font-size: 18px; }
+  .category-head .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px;
+          font-size: 10pt; font-weight: 600; }
+  .pill.crit { background: var(--danger-soft); color: var(--danger); }
+  .pill.major { background: var(--warn-soft); color: var(--warn); }
+  .pill.medium { background: var(--accent-soft); color: var(--accent); }
+
+  .phase-table th { background: var(--accent); color: white; }
+  .phase-table td:first-child { font-weight: 600; color: var(--accent); }
+
+  code { background: var(--surface); padding: 1px 5px; border-radius: 3px;
+         font-size: 10.5pt; color: var(--slate); }
+
+  @media print {
+    body { font-size: 10.5pt; }
+    .shell { padding: 16px 24px; max-width: 100%; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    .callout { page-break-inside: avoid; }
+    .category-head { page-break-after: avoid; }
+    @page { size: A4; margin: 16mm 14mm; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div class="cover">
+  <div class="eyebrow">Keysight SalesOps Agentic AI · Internal Working Document</div>
+  <h1>Web app gap analysis vs RFP deliverables</h1>
+  <p>A structured comparison between what The Hackett Group has committed to Keysight in the RFP response package (Approach deck, Executive Summary, Solution Overview, Implementation Approach, AI/ML Capabilities) and what the ZBrain demo application currently delivers. The analysis identifies seven categories of gap, sequences a four-week plan to close them, and flags the four explicit asks called out for immediate execution.</p>
+  <div class="meta">The Hackett Group on ZBrain &middot; Internal &middot; Response date 2026-05-13</div>
+</div>
+
+<h2>Summary at a glance</h2>
+
+<p>The web app delivers a credible six-stage pipeline, four-gate confidence tiering, HITL queue, audit trace, drift alerts, A/B experiments, and the Cost and Benefit Calculator. The largest gaps versus the RFP package are:</p>
+
+<ol>
+  <li><strong>Application-level governance</strong> &mdash; the deck commits to <strong>eleven AGT enforcement layers</strong> and <strong>OWASP ASI 2026 10/10 coverage</strong>; the app currently exposes around three.</li>
+  <li><strong>Confidence model formula mismatch</strong> &mdash; deliverables say <code>composite = min(gates)</code> across four gates; code uses a weighted average across three components.</li>
+  <li><strong>Scale credibility</strong> &mdash; the proposal commits to 2,000 emails per day and a 50x stress test; the demo holds 138 emails total and runs synchronously.</li>
+  <li><strong>Seed depth</strong> &mdash; Salesforce data, mailboxes, languages, and regions are sparse compared to the operational footprint the proposal positions.</li>
+</ol>
+
+<div class="callout">
+<strong>Sequenced plan.</strong> Four phases over four weeks if parallelised, six to seven weeks if single-threaded. Phase 1 (foundation seed expansion, realistic email content, long threads) unlocks everything downstream and runs first.
+</div>
+
+<!-- ============== CATEGORY A ============== -->
+<div class="category-head">
+  <h2>Category A &middot; Governance gaps <span class="pill crit">CRITICAL</span></h2>
+  <div class="sub">The deck commits to 11 AGT layers; the app exposes around three. This is the single highest-visibility gap.</div>
+</div>
+
+<p>The deliverables promise <strong>eleven named AGT enforcement layers</strong> with <strong>full OWASP ASI 2026 coverage (10/10)</strong> and <strong>Agent Context Protocol</strong> exposing role, duty, data touch points, metrics, policy, and retention for every agent. The current app surfaces almost none of this.</p>
+
+<table>
+<thead>
+<tr><th>#</th><th>AGT layer promised</th><th>Currently in app</th><th>Action to close</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Pipeline Governance Funnel</td><td>StageDetail per-stage drop-off exists</td><td>Surface as a "Governance Funnel" view in a new Governance page; label drops as policy events</td></tr>
+<tr><td>2</td><td>Policy Decisions (allow above 95%, audit 80 to 94%, block below 80%, deny on spam)</td><td>Tier mapping exists in <code>decide.py</code></td><td>Expose as PolicyEvaluator events on a Policy Decisions tab; show counts and recent decisions</td></tr>
+<tr><td>3</td><td>Confidence Threshold Gates</td><td>4-gate model partially in scoring</td><td>Fix formula mismatch (see Category B)</td></tr>
+<tr><td>4</td><td>Active Governance Policies (Global, Tenant, Agent scopes; YAML, OPA/Rego, Cedar)</td><td>None</td><td>Add a Policies UI showing live policies; even mocked YAML, OPA, Cedar samples that read as live</td></tr>
+<tr><td>5</td><td>Per-Agent Policy Limits (token caps, tool-call limits, drift thresholds; Execute = Ring 0, human approval)</td><td>Partial: tier gating on Execute exists</td><td>Surface per-agent token cap, tool-call cap, drift threshold per stage on the Governance screen</td></tr>
+<tr><td>6</td><td>Stage Agent Identities (cryptographic DID per stage, Trust Rings 3 to 0, 15-min TTL, named sponsor)</td><td>None</td><td>Add a Stage Identities table with DID, Trust Ring, TTL, sponsor name per stage</td></tr>
+<tr><td>7</td><td>MCP Gateway Security (5-stage tool pipeline, SHA-256 fingerprints, 6 threat classes)</td><td>None</td><td>Add a Tool Gateway page showing tool registry with SHA-256 fingerprints; a blocked-threats log</td></tr>
+<tr><td>8</td><td>Audit Trail (append-only AGT AuditLog with SHA-256 hash chain, tamper-evident on every dashboard load)</td><td>TraceEvent exists, no hash chain</td><td>Wrap TraceEvent in a hash-chain table; show integrity status on the Governance header</td></tr>
+<tr><td>9</td><td>KillSwitch (manual reject, spam-deny, runtime fault; SagaOrchestrator rolls back partial Ring-0 writes)</td><td>Manual reject exists</td><td>Add explicit KillSwitch button and saga rollback log on the Governance screen</td></tr>
+<tr><td>10</td><td>SLO Monitoring (6 SLOs with error budgets, auto THROTTLE, CIRCUIT_BREAK, KILL_AGENT)</td><td>None</td><td>Add SLO tiles and budget burn-down for 6 named SLOs; show last auto-action</td></tr>
+<tr><td>11</td><td>OWASP ASI Compliance (10/10 ASI 2026 controls, Automated Governance Attestation with reproducible hash)</td><td>None</td><td>Add an Attestation tile showing 10/10 coverage and a verify-hash link; export attestation JSON</td></tr>
+</tbody>
+</table>
+
+<div class="callout danger">
+<strong>Action.</strong> Stand up a new <code>/governance</code> page with eleven sections, each mapping to one AGT layer. Even partially mocked, this is the highest-visibility gap because the entire Application-Level Governance pillar of the deck depends on these layers being visible.
+</div>
+
+<!-- ============== CATEGORY B ============== -->
+<div class="category-head">
+  <h2>Category B &middot; Confidence model formula mismatch <span class="pill crit">CRITICAL</span></h2>
+  <div class="sub">Defensibility risk: deliverables and code use different math.</div>
+</div>
+
+<ul>
+  <li><strong>Deliverables say</strong>: composite confidence = <code>min(gates)</code>, four gates: Classification, Extraction, Entity Resolution, Action Feasibility.</li>
+  <li><strong>Code says</strong> (CLAUDE.md and <code>decide.py</code>): composite = <code>0.45 &times; intent + 0.35 &times; extract + 0.20 &times; customer-match</code>, three components, no Action Feasibility gate.</li>
+</ul>
+
+<p>A sharp procurement reviewer will catch this. Fix the code to use <code>min(gates)</code> across all four gates named in the deliverables. The Action Feasibility gate (can the downstream write actually execute with what was resolved) needs to be a real check against Salesforce and Oracle write-path field requirements.</p>
+
+<!-- ============== CATEGORY C ============== -->
+<div class="category-head">
+  <h2>Category C &middot; Pipeline and intent coverage gaps <span class="pill major">MAJOR</span></h2>
+  <div class="sub">Specific commitments in the deliverables that the demo cannot currently demonstrate.</div>
+</div>
+
+<table>
+<thead>
+<tr><th>Promised</th><th>Current</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td>13 canonical intents at Phase 1; 8 operational classes (KSO, Brazil Tax, Portal Admin, Collections, Auto-Reply, Undeliverable, internal forwards, Others)</td><td>18 intents in UI; some classes appear only 1 to 2 times in seed</td><td>Backfill seed so every intent has at least 15 representative pipelines including operational classes</td></tr>
+<tr><td>CMD activation request triggered when customer missing in Salesforce</td><td>Not present</td><td>Add CMD activation event type, emit from Stage 4, show on Activity timeline</td></tr>
+<tr><td>Magic-SKU resolver (CUSTOM PRODUCT, SOWDUMMY, EXPORTDUMMY)</td><td>KB references magic-SKU; no demonstration</td><td>Seed POs that trigger each magic-SKU code; show resolution badge on the pipeline</td></tr>
+<tr><td>Multi-asset fan-out (one CCC per Model and Serial pair)</td><td>Not visible in seed</td><td>Seed WO emails with 3+ Model and Serial pairs; show fan-out CCC list on the pipeline</td></tr>
+<tr><td>Existing-CCC matrix across all 10 statuses</td><td>CCC status field exists</td><td>Seed an email path that exercises each of the 10 statuses; show the matrix on the pipeline</td></tr>
+<tr><td>AIOA validation pattern on Trade Order Entry, SOM WO Update, Service Contracts</td><td>Not surfaced</td><td>Add an AIOA validation step in Stage 3 for these three intents; show the validation outcome</td></tr>
+<tr><td>Pre-pipeline mailbox-door triage with explicit operational filters</td><td>Stage 1 handles inline</td><td>Make pre-pipeline triage a visible Stage 0 in the funnel; show counts per filter</td></tr>
+<tr><td>Two-pass classifier</td><td>Single-pass with shadow third-pass</td><td>Rebrand shadow as second pass or add an explicit second pass; surface both decisions in the trace</td></tr>
+<tr><td>Thread-fragment walkback (past CAUTION banners, empty forwards)</td><td>Not visible</td><td>Seed 3+ threads with forwarded chain and empty top reply; show walkback in the trace</td></tr>
+<tr><td>CSR-instruction override detection ("please route to SOW team")</td><td>Not visible</td><td>Seed 5 emails with operator routing directions; show override detection on the trace</td></tr>
+<tr><td>Embedded Outlook items unrolled</td><td>Not visible</td><td>Add a synthetic <code>.msg</code> attachment with inner email and own attachments; show unrolling</td></tr>
+</tbody>
+</table>
+
+<!-- ============== CATEGORY D ============== -->
+<div class="category-head">
+  <h2>Category D &middot; Scale and volume gaps <span class="pill crit">CRITICAL</span></h2>
+  <div class="sub">The largest credibility gap. A 138-email demo cannot stand behind a 2,000-per-day proposal.</div>
+</div>
+
+<p><strong>Deliverables commit to</strong>: 880k emails per year (about 2,000 per day), 50 mailboxes, 16 to 18 languages, 4 regions, 5x quarter-end burst, 50x stress test, 100 emails per second sustained throughput, 1MB to 20MB attachments.</p>
+
+<table>
+<thead>
+<tr><th>Dimension</th><th>Promised</th><th>Current</th></tr>
+</thead>
+<tbody>
+<tr><td>Total emails</td><td>880,000 per year (2,000 per day)</td><td>138 emails total in seed</td></tr>
+<tr><td>Mailboxes</td><td>~50 region-segregated</td><td>1 configured</td></tr>
+<tr><td>Languages</td><td>16 to 18</td><td>3 (EN, ES, JA)</td></tr>
+<tr><td>Regions</td><td>4 (Americas, EMEA, Asia-Pac, Japan)</td><td>3 in customer data (no JP customers)</td></tr>
+<tr><td>Execution model</td><td>2,000 per day, 5x burst, 50x stress, 100 per second</td><td>Synchronous; no concurrency demonstration</td></tr>
+<tr><td>Throughput dashboard</td><td>Implicit in commitments</td><td>Not present</td></tr>
+</tbody>
+</table>
+
+<!-- ============== CATEGORY E ============== -->
+<div class="category-head">
+  <h2>Category E &middot; Continuous Learning gaps <span class="pill medium">MEDIUM</span></h2>
+  <div class="sub">Loop framework is in place; specific gates and sub-segment regression checks are partial.</div>
+</div>
+
+<table>
+<thead>
+<tr><th>Promised</th><th>Current</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td>Five named loops (A Signal Capture, B Opportunity Identification, C A/B Promotion, D Operator-Tunable KBs, E Drift and Anomaly Detection)</td><td>DriftAlert, LearningOpportunity, ABExperiment tables exist; Learning page renders them</td><td>Verify each loop renders end to end with realistic data; add named-owner attribution and one-click rollback on every promoted KB change</td></tr>
+<tr><td>Sub-segment regression check (per-region, per-language, per-intent) before A/B promote</td><td>Not enforced</td><td>Add a regression check step in the promotion flow; block promotion if any slice regresses</td></tr>
+<tr><td>Operator-Tunable KBs with version control, named owner, one-click rollback</td><td>KB endpoints exist</td><td>Surface version history and rollback button in the KB UI</td></tr>
+</tbody>
+</table>
+
+<!-- ============== CATEGORY F ============== -->
+<div class="category-head">
+  <h2>Category F &middot; Documentation refresh <span class="pill medium">MEDIUM</span></h2>
+</div>
+
+<table>
+<thead>
+<tr><th>Page</th><th>State</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td><code>/solution</code> and <code>/solution-overview</code></td><td>Routes exist; content predates the v2 Approach deck</td><td>Replace with content aligned to the v2 Approach deck: 6-week UAT, 11 AGT layers, 5 learning loops, Agent Context Protocol, four-gate confidence model</td></tr>
+<tr><td>Cost and Benefit Calculator</td><td>Live and aligned</td><td>OK</td></tr>
+</tbody>
+</table>
+
+<!-- ============== CATEGORY G ============== -->
+<div class="category-head">
+  <h2>Category G &middot; Four explicit asks <span class="pill crit">PRIORITY</span></h2>
+  <div class="sub">Items called out for immediate execution.</div>
+</div>
+
+<h3>G1 &middot; Longer email threads (10 to 40 messages each)</h3>
+
+<p><strong>Current state.</strong> Most seed emails are single messages or short 2 to 3 message threads.</p>
+
+<p><strong>Action.</strong></p>
+<ul>
+  <li>Extend the seed corpus to include at least 20 long threads ranging from 10 to 40 messages each. Mix of: multi-turn purchase order clarifications, service work order updates with several CSR responses, escalation chains that bounce between regions, and quote-to-order conversations spanning weeks.</li>
+  <li>Update the Inbox UI to render thread depth as a clear count and a collapsible message list.</li>
+  <li>Update the Activity and Trace views to show thread context: every prior message that informed the classification, with the system's reading of each message.</li>
+  <li>Add a Thread Length filter to the Inbox and a Dashboard tile for average thread length and longest open thread.</li>
+</ul>
+
+<h3>G2 &middot; Comprehensive email content</h3>
+
+<p><strong>Current state.</strong> Seed emails are short, often a sentence or two. Real customer mail is multi-paragraph with greetings, context, inline attachment references, and signature blocks.</p>
+
+<p><strong>Action.</strong></p>
+<ul>
+  <li>Rewrite seed email bodies to be realistic in length and structure: greeting, context paragraph, request paragraphs, attachment reference, sign-off, signature block, occasional footer disclaimer.</li>
+  <li>Vary tone: formal procurement, hurried operations, technical support escalation, polite follow-up, regulatory compliance request.</li>
+  <li>Include realistic headers (caution banners, forwarded headers, reply chains, CC lists).</li>
+  <li>Embed inline HTML tables for line-item POs to test mixed-mode extraction.</li>
+  <li>Include emails in EN, ES, JA, and add at least 5 more languages (French Canadian, German, Italian, Mandarin, Japanese hankaku and zenkaku variants) to back the 16 to 18 language commitment.</li>
+</ul>
+
+<h3>G3 &middot; Parallel processing for 2,000-per-day scale</h3>
+
+<p><strong>Current state.</strong> Pipeline runs are synchronous; no demonstration that the system handles concurrent inbound at scale.</p>
+
+<p><strong>Action.</strong></p>
+<ul>
+  <li><strong>Worker pool.</strong> Introduce a Celery, RQ, or asyncio worker pool fed by a job queue. Each inbound email becomes a job; N workers process in parallel.</li>
+  <li><strong>Throughput dashboard.</strong> Add Dashboard tiles for emails-per-minute, queue depth, current worker count, p50/p95/p99 pipeline latency.</li>
+  <li><strong>Stress-test script.</strong> A <code>make stress-test</code> target that fires 2,000 emails into the system in 1 hour (about 33 per minute, the 2,000/day baseline) and a 50x burst variant (1,667 per minute) the deliverables commit to.</li>
+  <li><strong>Visible scale demo.</strong> A Scale Test button on the Settings page that runs a controlled stress test and reports the result inline.</li>
+  <li><strong>Backend.</strong> Switch SQLite to WAL mode at minimum; consider Postgres for the demo if you want to defend the 100-emails-per-second claim in the implementation risk register.</li>
+</ul>
+
+<h3>G4 &middot; Salesforce data seed expansion</h3>
+
+<p><strong>Current state.</strong> 10 customers, 23 products, 11 orders. Sparse against a 650-FTE operation handling 880k emails per year.</p>
+
+<p><strong>Action.</strong></p>
+<ul>
+  <li>About 200 customers with realistic Account hierarchies (parent and child, billing vs shipping, regional ownership).</li>
+  <li>About 500 contacts linked to customers with realistic name and email patterns including aliases.</li>
+  <li>About 100 products covering the full Keysight catalog spectrum (PNA-X, MXG, FieldFox, Infiniium UXR, BERT, SMU, plus service SKUs, calibration certs, training credits).</li>
+  <li>About 300 quotes across active, expired, won, lost.</li>
+  <li>About 500 orders across booked, in-fulfilment, shipped, invoiced, on-hold so the Existing-CCC matrix can exercise all 10 statuses.</li>
+  <li>About 150 work orders covering calibration, repair, installation.</li>
+  <li>About 50 service contracts active and expiring.</li>
+  <li>About 30 distributors to exercise the distributor list routing rule.</li>
+  <li>Magic-SKU records for CUSTOM PRODUCT, SOWDUMMY, EXPORTDUMMY.</li>
+  <li>Re-seed so emails reference real Salesforce IDs across the expanded catalog.</li>
+  <li>Ensure all 4 regions (Americas, EMEA, Asia-Pac, Japan) have customers, contacts, products, and orders. Add Japan-specific records with hankaku and zenkaku variants.</li>
+</ul>
+
+<!-- ============== EXECUTION PLAN ============== -->
+<h2>Execution plan (sequenced)</h2>
+
+<table class="phase-table">
+<thead>
+<tr><th>Phase</th><th>Window</th><th>Scope</th><th>Why first</th></tr>
+</thead>
+<tbody>
+<tr><td>Phase 1 &middot; Foundation</td><td>Week 1</td><td>G4 seed expansion &middot; G2 realistic email content &middot; G1 long threads</td><td>Everything downstream depends on richer seed data</td></tr>
+<tr><td>Phase 2 &middot; Scale</td><td>Week 2</td><td>G3 parallel processing, throughput dashboard, stress-test script</td><td>Closes the 2,000-per-day credibility gap</td></tr>
+<tr><td>Phase 3 &middot; Governance UI</td><td>Week 2 to 3</td><td>Build the <code>/governance</code> page with eleven AGT layer sections</td><td>Closes Category A, the largest visibility gap</td></tr>
+<tr><td>Phase 4 &middot; Pipeline depth</td><td>Week 3</td><td>Category B (min-gate formula + Action Feasibility) and Category C (CMD activation, magic-SKU, multi-asset, two-pass, walkback, override, Outlook unroll)</td><td>Closes defensibility gaps a sharp reviewer will probe</td></tr>
+<tr><td>Phase 5 &middot; Polish</td><td>Week 4</td><td>Category E sub-segment regression and Category F doc refresh</td><td>Final alignment between deck, deliverables, and demo</td></tr>
+</tbody>
+</table>
+
+<p style="margin-top: 14px;">Total runway: <strong>four weeks</strong> if all four phases run in parallel with the right team. <strong>Six to seven weeks</strong> if single-threaded.</p>
+
+</div>
+</body>
+</html>

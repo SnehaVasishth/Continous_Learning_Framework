@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260521_123845_205607",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 2821,
+  "user_prompt_chars": 1081,
+  "raw_response_chars": 316,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email, not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these. the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nCRITICAL: DOMAIN UNFAMILIARITY ALONE IS NOT SPAM. Keysight is a B2B vendor with thousands of enterprise customers worldwide. Most legitimate sender domains will be UNFAMILIAR to you (raytheon-elseg.com, tesserasemiconductor.com.tw, auroraauto.com, meridiancomms.es, sakurasemi.co.jp, nordstern-telecom.de, etc.). These look unfamiliar but they are real customers' actual corporate domains. \n\nWhen the BODY CONTENT is a coherent customer business request (purchase order, quote-to-order conversion, ship-date change, hold release, calibration / repair / work-order request, service contract / renewal / cal-plan / PM-plan inquiry, or status question on an existing order/WO), the email is NOT spam, regardless of how unfamiliar the sender's domain looks to you. Set is_spam=False with category='legitimate' in those cases. \n\nReal lookalike-domain phishing requires BOTH (a) a domain that's clearly impersonating a known trusted brand (e.g., faux-keysight.com mimicking keysight.com, suspicious capital letters or homoglyphs, IP literal in URL) AND (b) a phishing pattern in the BODY (credential prompt, banking details change, urgent action click, executive-impersonation wire request, fake-invoice attachment from an unfamiliar sender). One signal alone (domain unfamiliarity OR business urgency) is NEVER sufficient. Both must be present. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: Rituraj Shrivastava <rituraj@leewayhertz.com>\nSUBJECT: Request to release credit hold on Order SO-LH-7733 \u2014 wire transfer cleared\nBODY (translated to English):\nHello Keysight Order Operations,\r\n\r\nCould you please release the credit hold on order SO-LH-7733? Our finance\r\nteam confirmed today that the outstanding balance on invoice INV-LH-7711\r\n(USD 88,420.00) was cleared by wire transfer on 2026-05-16. The bank\r\nconfirmation reference is WIRE-2026-05-16-LHRT-077.\r\n\r\nAttached is the Excel sheet our AR team uses for hold-release submissions,\r\nwith the bank reference, transaction ID, payer details, and the open\r\ninvoice it cleared.\r\n\r\nKey details:\r\n  - Customer: Leeway Hertz (account code LEEWAY-HERTZ-001)\r\n  - Order to release: SO-LH-7733\r\n  - Invoice cleared: INV-LH-7711 (USD 88,420.00)\r\n  - Payment date: 2026-05-16\r\n  - Bank reference: WIRE-2026-05-16-LHRT-077\r\n  - Method: SWIFT wire\r\n\r\nPlease confirm when the hold has been lifted so the order can move to ship.\r\n\r\nThanks,\r\nRituraj\r\nDirector, Procurement\r\nLeeway Hertz\r\nrituraj@leewayhertz.com\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.9,\"reasoning\":\"Coherent customer Order Ops request to release a credit hold on a specific sales order/invoice with wire payment confirmation details; no credential-harvest links, no request to change banking details, and sender domain matches stated company.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.9,
+    "reasoning": "Coherent customer Order Ops request to release a credit hold on a specific sales order/invoice with wire payment confirmation details; no credential-harvest links, no request to change banking details, and sender domain matches stated company.",
+    "category": "legitimate"
+  },
+  "error": null
+}

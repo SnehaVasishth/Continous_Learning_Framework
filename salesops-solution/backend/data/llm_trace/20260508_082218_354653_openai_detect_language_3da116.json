@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_082218_354653",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 224,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nConvert quote QT-AURA-AUTO-119-DEMO \u2192 order \u2014 PO + BOM + ATP attached\nHello team,\n\nPlease convert quote QT-AURA-AUTO-119-DEMO into an order using the attached PO PO-AURA-AUTO-119-Q2O-72296, BOM workbook, and acceptance test plan. The instruments will support our automotive Ethernet 100BASE-T1 conformance + ISO 26262 functional safety program with delivery into our automotive Ethernet / 100BASE-T1 conformance bench.\n\nSend SOA, projected ship date, and confirm cal certs will be A2LA-traceable as quoted.\n\nThanks,\nDanielle Park, Engineering Procurement\nAurora Automotive Electronics\n--- PO_PO-AURA-AUTO-119-Q2O-72296.pdf (light extract) ---\nPURCHASE ORDER\nAURORA AUTOMOTIVE ELECTRONICS\nAutomotive Electronics \u00b7 Americas Operations\nProcurement & Lab Operations\nBuyer: Danielle Park, Engineering Procurement\nPO Number\nPO-AURA-AUTO-119-Q2O\n-72296\nIssue Date\n2026-05-07\nRequested Ship Date\n2026-05-26\nPayment Terms\nNet 45\nQuote Reference\nQT-AURA-AUTO-119-DEM\nO\nBILL TO\nAurora Automotive Electronics\nAccounts Payable \u2014 Americas\nee.procurement@auroraauto.com\nSHIP TO\nAurora Automotive Electronics\nReceiving Dock \u2014 Americas\nAttn: Lab Operations\nSKU\nDescription\n Qty\n Unit Price\n Extended\nMSOS804A\nInfiniium S-Series Oscilloscope, 8 GHz, 4 analog + 16\ndigital\n 1\n $56,400.00\n $56,400.00\nB2902B\nPrecision Source/Measure Unit, 2-Ch, 10 fA / 100 nV\n 1\n $8,400.00\n $8,400.00\nCAL-A2LA-1Y\nCalibration Service - A2LA/ISO 17025 traceable,\n1-year\n 1\n $1,450.00\n $1,450.00\n Subtotal\n $66,250.00\n Tax (0%)\n $0.00\n TOT\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"The text uses English vocabulary and business email/PO terminology (e.g., 'Please convert quote', 'Purchase Order', 'Payment Terms', 'Requested Ship Date') with Latin script.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "The text uses English vocabulary and business email/PO terminology (e.g., 'Please convert quote', 'Purchase Order', 'Payment Terms', 'Requested Ship Date') with Latin script."
+  },
+  "error": null
+}

@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260508_084336_540474",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1742,
+  "user_prompt_chars": 1507,
+  "raw_response_chars": 1658,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.",
+  "user": "SOURCE_LANGUAGE_HINT: es\nTEXT:\n---**Page 1**PURCHASE ORDERMERIDIAN COMUNICACIONES SA Wireless / 5G/6G \u00b7 EMEA Operations Procurement & Lab Operations Procurement contact: see email signature for buyer details.BILL TOMeridian Comunicaciones SAAccounts Payable - EMEAcompras.lab@meridiancomms.esSHIP TOMeridian Comunicaciones SAReceiving Dock - EMEAAttn: Lab OperationsNOTES Added a cal kit (85052D) that was not on the original quote. Please include in the order if pricing is in line; otherwise let us know and we will issue a revised PO. This purchase order is issued subject to the buyer's standard terms and conditions of purchase. Acknowledgment of receipt is requested within 2 business days. All shipments must reference the PO Number on packing slips and invoices.- **PO Number:** PO-MERID-COMM-077-Q2 O-73116- **Issue Date:** 2026-05-07- **Requested Ship Date:** 2026-06-04- **Payment Terms:** Net 60- **Quote Reference:** QT-MERID-COMM-077-DE MO- **SKU:** Description | Qty | Unit Price | Extended- **M9384B-04F:** VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | $168,000.00 | $168,000.00- **N9040B-550:** UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | $196,000.00 | $196,000.00- **CAL-A2LA-1Y:** Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | $1,450.00 | $1,450.00- **85052D:** 3.5 mm Economy Calibration Kit, DC to 26.5 GHZ | 1 | $4,750.00 | $4,750.00- **Subtotal:** $370,200.00- **Tax (0%):** $0.00- **TOTAL:** $370,200.00\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"---**Page 1**\\nPURCHASE ORDER\\nMERIDIAN COMUNICACIONES SA\\nWireless / 5G/6G \u00b7 EMEA Operations Procurement & Lab Operations\\nProcurement contact: see email signature for buyer details.\\n\\nBILL TO\\nMeridian Comunicaciones SA\\nAccounts Payable - EMEA\\ncompras.lab@meridiancomms.es\\n\\nSHIP TO\\nMeridian Comunicaciones SA\\nReceiving Dock - EMEA\\nAttn: Lab Operations\\n\\nNOTES\\nAdded a cal kit (85052D) that was not on the original quote. Please include in the order if pricing is in line; otherwise let us know and we will issue a revised PO.\\nThis purchase order is issued subject to the buyer's standard terms and conditions of purchase.\\nAcknowledgment of receipt is requested within 2 business days.\\nAll shipments must reference the PO Number on packing slips and invoices.\\n\\n- **PO Number:** PO-MERID-COMM-077-Q2 O-73116\\n- **Issue Date:** 2026-05-07\\n- **Requested Ship Date:** 2026-06-04\\n- **Payment Terms:** Net 60\\n- **Quote Reference:** QT-MERID-COMM-077-DE MO-\\n\\n- **SKU:** Description | Qty | Unit Price | Extended\\n- **M9384B-04F:** VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | $168,000.00 | $168,000.00\\n- **N9040B-550:** UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | $196,000.00 | $196,000.00\\n- **CAL-A2LA-1Y:** Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | $1,450.00 | $1,450.00\\n- **85052D:** 3.5 mm Economy Calibration Kit, DC to 26.5 GHZ | 1 | $4,750.00 | $4,750.00\\n\\n- **Subtotal:** $370,200.00\\n- **Tax (0%):** $0.00\\n- **TOTAL:** $370,200.00\",\"source_language\":\"es\",\"notes\":\"The provided text is already in English; no translation changes were required.\"}",
+  "parsed": {
+    "translated_text": "---**Page 1**\nPURCHASE ORDER\nMERIDIAN COMUNICACIONES SA\nWireless / 5G/6G \u00b7 EMEA Operations Procurement & Lab Operations\nProcurement contact: see email signature for buyer details.\n\nBILL TO\nMeridian Comunicaciones SA\nAccounts Payable - EMEA\ncompras.lab@meridiancomms.es\n\nSHIP TO\nMeridian Comunicaciones SA\nReceiving Dock - EMEA\nAttn: Lab Operations\n\nNOTES\nAdded a cal kit (85052D) that was not on the original quote. Please include in the order if pricing is in line; otherwise let us know and we will issue a revised PO.\nThis purchase order is issued subject to the buyer's standard terms and conditions of purchase.\nAcknowledgment of receipt is requested within 2 business days.\nAll shipments must reference the PO Number on packing slips and invoices.\n\n- **PO Number:** PO-MERID-COMM-077-Q2 O-73116\n- **Issue Date:** 2026-05-07\n- **Requested Ship Date:** 2026-06-04\n- **Payment Terms:** Net 60\n- **Quote Reference:** QT-MERID-COMM-077-DE MO-\n\n- **SKU:** Description | Qty | Unit Price | Extended\n- **M9384B-04F:** VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | $168,000.00 | $168,000.00\n- **N9040B-550:** UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | $196,000.00 | $196,000.00\n- **CAL-A2LA-1Y:** Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | $1,450.00 | $1,450.00\n- **85052D:** 3.5 mm Economy Calibration Kit, DC to 26.5 GHZ | 1 | $4,750.00 | $4,750.00\n\n- **Subtotal:** $370,200.00\n- **Tax (0%):** $0.00\n- **TOTAL:** $370,200.00",
+    "source_language": "es",
+    "notes": "The provided text is already in English; no translation changes were required."
+  },
+  "error": null
+}

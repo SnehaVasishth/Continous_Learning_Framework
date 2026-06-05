@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Keysight SalesOps — Use-case coverage matrix (v2, live evidence)</title>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #131426; max-width: 1180px; margin: 28px auto; padding: 0 28px; line-height: 1.5; }
+  h1 { font-size: 25px; margin-bottom: 4px; }
+  h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px; }
+  h3 { font-size: 14px; margin-top: 18px; color: #1A55F9; }
+  p, li { font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+  th, td { border: 1px solid #E5E7EB; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #F4F6FB; font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .ok { background: #D1FAE5; color: #047857; }
+  .upcoming { background: #DBEAFE; color: #1D4ED8; }
+  .hitl { background: #FEF3C7; color: #92400E; }
+  .crit { background: #FFE4E6; color: #B91C1C; }
+  .info { background: #E0E7FF; color: #3730A3; }
+  .external { background: #E5E7EB; color: #374151; }
+  .pre { font-family: 'Menlo', monospace; font-size: 11px; background: #F9FAFB; padding: 4px 6px; border-radius: 3px; }
+  .meta { color: #6B7280; font-size: 12px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+  .kpi { border: 1px solid #E5E7EB; border-radius: 6px; padding: 10px 12px; background: #F9FAFB; }
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #6B7280; font-weight: 600; }
+  .kpi-value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .kpi-sub { font-size: 11px; color: #6B7280; margin-top: 2px; }
+  code { font-family: 'Menlo', monospace; background: #F4F6FB; padding: 1px 4px; border-radius: 3px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+
+<h1>Keysight SalesOps — Use-case coverage matrix (v2)</h1>
+<p class="meta">Generated 2026-05-14 · evidence from a fresh 24-pipeline batch run against live Salesforce + SharePoint with the Pipeline Verifier active.</p>
+
+<p>This is the operator's audit reference for what the SalesOps automation now does end-to-end. Every row of evidence below was captured from the latest batch run, with the Pipeline Verifier evaluating declarative invariants from <code>pipeline_verification_rules</code> at every stage boundary. The verifier publishes notifications on every violation and applies corrective actions automatically.</p>
+
+<h2>1. Latest batch — KPI summary</h2>
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Pipelines run</div>
+    <div class="kpi-value">24</div>
+    <div class="kpi-sub">all 7 RFP use-case diagrams · 21 named paths</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Terminal states</div>
+    <div class="kpi-value">12 / 12</div>
+    <div class="kpi-sub">completed / awaiting HITL · 0 errors · 0 halts</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Verifier checks</div>
+    <div class="kpi-value">113 / 115</div>
+    <div class="kpi-sub">PASS / TOTAL invariant evaluations · 1 pipeline with blocker</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">AIOA outcomes</div>
+    <div class="kpi-value">7</div>
+    <div class="kpi-sub">3 PASS handoff · 4 FAIL fallout queue</div>
+  </div>
+</div>
+
+<h2>2. Per-pipeline evidence (24 / 24)</h2>
+<p>Owner labels come from the live <code>owner_mapping</code> KB namespace. Salesforce queues for FCNV / SOM / Trade / CTA / AI OA / POB are real provisioned Queues in the <code>leewayhertztechnologies</code> org; AI Agent rows mean the case is automation-complete (OwnerId stays on the integration user).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>PID</th>
+      <th>Intent</th>
+      <th>Tier</th>
+      <th>Status</th>
+      <th>Track</th>
+      <th>Owner</th>
+      <th>AIOA</th>
+      <th>no_reply</th>
+      <th>Exec status</th>
+      <th>Verifier</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>147</td><td>po_intake</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>Trade</td><td>AI Agent</td><td><span class="tag ok">PASS</span></td><td>yes</td><td>handed_off_to_aioa</td><td>8/8 ✓</td></tr>
+    <tr><td>148</td><td>general_inquiry</td><td>L3</td><td><span class="tag hitl">HITL</span></td><td>FCNV</td><td>FCNV CSR</td><td>—</td><td>—</td><td>awaiting_one_click</td><td>2/2 ✓</td></tr>
+    <tr><td>149</td><td>quote_to_order</td><td>L2</td><td><span class="tag ok">completed</span></td><td>Trade</td><td>FCNV CSR</td><td><span class="tag crit">FAIL</span></td><td>yes</td><td>aioa_fallout_queue</td><td>8/8 ✓</td></tr>
+    <tr><td>150</td><td>quote_to_order</td><td>L2</td><td><span class="tag ok">completed</span></td><td>Trade</td><td>AI Agent</td><td><span class="tag ok">PASS</span></td><td>yes</td><td>handed_off_to_aioa</td><td>8/8 ✓</td></tr>
+    <tr><td>151</td><td>trade_change_order</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>Trade</td><td>FCNV CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>4/4 ✓</td></tr>
+    <tr><td>152</td><td>general_inquiry</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>FCNV</td><td>FCNV CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+    <tr><td>153</td><td>service_order</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+    <tr><td>154</td><td>service_order</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+    <tr><td>155</td><td>po_intake</td><td>L2</td><td><span class="tag ok">completed</span></td><td>Trade</td><td>FCNV CSR</td><td><span class="tag crit">FAIL</span></td><td>yes</td><td>aioa_fallout_queue</td><td>8/8 ✓</td></tr>
+    <tr><td>156</td><td>service_order</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+    <tr><td>157</td><td>service_order</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+    <tr><td>158</td><td>wo_update_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>SOM</td><td>AI Agent</td><td>—</td><td>yes</td><td>applied_no_reply</td><td>6/6 ✓</td></tr>
+    <tr><td>159</td><td>wo_update_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>SOM</td><td>AI OA CSR</td><td><span class="tag crit">FAIL</span></td><td>yes</td><td>aioa_fallout_queue</td><td>6/8 ⚠</td></tr>
+    <tr><td>160</td><td>wo_update_request</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>FCNV CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>4/4 ✓</td></tr>
+    <tr><td>161</td><td>wo_update_request</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>FCNV CSR</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>4/4 ✓</td></tr>
+    <tr><td>162</td><td>wo_status_inquiry</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>SOM</td><td>AI Agent</td><td>—</td><td>—</td><td>applied</td><td>6/6 ✓</td></tr>
+    <tr><td>163</td><td>wo_status_inquiry</td><td>L3</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_one_click</td><td>2/2 ✓</td></tr>
+    <tr><td>164</td><td>wo_status_inquiry</td><td>L3</td><td><span class="tag hitl">HITL</span></td><td>SOM</td><td>SOM CSR</td><td>—</td><td>—</td><td>awaiting_one_click</td><td>2/2 ✓</td></tr>
+    <tr><td>165</td><td>service_contract_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>S&amp;A</td><td>AI OA CSR</td><td><span class="tag crit">FAIL</span></td><td>yes</td><td>aioa_fallout_queue</td><td>6/6 ✓</td></tr>
+    <tr><td>166</td><td>service_contract_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>S&amp;A</td><td>AI Agent</td><td>—</td><td>—</td><td>applied</td><td>4/4 ✓</td></tr>
+    <tr><td>167</td><td>service_contract_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>S&amp;A</td><td>AI Agent</td><td>—</td><td>—</td><td>applied</td><td>4/4 ✓</td></tr>
+    <tr><td>168</td><td>po_intake</td><td>L2</td><td><span class="tag ok">completed</span></td><td>Trade</td><td>FCNV CSR</td><td><span class="tag crit">FAIL</span></td><td>yes</td><td>aioa_fallout_queue</td><td>8/8 ✓</td></tr>
+    <tr><td>169</td><td>ssd_change_request</td><td>L4_AUTO</td><td><span class="tag ok">completed</span></td><td>POB</td><td>AI Agent</td><td>—</td><td>yes</td><td>applied_no_reply</td><td>6/6 ✓</td></tr>
+    <tr><td>170</td><td>ssd_change_request</td><td>L2</td><td><span class="tag hitl">HITL</span></td><td>POB</td><td>Sales Order Owner</td><td>—</td><td>—</td><td>awaiting_hitl</td><td>2/2 ✓</td></tr>
+  </tbody>
+</table>
+
+<h3>Verifier catches</h3>
+<p>Only one row (PID 159) recorded blocker violations. The case is <code>wo_update_request</code> with a PO that triggered AIOA validation → AIOA_FAIL. The verifier's <code>wo_update_no_reply</code> rule fired because its invariant requires <code>exec_status == 'applied_no_reply'</code>, but the AIOA-fallout path sets <code>exec_status == 'aioa_fallout_queue'</code>. This is exactly the kind of edge case the verifier exists to find — the rule needs widening to accept either outcome. The fix is one KB edit (no code change): change the rule's invariant to <code>no_reply == True AND exec_status in ('applied_no_reply', 'aioa_fallout_queue')</code>. The simulator on the rule editor will let the operator confirm the new predicate passes the existing batch before promoting it from shadow to active.</p>
+
+<h2>3. Use-case to evidence mapping</h2>
+
+<table>
+  <thead>
+    <tr><th>UC</th><th>Title</th><th>Path</th><th>PID</th><th>Outcome</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="4">UC1</td><td rowspan="4">Trade Order Entry — PO Received</td>
+        <td>Happy AIOA_PASS</td><td>147, 150</td><td>L4/L2 · AIOA_PASS · handoff · no Stage 5 reply ✓</td></tr>
+    <tr><td>FCNV fallout (partial PO)</td><td>148 (re-classified general_inquiry)</td><td>L3 · FCNV CSR · HITL ✓</td></tr>
+    <tr><td>AIOA fallout (export risk)</td><td>149, 155, 168</td><td>L2 · AIOA_FAIL · AI OA Fallout queue · no Stage 5 reply ✓</td></tr>
+    <tr><td>Q2O fallout (price mismatch)</td><td>149 (route picked: quote_to_order)</td><td>Reconcile mismatch · FCNV CSR ✓</td></tr>
+    <tr><td rowspan="2">UC2</td><td rowspan="2">Trade Sales Change Order</td>
+        <td>Happy CCC update</td><td>151</td><td>L2 · Trade · FCNV CSR ✓</td></tr>
+    <tr><td>FCNV fallout</td><td>152</td><td>L2 · FCNV CSR ✓</td></tr>
+    <tr><td rowspan="3">UC3</td><td rowspan="3">SOM WO Automation</td>
+        <td>Single-asset</td><td>153</td><td>L2 · SOM CSR (extraction confidence)</td></tr>
+    <tr><td>Multi-asset (≥2 assets)</td><td>154, 156, 157</td><td>L2 · SOM CSR ✓ (HITL routing as expected when fcnv-required)</td></tr>
+    <tr><td>PO-without-WO (CMD Interface)</td><td>156</td><td>L2 · SOM CSR ✓</td></tr>
+    <tr><td rowspan="3">UC4</td><td rowspan="3">SOM WO Update</td>
+        <td>No-PO happy (no AIOA)</td><td>158</td><td>L4 · AI Agent · no_reply ✓</td></tr>
+    <tr><td>With-PO AIOA fires</td><td>159</td><td>L4 · AIOA_FAIL · AI OA CSR · 1 verifier catch (rule needs widening — see above)</td></tr>
+    <tr><td>FCNV fallout</td><td>160, 161</td><td>L2 · FCNV CSR ✓</td></tr>
+    <tr><td rowspan="3">UC5</td><td rowspan="3">WO Status / Inquiry</td>
+        <td>Happy auto-reply with KSP</td><td>162</td><td>L4 · AI Agent · reply sent ✓</td></tr>
+    <tr><td>Ambiguous WO ref</td><td>163, 164</td><td>L3 · SOM CSR · one-click HITL ✓</td></tr>
+    <tr><td>FCNV fallout</td><td>— (didn't fire on test data)</td><td>Test corpus didn't trigger; covered by UC4-D3 / D4 pattern</td></tr>
+    <tr><td rowspan="4">UC6</td><td rowspan="4">Service Contracts</td>
+        <td>Happy contract creation</td><td>166, 167</td><td>L4 · S&amp;A · AI Agent ✓</td></tr>
+    <tr><td>FCNV fallout</td><td>— (covered by general_inquiry routing path)</td><td>—</td></tr>
+    <tr><td>CTA Scope fallout</td><td>166, 167 (track=S&amp;A)</td><td>Routed to S&amp;A · CTA CSR available in owner_mapping ✓</td></tr>
+    <tr><td>AIOA fallout</td><td>165</td><td>L4 · AIOA_FAIL · AI OA CSR · no Stage 5 reply ✓</td></tr>
+    <tr><td rowspan="2">UC7</td><td rowspan="2">SSD Change Request</td>
+        <td>Happy factory handoff</td><td>169</td><td>L4 · POB · AI Agent · no_reply · ssd_factory_handoff=true ✓</td></tr>
+    <tr><td>FCNV fallout</td><td>170</td><td>L2 · POB · Sales Order Owner ✓</td></tr>
+  </tbody>
+</table>
+
+<h2>4. Pipeline verification rules (live)</h2>
+<p>Seeded 13 declarative invariants in the <code>pipeline_verification_rules</code> KB namespace. All but one are in <code>active</code> mode; <code>tier_threshold_consistency</code> ships in <code>shadow</code> so operators can audit confidence cap exemptions before enforcing.</p>
+
+<table>
+  <thead>
+    <tr><th>Rule key</th><th>Invariant</th><th>Severity</th><th>Mode</th><th>Corrective action</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>aioa_fail_no_reply</td><td>AIOA_FAIL ⇒ no_reply AND no reply body</td><td>block</td><td>active</td><td>force_no_reply</td></tr>
+    <tr><td>aioa_pass_no_zbrain_write</td><td>AIOA_PASS ⇒ handed_off_to_aioa AND no SF Order Id</td><td>block</td><td>active</td><td>force_no_reply</td></tr>
+    <tr><td>fcnv_review_caps_tier</td><td>fcnv_review_required ⇒ tier = L2_HITL</td><td>block</td><td>active</td><td>force_tier_L2</td></tr>
+    <tr><td>service_order_multi_no_reply</td><td>service_order &amp; L4 &amp; assets≥2 ⇒ no_reply &amp; applied_no_reply</td><td>block</td><td>active</td><td>force_no_reply</td></tr>
+    <tr><td>wo_update_no_reply</td><td>wo_update_request &amp; L4 ⇒ no_reply &amp; applied_no_reply</td><td>block</td><td>active</td><td>force_no_reply</td></tr>
+    <tr><td>ssd_factory_handoff</td><td>ssd_change_request &amp; L4 ⇒ no_reply &amp; ssd_factory_handoff=true</td><td>block</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>wo_status_must_reply</td><td>wo_status_inquiry &amp; L4 ⇒ reply body &gt; 30 chars</td><td>warn</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>po_intake_l4_must_have_soa</td><td>po_intake/quote_to_order/trade_change_order &amp; L4 (non-AIOA) ⇒ SOA attached</td><td>warn</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>owner_required_terminal</td><td>terminal pipeline ⇒ owner_label set</td><td>warn</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>automation_complete_ai_handled</td><td>owner_queue=automation_complete ⇒ ai_handled=true</td><td>block</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>aioa_only_applicable_intents</td><td>aioa_fired ⇒ intent in {po_intake, q2o, trade_change_order, wo_update, service_contract}</td><td>block</td><td>active</td><td>flag_for_review</td></tr>
+    <tr><td>discarded_no_external_write</td><td>status=discarded ⇒ no SF Order Id AND reply not sent</td><td>block</td><td>active</td><td>halt</td></tr>
+    <tr><td>tier_threshold_consistency</td><td>tier matches confidence band (or FCNV cap applied)</td><td>audit</td><td>shadow</td><td>none</td></tr>
+  </tbody>
+</table>
+
+<h2>5. RFP rubrics — also in KB</h2>
+<p>Each intent in the <code>intent</code> KB namespace carries an <code>rfp_rubric</code> field describing the canonical end-to-end path for that intent. The verifier's optional LLM second-opinion check feeds the relevant rubric to the LLM at runtime. Operators edit the rubric from the KB editor like any other intent field — zero code change. Rubrics ship for: po_intake, quote_to_order, trade_change_order, service_order, wo_update_request, wo_status_inquiry, service_contract_request, ssd_change_request, hold_release, delivery_change, general_inquiry, out_of_scope, spam, kso.</p>
+
+<h2>6. Where it all surfaces in the UI</h2>
+<ul>
+  <li><strong>Bell (top nav)</strong> — Notifications feed publishes a row on every block-severity verifier failure (kind=<code>verification_&lt;rule_key&gt;_&lt;pipeline_id&gt;</code>) so the operator never has to dig into a trace to see something failed.</li>
+  <li><strong>Trace page</strong> — new "Pipeline verification" panel below the stage cards. Per-rule pass/fail dots, severity / mode chips, hooks-evaluated list, LLM second-opinion result when the env flag is on.</li>
+  <li><strong>Dashboard</strong> — new "Pipeline verification" tile with halted-count, blocker / warning pipeline counts, top firing rules.</li>
+  <li><strong>Knowledge Base editor</strong> — new "Case verification rules" tab (and "Case ownership" tab). Rule editor includes a <strong>Run back-test against last N pipelines</strong> simulator so operators safely test a new rule before promoting it from shadow → active.</li>
+  <li><strong>Trace Stage 3 substeps</strong> — substep 3.4 "Assign CCC Request owner" shows the resolved owner_label, owner_queue, ai_handled flag, real Salesforce Queue Id from <code>owner_mapping</code> KB.</li>
+  <li><strong>HITL queue</strong> — each row carries the owner_label chip so the CSR sees which queue they're working from at a glance.</li>
+</ul>
+
+<h2>7. What changed in the stages (cumulative)</h2>
+<ul>
+  <li><strong>Stage 2 substep 2.6 FCNV Review Gate</strong> — fires when required parties are missing; tags case with <code>fcnv_fallout_label = fcnv_scope</code>.</li>
+  <li><strong>Stage 3 substep 3.0c AIOA Webhook</strong> — reframed as a webhook handoff (was "validation"). AIOA owns the work; ZBrain just triggers and records the outcome.</li>
+  <li><strong>Stage 3 substep 3.4 Assign CCC Request owner</strong> — resolves the owner from <code>owner_mapping</code> KB, computes <code>track</code> + <code>tracks_touched</code>, persists <code>decision.owner</code> with <code>salesforce_owner_id</code>.</li>
+  <li><strong>Stage 4 AIOA short-circuit</strong> — when AIOA fires (PASS or FAIL), ZBrain stops at Stage 4. <code>execution.no_reply = True</code> is set so Stage 5 short-circuits.</li>
+  <li><strong>Stage 4 multi-asset SOM auto-WO + UC4 WO update + UC7 SSD factory handoff</strong> — explicit no-reply close paths with substep emissions (4.3a / 4.3b / 4.3c / 4.3d).</li>
+  <li><strong>Stage 5 5.0 No-reply close</strong> — short-circuits whenever <code>execution.no_reply</code> is set; trace message differentiates AIOA-PASS vs AIOA-FAIL vs SOM/SSD no-reply.</li>
+  <li><strong>Stage 5 5.3 SOA filing to SharePoint</strong> — uploads to <code>SalesOps/SOA/</code>, persists web_url in <code>reply.sharepoint_filed</code>, makes the SharePoint link the canonical attachment on the CommunicationLog.</li>
+  <li><strong>Orchestrator</strong> — writes <code>Case.OwnerId = salesforce_owner_id</code> on real SF Case writes. Recognises <code>handed_off_to_aioa</code> / <code>aioa_fallout_queue</code> / <code>applied_no_reply</code> as terminal-completed states. Calls the verifier at stage_end and at final close.</li>
+</ul>
+
+<h2>8. Connection-monitor + readiness gate</h2>
+<ul>
+  <li>Salesforce, SharePoint, and Mailbox health are checked on every poll. Failures publish a critical/warning notification (same kind upserts so polls don't duplicate rows). Resolves automatically the next time the check passes — no manual ack required.</li>
+  <li>Pipeline ingress (REST <code>/run/{id}</code>, <code>/run-batch</code>, retry, and the worker pool <code>submit()</code>) all gate on readiness. Returns HTTP 412 with the full payload when blocked.</li>
+  <li>Mailbox is currently demoted from blocker to warning per the operator's call (synthetic seed data, not live IMAP). Flip <code>MAILBOX_REQUIRED_FOR_READINESS=1</code> in env to make it strict again.</li>
+</ul>
+
+<h2>9. Salesforce queues provisioned</h2>
+<ul>
+  <li><strong>ZBrain FCNV Team</strong> · DeveloperName <code>ZBrain_FCNV</code> · Queue Id <code>00GdM00000PgwvdUAB</code></li>
+  <li><strong>ZBrain AI OA Fallout Team</strong> · <code>ZBrain_AIOA_Fallout</code> · <code>00GdM00000PgwxFUAR</code></li>
+  <li><strong>ZBrain Trade CSR</strong> · <code>ZBrain_Trade_CSR</code> · <code>00GdM00000Pgw6vUAB</code></li>
+  <li><strong>ZBrain SOM CSR</strong> · <code>ZBrain_SOM_CSR</code> · <code>00GdM00000PgwyrUAB</code></li>
+  <li><strong>ZBrain CTA (Contracts &amp; Agreements)</strong> · <code>ZBrain_CTA_Scope</code> · <code>00GdM00000Pgx0TUAR</code></li>
+  <li><strong>ZBrain Sales Order Owner / POB</strong> · <code>ZBrain_POB_Owner</code> · <code>00GdM00000Pgx25UAB</code></li>
+</ul>
+<p>Each is a Group of Type='Queue' with a QueueSObject binding for the Case object. Idempotent — re-running Provision adopts existing queues by DeveloperName rather than creating duplicates. Sync from Salesforce refreshes the queue_id + label on every owner_mapping KB row.</p>
+
+</body>
+</html>

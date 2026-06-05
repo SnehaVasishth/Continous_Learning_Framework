@@ -1,0 +1,369 @@
+/**
+ * Governance API client.
+ *
+ * Talks to the live SalesOps backend over CORS. In dev the proxy in
+ * vite.config.ts forwards /api/* to localhost:8000; in production the same
+ * domain serves both apps so requests are same-origin via path routing.
+ *
+ * Set VITE_SALESOPS_API_URL to override the base for split-deploy setups.
+ */
+
+const API_BASE = (import.meta.env.VITE_SALESOPS_API_URL || "").replace(/\/$/, "");
+
+async function getJson<T>(path: string): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) {
+    throw new Error(`${path} → HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function postJson<T>(path: string, body?: unknown): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    throw new Error(`${path} → HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// =============================================================================
+// Governance response types — full set matching the ported backend endpoints.
+// Names match the source repo so the ported Governance.tsx imports just work.
+// =============================================================================
+
+export type GovSummary = {
+  hours: number;
+  generated_at: string;
+  totals: {
+    governed_pipelines: number;
+    active_policies: number;
+    pending_hitl: number;
+    avg_trust_score: number;
+    owasp_coverage: string;
+  };
+  policy_decisions: Record<string, number>;
+  ring_distribution: Record<string, number>;
+  ring_agents: Record<string, string[]>;
+  kill_events: { MANUAL: number; BEHAVIORAL_DRIFT: number; RATE_LIMIT: number; RING_BREACH: number; QUARANTINE_TIMEOUT: number; SESSION_TIMEOUT: number; total: number };
+  breach_alerts: { kind: string; severity: string; message: string; detected_at: string }[];
+  autonomy_tiers: Record<string, number>;
+  funnel: {
+    received: number;
+    passed_intake: number;
+    extracted: number;
+    reached_decision: number;
+    l4_auto: number;
+    l3_one_click: number;
+    l2_hitl: number;
+    completed: number;
+    discarded_intake: number;
+    errored: number;
+  };
+};
+
+export type GovAuditEntry = {
+  entry_id: number;
+  hash: string;
+  previous_hash: string;
+  timestamp: string | null;
+  agent_did: string;
+  // Server-rendered display name for the agent. Comes from the live
+  // `_live_stage_agents` map so it matches every other tab on the dashboard.
+  agent_display_name?: string;
+  event_type: string;
+  action: string;
+  resource: string;
+  outcome: string;
+  policy_decision: string;
+  matched_rule: string | null;
+  trace_id: string | null;
+  error_detail: string | null;
+  duration_ms: number | null;
+  stage: string;
+};
+
+export type GovAuditLog = {
+  page: number;
+  page_size: number;
+  total_count: number;
+  chain_integrity: "verified" | "tampered";
+  tampered_at: number | null;
+  entries: GovAuditEntry[];
+};
+
+export type GovAgentInfo = {
+  stage: string;
+  did: string;
+  display_name: string;
+  ring: number;
+  ring_label: string;
+  sponsor_role: string;
+  credential_ttl_sec: number;
+  allowed_tools: string[];
+  denied_tools: string[];
+  reversibility: string;
+  description: string;
+  key_properties: string[];
+  avg_trust_score: number;
+  trust_tier_label: string;
+  samples: number;
+  kill_events: number;
+  trust_histogram: number[];
+  credential_rotate_threshold_sec: number;
+  last_credential_rotation: string;
+};
+
+export type GovAgents = {
+  agents: GovAgentInfo[];
+  delegation_chain: {
+    root: {
+      label: string;
+      did: string;
+      ring: string;
+      capabilities: string[];
+      delegation_depth: number;
+      status: string;
+    };
+    agents: {
+      label: string;
+      did: string;
+      ring: number;
+      capabilities: string[];
+      dropped_capabilities: string[];
+      scope_narrowed: boolean;
+      delegation_depth: number;
+      parent_did: string;
+      status: string;
+      sponsor_role: string;
+    }[];
+    scope_chain_verified: boolean;
+    verified_at: string;
+  };
+  risk_signals: { kind: string; severity: string; stage: string; agent_did: string; message: string; ts: string | null }[];
+};
+
+export type GovPolicyDoc = {
+  policy_id: string;
+  namespace: string;
+  scope: string;
+  rule_key: string;
+  label: string;
+  description: string;
+  action: string;
+  priority: number;
+  condition_field: string;
+  condition_operator: string;
+  condition_value: string;
+  rule_message: string;
+  enforced_at: string;
+  owasp_control: string;
+  eval_backend: string;
+  evaluation_ms: number;
+  conflict_trace: string[];
+  conflict_detected: boolean;
+  candidates_evaluated: number;
+  audit_entry_sample: {
+    policy: string; rule: string; action: string;
+    context_snapshot: Record<string, unknown>;
+    timestamp: string; error: boolean;
+  };
+  strictness_diff: {
+    is_stricter_than_default: boolean;
+    diffs: { field: string; base: unknown; current: unknown; direction: string }[];
+  };
+  version: number;
+  updated_at: string | null;
+  fire_count: number;
+  last_fired_at: string | null;
+};
+
+export type GovPolicies = {
+  conflict_resolution: string;
+  all_conflict_strategies: { id: string; label: string; description: string; use_when: string; active: boolean }[];
+  policy_defaults: {
+    max_tool_calls: number; max_tokens: number; confidence_threshold: number;
+    drift_threshold: number; require_human_approval: boolean; log_all_calls: boolean;
+    timeout_seconds: number; checkpoint_frequency: number; max_concurrent: number; backpressure_threshold: number;
+  };
+  per_agent_policies: {
+    stage: string; label: string; ring: number;
+    max_tool_calls: number; max_tokens: number; confidence_threshold: number;
+    require_human_approval: boolean; log_all_calls: boolean; drift_threshold: number; timeout_seconds: number;
+  }[];
+  policies: GovPolicyDoc[];
+  policy_default_action: string;
+  tool_allow_deny_matrix: {
+    stage: string; did: string; ring: number; ring_label: string; reversibility: string; rate_limit_burst: number;
+    allowed: string[]; denied: string[];
+    policy_rule_count: number; policy_fire_count: number;
+    max_action: string | null; coverage_gap: boolean;
+    top_rule: { label: string; action: string; priority: number; owasp: string } | null;
+  }[];
+  confidence_gates: { gate: string; label: string; threshold_min: number | null; threshold_max: number | null; action: string; decision_allowed: boolean; stage: string; description: string }[];
+  blocked_patterns: {
+    kpis: { total_patterns: number; total_blocks: number; most_active_category: string; most_active_count: number; categories_count: number };
+    categories: {
+      id: string; label: string; description: string; agt_field: string;
+      total_patterns: number; total_fire_count: number;
+      patterns: { label: string; pattern: string; type: string; action: string; fire_count: number }[];
+    }[];
+    top_triggered: { label: string; pattern: string; type: string; action: string; fire_count: number; category: string; category_id: string }[];
+  };
+  total_active: number;
+  tool_invocation_breakdown: { tool: string; allow: number; block: number; total: number; block_rate: number }[];
+};
+
+export type SloResult = {
+  id: string;
+  name: string;
+  sli_type: string;
+  description: string;
+  display_target: string;
+  unit: string;
+  exhaustion_action: string;
+  window_hours: number;
+  current_value: number;
+  target: number;
+  comparison: "lt" | "gte";
+  met: boolean;
+  samples: number;
+  budget_total: number;
+  budget_consumed: number;
+  budget_remaining_pct: number;
+  is_exhausted: boolean;
+  burn_rate: number;
+  burn_rate_alert_threshold: number;
+  burn_rate_critical_threshold: number;
+  firing_alerts: { name: string; rate: number; severity: "warning" | "critical" }[];
+  series: (number | null)[];
+};
+
+export type StageSloRow = {
+  stage: string;
+  ring: number;
+  p50_ms: number;
+  p95_ms: number;
+  p99_ms: number;
+  samples: number;
+  target_ms: number;
+  met: boolean;
+};
+
+export type CostStageSummary = {
+  stage: string;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  token_budget: number;
+  cost_usd: number;
+  soft_cap_usd: number;
+  hard_cap_usd: number;
+  budget_used_pct: number;
+  status: "healthy" | "warning" | "over_hard_cap";
+};
+
+export type GovSlo = {
+  generated_at: string;
+  window_hours: number;
+  slos: SloResult[];
+  stage_latency: StageSloRow[];
+  cost_summary: {
+    window_hours: number;
+    total_tokens: number;
+    total_cost_usd: number;
+    soft_cap_usd: number;
+    hard_cap_usd: number;
+    per_stage: CostStageSummary[];
+  };
+  slos_met: number;
+  slos_total: number;
+  budgets_healthy: number;
+  active_alerts: number;
+};
+
+export type GovOWASPRisk = {
+  id: string;
+  name: string;
+  severity: "HIGH" | "MEDIUM";
+  agt_component: string;
+  salesops_feature: string;
+  agt_feature: string;
+  status: string;
+  evidence_field: string | null;
+  evidence_count: number | null;
+  grade: string;
+  evidence_strength: "strong" | "moderate" | "weak" | "none";
+  policy_rule_count: number;
+  policy_fire_count: number;
+};
+
+export type GovCompliance = {
+  generated_at: string;
+  owasp_version: string;
+  coverage: string;
+  all_covered: boolean;
+  compliance_grade: string;
+  coverage_pct: number;
+  attestation_hash: string;
+  grade_distribution: Record<string, number>;
+  needs_attention: { id: string; name: string; grade: string; evidence_strength: string; severity: string }[];
+  risks: GovOWASPRisk[];
+  mcp_gateway: {
+    tools_registered: number;
+    tools_clean: number;
+    threats_total: number;
+    last_full_scan: string;
+    pipeline_stages: string[];
+    tools: {
+      tool: string;
+      fingerprint: string;
+      last_scanned: string;
+      tool_poisoning: boolean;
+      rug_pull: boolean;
+      cross_server_attack: boolean;
+      confused_deputy: boolean;
+      hidden_instruction: boolean;
+      description_injection: boolean;
+      threats_detected: number;
+      status: string;
+      primary_stage?: string;
+      primary_ring?: number;
+    }[];
+  };
+  rate_limits: { ring: number; label: string; calls_per_sec: number; burst: number }[];
+};
+
+// =============================================================================
+// Function-style API surface
+// =============================================================================
+
+// The ported Governance.tsx (source) calls api.governance.summary() etc; the
+// new pages I added call api.summary() directly. Both shapes work.
+const governance = {
+  summary: (hours = 0) => getJson<GovSummary>(`/api/governance/summary?hours=${hours}`),
+  auditLog: (params: { page?: number; page_size?: number; event_type?: string; outcome?: string; agent_did?: string; hours?: number } = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") q.set(k, String(v)); });
+    return getJson<GovAuditLog>(`/api/governance/audit-log?${q.toString()}`);
+  },
+  agents: () => getJson<GovAgents>(`/api/governance/agents`),
+  policies: () => getJson<GovPolicies>(`/api/governance/policies`),
+  compliance: () => getJson<GovCompliance>(`/api/governance/compliance`),
+  slo: () => getJson<GovSlo>(`/api/governance/slo`),
+  acknowledgeAlert: (kind: string) =>
+    postJson<{ ok: boolean }>(`/api/governance/alerts/acknowledge`, { kind, actor: "governance_dashboard" }),
+  resolveAlert: (kind: string, note?: string) =>
+    postJson<{ ok: boolean }>(`/api/governance/alerts/resolve`, { kind, note, actor: "governance_dashboard" }),
+};
+
+export const api = {
+  ...governance,        // flat surface for the new route-page wrappers
+  governance,            // nested surface for the ported source components
+};

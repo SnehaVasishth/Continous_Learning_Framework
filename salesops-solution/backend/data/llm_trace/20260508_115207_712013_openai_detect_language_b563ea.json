@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_115207_712013",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 625,
+  "raw_response_chars": 185,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nService contract renewal \u2014 Z540.3 cal plan, Platinum SLA\nHi Keysight Service Contracts team,\n\nOur existing service contract is approaching expiry and we'd like to **renew** for another 12 months at the same coverage level (Platinum tier). Our defense program quality plan continues to require Z540.3 cal with full uncertainty budgets.\n\nIf there's any pricing concession for multi-year renewal, we'd consider extending to 24 or 36 months. Please send the renewal quote with start date aligning to current contract end date.\n\nAaron Brewer, Calibration Lab Supervisor\nRaytheon Aerospace - El Segundo Lab\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"English business email vocabulary and syntax (e.g., \\\"service contract renewal\\\", \\\"please send the renewal quote\\\") with Latin script.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "English business email vocabulary and syntax (e.g., \"service contract renewal\", \"please send the renewal quote\") with Latin script."
+  },
+  "error": null
+}

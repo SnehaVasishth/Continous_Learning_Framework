@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_084833_392648",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 743,
+  "raw_response_chars": 116,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\n\u30b9\u30ad\u30e3\u30f3 PO PO-SAKURA-SEMI-101-61612 \u306e\u9001\u4ed8\uff08OCR \u3054\u5bfe\u5fdc\u9858\u3044\u307e\u3059\uff09\nKeysight \u5fa1\u4e2d\n\n\u534a\u5c0e\u4f53\u30c6\u30b9\u30c8\u5411\u3051 5G NR FR2 \u8a55\u4fa1\u30e9\u30a4\u30f3\u3067\u4f7f\u7528\u4e88\u5b9a\u306e UXA Signal Analyzer \u306e\u767a\u6ce8\u66f8 (PO-SAKURA-SEMI-101-61612) \u3092\u3001\u627f\u8a8d\u30b9\u30bf\u30f3\u30d7\u4ed8\u304d\u30b9\u30ad\u30e3\u30f3\u753b\u50cf\u3067\u9001\u4ed8\u3044\u305f\u3057\u307e\u3059\u3002OCR \u306b\u3066\u5185\u5bb9\u3092\u3054\u78ba\u8a8d\u3044\u305f\u3060\u304d\u3001SOA \u3092\u767a\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\n\u306a\u304a\u3001ISO/IEC 17025 \u306b\u6e96\u62e0\u3057\u305f\u6821\u6b63\u30b5\u30fc\u30d3\u30b9\u3082\u5225\u9014\u304a\u898b\u7a4d\u3082\u308a\u4f9d\u983c\u4e88\u5b9a\u3067\u3059\u3002\n\n\u4f50\u85e4 \u7f8e\u54b2 / \u8a08\u6e2c\u6a5f\u5668\u8abf\u9054\nSakura Semiconductor KK\n--- PO_PO-SAKURA-SEMI-101-61612_scan.png (image) ---\nPURCHASE ORDER\nSAKURA SEMICONDUCTOR KK\nSemiconductor \u00b7 Asia-Pacific Operations\n\nPO NUMBER\nPO-SAKURA-SEMI-101-61612\nISSUE DATE\n2026-05-07\nREQUESTED SHIP DATE\n2026-05-28\nPAYMENT TERMS\nNet 45\n\nSKU  DESCRIPTION  QTY  UNIT PRICE  EXTENDED\nN9040B-550  UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth  1  $196,000.00  $196,000.00\n\nTOTAL  $196,000.00\n\nscanned copy \u2014 please OCR\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"ja\",\"confidence\":0.93,\"reasoning\":\"\u672c\u6587\u306f\u65e5\u672c\u8a9e\u306e\u8a9e\u5f59\u3068\u656c\u8a9e\u8868\u73fe\uff08\u300c\u5fa1\u4e2d\u300d\u300c\u9001\u4ed8\u3044\u305f\u3057\u307e\u3059\u300d\u300c\u3054\u78ba\u8a8d\u3044\u305f\u3060\u304d\u300d\uff09\u304c\u4e2d\u5fc3\u3067\u3001\u30ab\u30bf\u30ab\u30ca\u30fb\u6f22\u5b57\u30fb\u3072\u3089\u304c\u306a\u306e\u6df7\u5728\u304c\u898b\u3089\u308c\u308b\u305f\u3081\u3002\"}",
+  "parsed": {
+    "language": "ja",
+    "confidence": 0.93,
+    "reasoning": "\u672c\u6587\u306f\u65e5\u672c\u8a9e\u306e\u8a9e\u5f59\u3068\u656c\u8a9e\u8868\u73fe\uff08\u300c\u5fa1\u4e2d\u300d\u300c\u9001\u4ed8\u3044\u305f\u3057\u307e\u3059\u300d\u300c\u3054\u78ba\u8a8d\u3044\u305f\u3060\u304d\u300d\uff09\u304c\u4e2d\u5fc3\u3067\u3001\u30ab\u30bf\u30ab\u30ca\u30fb\u6f22\u5b57\u30fb\u3072\u3089\u304c\u306a\u306e\u6df7\u5728\u304c\u898b\u3089\u308c\u308b\u305f\u3081\u3002"
+  },
+  "error": null
+}

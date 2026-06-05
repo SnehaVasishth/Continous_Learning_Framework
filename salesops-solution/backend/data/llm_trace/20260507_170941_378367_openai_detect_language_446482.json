@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260507_170941_378367",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 218,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nQ2O QT-RTHN-AERO-014-DEMO \u2014 PO PO-RTHN-AERO-014-Q2O-70993 attached\nHi Keysight Sales, Please find PO PO-RTHN-AERO-014-Q2O-70993 converting\r\nquote QT-RTHN-AERO-014-DEMO. Requesting the discounted unit price agreed\r\nverbally with our account executive on the first line item. Please confirm\r\nor escalate for sales-ops approval. Issue the SOA and let me know if the\r\nvariance needs sales-ops approval. Thanks, Matt Holloway, Senior Buyer\r\nRaytheon Aerospace - El Segundo Lab\n--- imap_058cd797_BOM_PO-RTHN-AERO-014-Q2O-70993.xlsx (light extract) ---\n# Sheet: BOM\nBill of Materials |  |  |  | \nCustomer | Raytheon Aerospace - El Segundo Lab |  |  | \nQuote # | QT-RTHN-AERO-014-DEMO |  |  | \nSKU | Description | Qty | Unit Price (USD) | Extended (USD)\nN5247B-419 | PNA-X Microwave Network Analyzer, 67 GHz, 4-port, with frequency-converter + receiver options | 1 | 201020 | 201020\n85052D | 3.5 mm Economy Calibration Kit, DC to 26.5 GHz | 1 | 4750 | 4750\nCAL-Z540-1Y | Calibration Service - Z540.3 compliant, 1-year, with as-found data | 1 | 1850 | 1850\n |  |  | Subtotal | 207620\n |  |  | TOTAL | 207620\n\n--- imap_b8e66589_PO_PO-RTHN-AERO-014-Q2O-70993.pdf (light extract) ---\n---**Page 1**# PURCHASE ORDERRAYTHEON AEROSPACE - EL SEGUNDO LAB Aerospace & Defense \u00b7 Americas Operations Procurement & Lab Operations Procurement contact: see email signature for buyer details.BILL TORaytheon Aerospace - El Segundo LabAccounts Payable - Americasrfp.procurement@raytheon-elseg.comSHIP TORaytheon Aerospace - El\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"Text is predominantly English business correspondence with English vocabulary and formatting (e.g., 'Please find', 'Requesting', 'Purchase Order', 'Bill of Materials').\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "Text is predominantly English business correspondence with English vocabulary and formatting (e.g., 'Please find', 'Requesting', 'Purchase Order', 'Bill of Materials')."
+  },
+  "error": null
+}

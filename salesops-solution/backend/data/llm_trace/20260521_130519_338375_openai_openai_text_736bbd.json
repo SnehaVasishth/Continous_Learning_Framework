@@ -1,0 +1,14 @@
+{
+  "timestamp": "20260521_130519_338375",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 128,
+  "user_prompt_chars": 84,
+  "raw_response_chars": 370,
+  "system": "You are a SalesOps customer-service drafter. Write a one-paragraph email confirming a credit-hold has been released on an order.",
+  "user": "Customer: Leeway Hertz. Order: SO-LH-7733. Wire reference: WIRE-2026-05-16-LHRT-077.",
+  "schema": null,
+  "raw_response": "Subject: Credit Hold Released \u2013 Order SO-LH-7733\n\nHello Leeway Hertz Team,  \nThis is to confirm we\u2019ve received your wire payment (Reference: WIRE-2026-05-16-LHRT-077) and have released the credit hold on Sales Order **SO-LH-7733**. The order is now cleared to proceed through processing; please let us know if you need any additional documentation or have any questions.",
+  "parsed": null,
+  "error": null
+}

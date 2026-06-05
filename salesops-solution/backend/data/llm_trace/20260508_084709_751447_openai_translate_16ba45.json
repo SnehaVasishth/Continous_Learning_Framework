@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260508_084709_751447",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1742,
+  "user_prompt_chars": 647,
+  "raw_response_chars": 783,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.",
+  "user": "SOURCE_LANGUAGE_HINT: es\nTEXT:\n# Sheet: BOM\nBill of Materials |  |  |  | \nCustomer | Meridian Comunicaciones SA |  |  | \nQuote # | QT-MERID-COMM-077-DEMO |  |  | \nSKU | Description | Qty | Unit Price (USD) | Extended (USD)\nM9384B-04F | VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | 168000 | 168000\nN9040B-550 | UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | 196000 | 196000\nCAL-A2LA-1Y | Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | 1450 | 1450\n85052D | 3.5 mm Economy Calibration Kit, DC to 26.5 GHz | 1 | 4750 | 4750\n |  |  | Subtotal | 370200\n |  |  | TOTAL | 370200\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"# Sheet: BOM\\nBill of Materials |  |  |  | \\nCustomer | Meridian Comunicaciones SA |  |  | \\nQuote # | QT-MERID-COMM-077-DEMO |  |  | \\nSKU | Description | Qty | Unit Price (USD) | Extended (USD)\\nM9384B-04F | VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | 168,000 | 168,000\\nN9040B-550 | UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | 196,000 | 196,000\\nCAL-A2LA-1Y | Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | 1,450 | 1,450\\n85052D | 3.5 mm Economy Calibration Kit, DC to 26.5 GHz | 1 | 4,750 | 4,750\\n |  |  | Subtotal | 370,200\\n |  |  | TOTAL | 370,200\",\"source_language\":\"es\",\"notes\":\"Source text is already in English; only number grouping was reformatted to EN locale (e.g., 168000 \u2192 168,000).\"}",
+  "parsed": {
+    "translated_text": "# Sheet: BOM\nBill of Materials |  |  |  | \nCustomer | Meridian Comunicaciones SA |  |  | \nQuote # | QT-MERID-COMM-077-DEMO |  |  | \nSKU | Description | Qty | Unit Price (USD) | Extended (USD)\nM9384B-04F | VXG Vector Signal Generator, 44 GHz, 2-channel, 2 GHz modulation BW | 1 | 168,000 | 168,000\nN9040B-550 | UXA Signal Analyzer, 50 GHz, 510 MHz analysis bandwidth | 1 | 196,000 | 196,000\nCAL-A2LA-1Y | Calibration Service - A2LA/ISO 17025 traceable, 1-year | 1 | 1,450 | 1,450\n85052D | 3.5 mm Economy Calibration Kit, DC to 26.5 GHz | 1 | 4,750 | 4,750\n |  |  | Subtotal | 370,200\n |  |  | TOTAL | 370,200",
+    "source_language": "es",
+    "notes": "Source text is already in English; only number grouping was reformatted to EN locale (e.g., 168000 \u2192 168,000)."
+  },
+  "error": null
+}

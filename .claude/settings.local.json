@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\ZBrain_Project\\\\keysight-salesops-bundle\\\\salesops-solution\\\\backend\\\\app\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(Get-ChildItem -Path \"D:\\\\ZBrain_Project\\\\keysight-salesops-bundle\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(dir /s /b \"D:\\\\ZBrain_Project\\\\keysight-salesops-bundle\\\\salesops-solution\\\\backend\")",
+      "Bash(xargs grep -l \"HitlTask\\\\|autonomy_tier\")",
+      "Bash(xargs grep -l \"realised_lift\\\\|observed_lift\\\\|post_promotion\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\ZBrain_Project\\\\keysight-salesops-bundle\\\\salesops-solution\\\\backend\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Recurse -Name -Directory)",
+      "Bash(xargs grep -l \"lineage\\\\|provenance\")"
+    ]
+  }
+}

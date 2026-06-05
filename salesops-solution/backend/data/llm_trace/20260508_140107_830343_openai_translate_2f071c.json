@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260508_140107_830343",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1742,
+  "user_prompt_chars": 910,
+  "raw_response_chars": 898,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.",
+  "user": "SOURCE_LANGUAGE_HINT: es\nTEXT:\nEstimado equipo de Meridian Comms,\n\nGracias por su mensaje y por los detalles adicionales sobre la reparaci\u00f3n del UXR0334A.\n\nHemos recibido su solicitud de actualizaci\u00f3n de la orden de trabajo con los siguientes elementos:\n\n- Nota a a\u00f1adir: \"Cliente confirma que el problema se reproduce intermitentemente en Ch3 entre 12-15 GHz, no continuo. Adjuntar capturas si es posible.\"\n- Tarea a a\u00f1adir: \"Ejecutar verificaci\u00f3n de S-parameters as-found ANTES de cualquier ajuste, para nuestro audit log.\"\n\nPara poder aplicar correctamente estos cambios, \u00bfpodr\u00eda confirmarnos el n\u00famero de orden de trabajo (WO) asociado a la reparaci\u00f3n del UXR0334A? Con ese dato procederemos a incorporar la nota y la tarea de verificaci\u00f3n as-found al expediente, y le enviaremos confirmaci\u00f3n una vez registradas.\n\nQuedamos atentos a su respuesta.\n\nCordialmente,\nEquipo Keysight SalesOps\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"Dear Meridian Comms team,\\n\\nThank you for your message and for the additional details regarding the repair of the UXR0334A.\\n\\nWe have received your request to update the work order with the following items:\\n\\n- Note to add: \\\"Customer confirms the issue reproduces intermittently on Ch3 between 12\u201315 GHz, not continuously. Attach screenshots if possible.\\\"\\n- Task to add: \\\"Run as-found S-parameters verification BEFORE any adjustment, for our audit log.\\\"\\n\\nIn order to apply these changes correctly, could you please confirm the work order (WO) number associated with the repair of the UXR0334A? With that information, we will proceed to add the note and the as-found verification task to the file, and we will send you confirmation once they have been recorded.\\n\\nWe look forward to your reply.\\n\\nSincerely,\\nKeysight SalesOps Team\",\"source_language\":\"es\",\"notes\":\"\"}",
+  "parsed": {
+    "translated_text": "Dear Meridian Comms team,\n\nThank you for your message and for the additional details regarding the repair of the UXR0334A.\n\nWe have received your request to update the work order with the following items:\n\n- Note to add: \"Customer confirms the issue reproduces intermittently on Ch3 between 12\u201315 GHz, not continuously. Attach screenshots if possible.\"\n- Task to add: \"Run as-found S-parameters verification BEFORE any adjustment, for our audit log.\"\n\nIn order to apply these changes correctly, could you please confirm the work order (WO) number associated with the repair of the UXR0334A? With that information, we will proceed to add the note and the as-found verification task to the file, and we will send you confirmation once they have been recorded.\n\nWe look forward to your reply.\n\nSincerely,\nKeysight SalesOps Team",
+    "source_language": "es",
+    "notes": ""
+  },
+  "error": null
+}

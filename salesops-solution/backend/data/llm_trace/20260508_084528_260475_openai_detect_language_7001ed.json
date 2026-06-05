@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_084528_260475",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 209,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nFwd: Work faster with AI built into Google Workspace\nRegards,\r\nRituraj | VP of Product\r\nLeewayHertz, A Hackett Group Company\r\nhttps://calendly.com/riturajs/\r\n\r\n\r\n---------- Forwarded message ---------\r\nFrom: Google Workspace x YourStory <Info@yourstory.com>\r\nDate: Thu, May 7, 2026 at 4:32\u202fPM\r\nSubject: Work faster with AI built into Google Workspace\r\nTo: <rituraj@leewayhertz.com>\r\n\r\n\r\nSmarter emails, docs, and collaboration \u2014 now powered by Gemini AI\r\n\r\n07 May 2026 View in Browser\r\n<https://api-esp-ap.piano.io/story/estored/161/50275/632687/9508145/290472/vib-cmovdmw2z00q401kj7dfb6hpq?sig=11b5e828eb527ccbd77b4c79917d513c9d3db7d578a7a369693409fab4cde87f&order=0>\r\n\r\n\r\n<https://api-esp-ap.piano.io/-c/161/50275/632693/9508145/290472/5db9e6dbe51a9837552527ed3c15bd44/-1/-1?attrs=0&order=0>\r\n\r\n\r\nHello ,\r\n\r\n\r\n\r\nWork slows down in small, often invisible ways.\r\n\r\n\r\n\r\nNot because teams lack capability, but because too much time is spent\r\nnavigating emails, coordinating schedules, and piecing together information\r\nacross tools.\r\nOver time, that friction adds up.\r\n\r\n\r\n\r\nGoogle Workspace with Gemini helps reduce that friction by bringing AI\r\ndirectly into the tools your team already uses.\r\n\r\n\r\n\r\n*With Google Workspace, your team can:*\r\n\r\n   - Quickly understand long email threads with AI-powered summaries\r\n   - Draft responses with context and keep conversations moving\r\n   - Organise ideas, analyse inputs, and create structured outputs faster\r\n   - Let clients and partners book time directl\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"The text uses English vocabulary and business email phrasing (e.g., 'Work faster', 'Smarter emails', 'Hello', 'teams', 'reduce that friction') in Latin script.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "The text uses English vocabulary and business email phrasing (e.g., 'Work faster', 'Smarter emails', 'Hello', 'teams', 'reduce that friction') in Latin script."
+  },
+  "error": null
+}

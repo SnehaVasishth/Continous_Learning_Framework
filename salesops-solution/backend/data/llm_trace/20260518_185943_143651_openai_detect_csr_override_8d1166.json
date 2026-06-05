@@ -1,0 +1,105 @@
+{
+  "timestamp": "20260518_185943_143651",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 2047,
+  "user_prompt_chars": 534,
+  "raw_response_chars": 378,
+  "system": "You are a CSR-override detector for an enterprise B2B SalesOps inbox. Your job is to detect when a Keysight CSR (Customer Service Rep) has forwarded a customer email with EXPLICIT INSTRUCTIONS that override the automated intent classifier.\n\nCSR overrides typically appear in one of these forms:\n  \u2022 An added line at the top of a forwarded email \u2014 `\"FYI - process as hold release, not new PO\"`\n  \u2022 A directive \u2014 `\"Do NOT auto-respond. Escalate to legal team.\"`\n  \u2022 A re-routing instruction \u2014 `\"Wrong inbox \u2014 please route to service team.\"`\n  \u2022 An intent correction \u2014 `\"This is actually a service contract renewal, not a quote.\"`\n  \u2022 A force-HITL flag \u2014 `\"Customer is on credit hold \u2014 needs CSR review before any reply.\"`\n\nThe CSR is typically internal (sender domain matches the company, or the instruction sits ABOVE a `From:`/`-----Original Message-----`/`Begin forwarded message:` delimiter that introduces the original customer mail).\n\nDistinguish between:\n  \u2022 CSR override (what you flag) \u2014 internal staff overriding the classifier\n  \u2022 Customer instruction (NOT an override) \u2014 the customer themselves saying     'this is urgent' or 'please process as quote conversion'. Customer wording     is just normal classification signal \u2014 the classifier already considers it.\n\nOUTPUT KINDS:\n  \u2022 `none` \u2014 no CSR override present\n  \u2022 `intent_override` \u2014 CSR named a specific canonical intent (set override_intent)\n  \u2022 `do_not_auto` \u2014 CSR said 'do not auto-respond' / 'no automated reply' / 'manual handling only'\n  \u2022 `force_hitl` \u2014 CSR said 'needs review' / 'escalate' / 'flag for CSR' / 'HITL only'\n  \u2022 `force_track` \u2014 CSR named a workflow track (trade/som/service_contract)\n  \u2022 `route_to_team` \u2014 CSR routed to a named team (legal, credit, service, etc.)\n\nWhen in doubt, return `has_override=False` with `override_kind=none`. False positives here cost the CSR trust \u2014 better to miss a soft override than fabricate one. Only set has_override=True when there is CLEAR INTERNAL CSR LANGUAGE addressing the system.\n\nReturn strict JSON matching the contract.",
+  "user": "FROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: [UC3-C2] Service request \u2014 multi-asset calibration (3 instruments)\nAUTO-CLASSIFIER PRIMARY INTENT: service_order\nBODY (translated to English):\nPlease schedule calibration for the following at our Pasadena anechoic chamber by 2026-07-15:\n - Model E5071C Serial KEY-2202-0011\n - Model N5247B Serial KEY-2202-0034\n - Model 8975A  Serial KEY-2202-0099\nSame site for all three. Field service preferred.\n\nDetect whether a CSR has typed override instructions in this email. Return JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "has_override",
+      "override_kind",
+      "override_instruction",
+      "override_intent",
+      "override_track",
+      "override_team",
+      "reasoning",
+      "confidence"
+    ],
+    "properties": {
+      "has_override": {
+        "type": "boolean"
+      },
+      "override_kind": {
+        "type": "string",
+        "enum": [
+          "none",
+          "intent_override",
+          "do_not_auto",
+          "force_hitl",
+          "force_track",
+          "route_to_team"
+        ]
+      },
+      "override_instruction": {
+        "type": "string",
+        "description": "Verbatim CSR instruction text extracted from the email (empty string if none)."
+      },
+      "override_intent": {
+        "type": "string",
+        "enum": [
+          "po_intake",
+          "quote_to_order",
+          "trade_change_order",
+          "ssd_change_request",
+          "hold_release",
+          "delivery_change",
+          "service_order",
+          "wo_update_request",
+          "wo_status_inquiry",
+          "service_contract_request",
+          "general_inquiry",
+          "out_of_scope",
+          "spam",
+          "kso",
+          "collections",
+          "portal_admin",
+          "brazil_tax",
+          "undeliverable",
+          ""
+        ],
+        "description": "If override_kind=intent_override, the canonical intent the CSR named. Empty string otherwise."
+      },
+      "override_track": {
+        "type": "string",
+        "enum": [
+          "trade",
+          "som",
+          "service_contract",
+          "none",
+          ""
+        ],
+        "description": "If override_kind=force_track, the track the CSR named. Empty string otherwise."
+      },
+      "override_team": {
+        "type": "string",
+        "description": "If override_kind=route_to_team, the named team (e.g., 'legal', 'service', 'credit'). Empty string otherwise."
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence quoting the CSR instruction and explaining why it overrides the classifier."
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      }
+    }
+  },
+  "raw_response": "{\"has_override\":false,\"override_kind\":\"none\",\"override_instruction\":\"\",\"override_intent\":\"\",\"override_track\":\"\",\"override_team\":\"\",\"reasoning\":\"The email contains only customer service scheduling details and no internal CSR-added directive overriding classification (no text above a forward delimiter or instructions like 'process as'/'do not auto-respond').\",\"confidence\":0.93}",
+  "parsed": {
+    "has_override": false,
+    "override_kind": "none",
+    "override_instruction": "",
+    "override_intent": "",
+    "override_track": "",
+    "override_team": "",
+    "reasoning": "The email contains only customer service scheduling details and no internal CSR-added directive overriding classification (no text above a forward delimiter or instructions like 'process as'/'do not auto-respond').",
+    "confidence": 0.93
+  },
+  "error": null
+}

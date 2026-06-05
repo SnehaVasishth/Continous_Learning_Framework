@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260508_085209_858875",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1481,
+  "user_prompt_chars": 817,
+  "raw_response_chars": 280,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email \u2014 not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these \u2014 the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: Google <no-reply@accounts.google.com>\nSUBJECT: Security alert\nBODY (translated to English):\n[image: Google]\r\nApp password created to sign in to your account\r\n\r\n\r\norderinbox@leewayhertz.com\r\nIf you didn't generate this password for Application, someone might be\r\nusing your account. Check and secure your account now.\r\nCheck activity\r\n<https://accounts.google.com/AccountChooser?Email=orderinbox@leewayhertz.com&continue=https://myaccount.google.com/alert/nt/1778148650334?rfn%3D20%26rfnc%3D1%26eid%3D-4643087032193397348%26et%3D0>\r\nYou can also see security activity at\r\nhttps://myaccount.google.com/notifications\r\nYou received this email to let you know about important changes to your\r\nGoogle Account and services.\r\n\u00a9 2026 Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":false,\"confidence\":0.93,\"reasoning\":\"Security alert from Google no-reply@accounts.google.com with links to accounts.google.com/myaccount.google.com; appears to be a legitimate account notification rather than credential phishing or wire-fraud.\",\"category\":\"legitimate\"}",
+  "parsed": {
+    "is_spam": false,
+    "confidence": 0.93,
+    "reasoning": "Security alert from Google no-reply@accounts.google.com with links to accounts.google.com/myaccount.google.com; appears to be a legitimate account notification rather than credential phishing or wire-fraud.",
+    "category": "legitimate"
+  },
+  "error": null
+}

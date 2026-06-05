@@ -1,0 +1,37 @@
+# Local dev reverse proxy: terminates TLS at app.solution.zbrain.ai (with a
+# trusted cert from mkcert) and routes:
+#   /keysight-salesops/*  -> Vite dev server on :5173
+#   /api/*                -> FastAPI on :8000
+#   /                     -> redirect to /keysight-salesops/
+
+{
+	auto_https off
+	admin off
+}
+
+app.solution.zbrain.ai:443 {
+	tls /Users/rituraj/Downloads/keysight-handoff/keysight-salesops-demo/dev-proxy/app.solution.zbrain.ai.pem /Users/rituraj/Downloads/keysight-handoff/keysight-salesops-demo/dev-proxy/app.solution.zbrain.ai-key.pem
+
+	# Backend API
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	# Frontend (Vite dev server, configured with base /keysight-salesops/)
+	handle /keysight-salesops/* {
+		reverse_proxy 127.0.0.1:5173 {
+			# Forward the WebSocket upgrade so Vite HMR keeps working
+			header_up Host {host}
+		}
+	}
+
+	# Anything else lands on the app
+	handle {
+		redir /keysight-salesops/ 302
+	}
+
+	log {
+		output file /tmp/caddy-zbrain.log
+		level INFO
+	}
+}

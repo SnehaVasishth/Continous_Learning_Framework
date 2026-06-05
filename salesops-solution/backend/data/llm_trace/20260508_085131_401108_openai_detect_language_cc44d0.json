@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_085131_401108",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 397,
+  "raw_response_chars": 165,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nQuick: WO as-found status + invoice INV-2007-3 paid?\nHello,\n\nQuick question on the open work order for our SMU \u2014 did the as-found data come back in spec? Also, while you're looking, can you check whether our last invoice (INV-2007-3) has been paid? My AP team flagged it but I want to verify on your side before I push back.\n\nDr. Priya Iyer, Lab PI\nVertex Quantum Research\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"English vocabulary and business email phrasing (e.g., 'Quick question', 'invoice has been paid') with Latin script.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "English vocabulary and business email phrasing (e.g., 'Quick question', 'invoice has been paid') with Latin script."
+  },
+  "error": null
+}

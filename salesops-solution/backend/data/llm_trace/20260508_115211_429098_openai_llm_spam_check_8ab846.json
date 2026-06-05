@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260508_115211_429098",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 1481,
+  "user_prompt_chars": 699,
+  "raw_response_chars": 359,
+  "system": "You are a phishing / wire-fraud classifier for an enterprise B2B SalesOps inbox at Keysight Technologies. Your only job is to flag MALICIOUS or DECEPTIVE email \u2014 not promotional or transactional content from legitimate senders. Set is_spam=True ONLY when the email shows signs of: credential phishing ('verify your account', 'your mailbox is full'), payment-redirect / wire-fraud setups ('our banking details have changed'), lookalike-domain attacks (faux-keysight.com), 419/advance-fee scams, or unsolicited promo blasts from UNKNOWN/unverified senders. \n\nDO NOT flag is_spam=True for legitimate non-customer-business email. Examples that are NOT spam:\n  - Forwarded marketing newsletters from known brands (Google, Microsoft, AWS, LinkedIn)\n  - Account-security notifications from known providers (Google, Microsoft)\n  - Internal HR / IT / payroll announcements\n  - Calendar invites, out-of-office auto-replies\n  - Vendor receipts, billing notifications from known vendors\nThese are 'out_of_scope' (handled by the intent classifier, not by you). Set is_spam=False for these \u2014 the intent classifier downstream will categorize them. Use category='promotional' or 'legitimate' with is_spam=False when the email is non-customer-business but from a known/legit sender. \n\nReturn strict JSON: {\"is_spam\": bool, \"confidence\": float 0..1, \"reasoning\": short string citing specific cues, \"category\": one of [legitimate, promotional, phishing, payment_redirect, social_engineering, other]}.",
+  "user": "FROM: rfp.procurement@raytheon-elseg.com\nSUBJECT: Service contract renewal \u2014 Z540.3 cal plan, Platinum SLA\nBODY (translated to English):\nHi Keysight Service Contracts team,\n\nOur existing service contract is approaching expiry and we'd like to **renew** for another 12 months at the same coverage level (Platinum tier). Our defense program quality plan continues to require Z540.3 cal with full uncertainty budgets.\n\nIf there's any pricing concession for multi-year renewal, we'd consider extending to 24 or 36 months. Please send the renewal quote with start date aligning to current contract end date.\n\nAaron Brewer, Calibration Lab Supervisor\nRaytheon Aerospace - El Segundo Lab\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "is_spam",
+      "confidence",
+      "reasoning",
+      "category"
+    ],
+    "properties": {
+      "is_spam": {
+        "type": "boolean"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Short string citing specific cues"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "legitimate",
+          "promotional",
+          "phishing",
+          "payment_redirect",
+          "social_engineering",
+          "other"
+        ]
+      }
+    }
+  },
+  "raw_response": "{\"is_spam\":true,\"confidence\":0.78,\"reasoning\":\"Sender domain 'raytheon-elseg.com' appears to be a lookalike/typosquat of a major defense contractor (Raytheon) and not an obviously official domain; procurement/RFP context could be used for social engineering. No direct payment/credential ask, but domain anomaly is a key cue.\",\"category\":\"social_engineering\"}",
+  "parsed": {
+    "is_spam": true,
+    "confidence": 0.78,
+    "reasoning": "Sender domain 'raytheon-elseg.com' appears to be a lookalike/typosquat of a major defense contractor (Raytheon) and not an obviously official domain; procurement/RFP context could be used for social engineering. No direct payment/credential ask, but domain anomaly is a key cue.",
+    "category": "social_engineering"
+  },
+  "error": null
+}

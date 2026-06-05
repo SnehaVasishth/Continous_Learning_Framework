@@ -1,0 +1,37 @@
+{
+  "timestamp": "20260514_165948_868683",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 2894,
+  "user_prompt_chars": 318,
+  "raw_response_chars": 639,
+  "system": "You are a professional translator. Translate the user's text into clear, faithful English. Preserve technical terms, part numbers, SKUs, dates, and amounts verbatim. Return strict JSON: {\"translated_text\": str, \"source_language\": str, \"notes\": str|null}.\n\nKEYSIGHT TRANSLATION KB \u2014 apply these rules:\n  \u2022 Formatting: Reformat number grouping per locale (1.000,00 in DE/ES, 1,000.00 in EN). Do NOT convert currency unless explicitly requested.\n  \u2022 Preserve verbatim: Keysight\n  \u2022 Preserve verbatim: Keysight Technologies\n  \u2022 Preserve verbatim: SOA\n  \u2022 Preserve verbatim: PO\n  \u2022 Preserve verbatim: Q2O\n  \u2022 Preserve verbatim: SSD\n  \u2022 Preserve verbatim: WO\n  \u2022 Preserve verbatim: ECCN\n  \u2022 Preserve verbatim: EAR99\n  \u2022 Preserve verbatim: EAR\n  \u2022 Preserve verbatim: ITAR\n  \u2022 Preserve verbatim: A2LA\n  \u2022 Preserve verbatim: ISO 17025\n  \u2022 Preserve verbatim: Z540.3\n  \u2022 Preserve verbatim: ANSI/NCSL\n  \u2022 Preserve verbatim: MIL-STD-461\n  \u2022 Preserve verbatim: MIL-STD-810\n  \u2022 Preserve verbatim: AS9100\n  \u2022 Preserve verbatim: IATF 16949\n  \u2022 Preserve verbatim: ISO 26262\n  \u2022 Preserve verbatim: BERT\n  \u2022 Preserve verbatim: VNA\n  \u2022 Preserve verbatim: DSO\n  \u2022 Preserve any token matching pattern: \\\\b(PO|Q|QT|QUOTE|SO|WO|INV|CCC|CC|CR)-[A-Z0-9-]+\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]\\\\d{4,5}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b[A-Z]{2,4}\\\\d{2,4}[A-Z]?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bN\\\\d{4}[A-Z]?(-\\\\d+[A-Z]?)?\\\\b\n  \u2022 Preserve any token matching pattern: \\\\bM\\\\d{4}[A-Z]\\\\b\n  \u2022 Preserve any token matching pattern: \\\\b(MXA|EXA|UXA|UXR|FieldFox|InfiniiVision|Truevolt|Trueform|Streamline)\\\\b\n  \u2022 Tone: Use formal business register. Spanish: usted form. Japanese: keigo (\u656c\u8a9e). German: Sie form. French: vous form.\n\n  Keysight glossary (JA \u2192 EN) \u2014 use these canonical English terms:\n    \u00b7 \u30b3\u30f3\u30d7\u30e9\u30a4\u30a2\u30f3\u30b9\u4fdd\u7559 \u2192 compliance hold\n    \u00b7 EAR \u2192 EAR\n    \u00b7 ECCN \u2192 ECCN\n    \u00b7 \u6700\u7d42\u7528\u9014\u58f0\u660e\u66f8 \u2192 end-use statement\n    \u00b7 HS\u30b3\u30fc\u30c9 \u2192 HS code\n    \u00b7 ISO 17025 \u2192 ISO 17025\n    \u00b7 ITAR \u2192 ITAR\n    \u00b7 ANSI/NCSL Z540.3 \u2192 ANSI/NCSL Z540.3\n    \u00b7 \u90e8\u54c1\u8868 (BOM) \u2192 bill of materials\n    \u00b7 \u8acb\u6c42\u5148 \u2192 bill-to\n    \u00b7 \u30af\u30ec\u30b8\u30c3\u30c8\u4fdd\u7559 \u2192 credit hold\n    \u00b7 \u88fd\u9020\u7d42\u4e86 (EOL) \u2192 end of life\n    \u00b7 \u4fdd\u7559 \u2192 hold\n    \u00b7 \u7d0d\u671f \u2192 lead time\n    \u00b7 Net 30 \u2192 Net 30\n    \u00b7 \u65b0\u88fd\u54c1\u5c0e\u5165 (NPI) \u2192 new product introduction\n    \u00b7 \u90e8\u54c1\u756a\u53f7 \u2192 part number\n    \u00b7 \u652f\u6255\u6761\u4ef6 \u2192 payment terms\n    \u00b7 \u767a\u6ce8\u66f8 \u2192 purchase order\n    \u00b7 \u898b\u7a4d\u66f8 \u2192 quote\n    \u00b7 \u4fdd\u7559\u89e3\u9664 \u2192 release the hold\n    \u00b7 \u53d7\u6ce8\u78ba\u8a8d\u66f8 (SOA) \u2192 sales order acknowledgment\n    \u00b7 \u914d\u9001\u5148 \u2192 ship-to\n    \u00b7 SKU \u2192 SKU\n    \u00b7 \u6821\u6b63\u524d (as-found) \u2192 as-found\n    \u00b7 \u6821\u6b63\u5f8c (as-left) \u2192 as-left\n    \u00b7 \u6821\u6b63\u8a3c\u660e\u66f8 \u2192 calibration certificate\n    \u00b7 \u30aa\u30f3\u30b5\u30a4\u30c8\u30b5\u30fc\u30d3\u30b9 \u2192 on-site service\n    \u00b7 \u516c\u5dee\u5916 \u2192 out of tolerance\n    \u00b7 \u89e3\u6c7a\u6642\u9593 \u2192 resolution time\n    \u00b7 \u5fdc\u7b54\u6642\u9593 \u2192 response time\n    \u00b7 \u30b5\u30fc\u30d3\u30b9\u5951\u7d04 \u2192 service contract\n    \u00b7 SLA \u2192 SLA\n    \u00b7 \u4f5c\u696d\u6307\u793a \u2192 work order\n    \u00b7 Keysight Technologies \u2192 Keysight Technologies\n  Preserve verbatim acronyms (universal, never localize): BOM, EOL, NPI, OOT, MPN, PO, QT, SOA, WO",
+  "user": "SOURCE_LANGUAGE_HINT: ja\nTEXT:\nSubject: \u4f5c\u696d\u6307\u793a\u306e\u30b9\u30c6\u30fc\u30bf\u30b9\u78ba\u8a8d (\u6821\u6b63\u5bfe\u8c61 OOT \u542b\u3080)\n\n\u304a\u4e16\u8a71\u306b\u306a\u3063\u3066\u304a\u308a\u307e\u3059\u3002\n\n\u5f0a\u793e\u30aa\u30fc\u30d7\u30f3\u72b6\u614b\u306e\u4f5c\u696d\u6307\u793a\u66f8\u306e\u30b9\u30c6\u30fc\u30bf\u30b9\u3068\u5b8c\u4e86\u898b\u8fbc\u307f\u3092\u3054\u6559\u793a\u304f\u3060\u3055\u3044\u3002\u7279\u306b\u6821\u6b63\u5bfe\u8c61\u30a2\u30bb\u30c3\u30c8\u306b\u3064\u3044\u3066\u3001OOT \u9805\u76ee\u306e\u6709\u7121\u3082\u3042\u308f\u305b\u3066\u3054\u9023\u7d61\u3044\u305f\u3060\u3051\u307e\u3059\u3067\u3057\u3087\u3046\u304b\u3002\n\nOzeki Test Systems\n\n\n--\nOzeki Test Systems\n\u8cfc\u8cb7\u90e8 / Procurement\nwww.ozekitest.co.jp\n\u672c\u30e1\u30fc\u30eb\u304a\u3088\u3073\u6dfb\u4ed8\u30d5\u30a1\u30a4\u30eb\u306f\u6a5f\u5bc6\u60c5\u5831\u3092\u542b\u3080\u5834\u5408\u304c\u3042\u308a\u307e\u3059\u3002\u8aa4\u3063\u3066\u53d7\u4fe1\u3055\u308c\u305f\u5834\u5408\u306f\u3054\u9023\u7d61\u306e\u4e0a\u3001\u524a\u9664\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "translated_text",
+      "source_language",
+      "notes"
+    ],
+    "properties": {
+      "translated_text": {
+        "type": "string"
+      },
+      "source_language": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  },
+  "raw_response": "{\"translated_text\":\"Subject: Status Check for Work Orders (Including OOT Calibration Items)\\n\\nThank you for your continued support.\\n\\nCould you please advise the status and expected completion date for our work orders that are currently open? In particular, for the assets subject to calibration, could you also let us know whether there are any OOT items?\\n\\nOzeki Test Systems\\n\\n\\n--\\nOzeki Test Systems\\nPurchasing Department / Procurement\\nwww.ozekitest.co.jp\\nThis email and any attachments may contain confidential information. If you have received it in error, please contact us and delete it.\",\"source_language\":\"ja\",\"notes\":\"\"}",
+  "parsed": {
+    "translated_text": "Subject: Status Check for Work Orders (Including OOT Calibration Items)\n\nThank you for your continued support.\n\nCould you please advise the status and expected completion date for our work orders that are currently open? In particular, for the assets subject to calibration, could you also let us know whether there are any OOT items?\n\nOzeki Test Systems\n\n\n--\nOzeki Test Systems\nPurchasing Department / Procurement\nwww.ozekitest.co.jp\nThis email and any attachments may contain confidential information. If you have received it in error, please contact us and delete it.",
+    "source_language": "ja",
+    "notes": ""
+  },
+  "error": null
+}

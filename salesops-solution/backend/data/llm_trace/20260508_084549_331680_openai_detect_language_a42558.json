@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_084549_331680",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 1525,
+  "raw_response_chars": 212,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nPO PO-VERTEX-Q-053-56735 \u2014 Precision Source/Measure Unit \u2014 please acknowledge\nHi Keysight Sales Ops team,\n\nPlease find attached our purchase order PO-VERTEX-Q-053-56735 for the Precision Source/Measure Unit.\nThis is being deployed in our quantum control electronics rack for qubit control characterization at mK temperatures. Kindly issue the Sales Order Acknowledgment (SOA) and confirm the requested ship date.\n\nNote: please coordinate any export documentation through our Trade Compliance team \u2014 copy on this thread.\n\nRegards,\nDr. Priya Iyer, Lab PI\nVertex Quantum Research\nlab.ops@vertex-quantum.com\n--- PO_PO-VERTEX-Q-053-56735.pdf (light extract) ---\n---**Page 1**PURCHASE ORDER VERTEX QUANTUM RESEARCH Research . Americas Operations Procurement & Lab OperationsBILL TOVertex Quantum ResearchAccounts Payable - Americaslab.ops@vertex-quantum.comSHIP TOVertex Quantum ResearchReceiving Dock - AmericasAttn: Lab OperationsNOTESPlease confirm SOA and ship date.This purchase order is issued subject to the buyer's standard terms and conditions of purchase. Acknowledgment of receipt is requested within 2 business days. All shipments must reference the PO Number on packing slips and invoices.- **PO Number:** PO-VERTEX-Q-053-56735- **Issue Date:** 2026-05-07- **Requested Ship Date:** 2026-05-22- **Payment Terms:** Net 45- **SKU:** Description | Qty | Unit Price | Extended- **B2902B:** Precision Source/Measure Unit, 2-Ch, 10 fA / 100 nV | 1 | $8,400.00 | $8,400.00- **Subtotal:** $8,400.00- **\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"en\",\"confidence\":0.99,\"reasoning\":\"The text uses English vocabulary and business email phrasing (e.g., 'please find attached', 'purchase order', 'requested ship date') with Latin script throughout.\"}",
+  "parsed": {
+    "language": "en",
+    "confidence": 0.99,
+    "reasoning": "The text uses English vocabulary and business email phrasing (e.g., 'please find attached', 'purchase order', 'requested ship date') with Latin script throughout."
+  },
+  "error": null
+}

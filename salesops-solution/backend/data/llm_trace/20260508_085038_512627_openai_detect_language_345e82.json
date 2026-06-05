@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260508_085038_512627",
+  "provider": "openai",
+  "model": "gpt-5.2",
+  "system_prompt_chars": 226,
+  "user_prompt_chars": 521,
+  "raw_response_chars": 243,
+  "system": "You are a language-detection agent. Given a short piece of text, return strict JSON: {\"language\": one of [en, es, ja, other], \"confidence\": float 0..1, \"reasoning\": short string explaining the cue (script, vocabulary, idiom)}.",
+  "user": "TEXT:\nSolicitud \u2014 Plan PM con cal A2LA, SLA Gold, ~8 instrumentos\nHola Keysight,\n\nSolicito informaci\u00f3n sobre planes de mantenimiento preventivo (PM) para nuestra c\u00e1mara anecoica y banco de pre-cumplimiento 5G. Buscamos un plan **PM** con visita semestral, calibraci\u00f3n trazable A2LA, y SLA Gold (8h response / 48h resolution).\n\nAproximadamente 8 instrumentos en cobertura. \u00bfPueden enviar una cotizaci\u00f3n inicial y los t\u00e9rminos del contrato?\n\nSaludos,\nLuc\u00eda M\u00e9ndez, AP & Procurement\nNordstern Telecom Labs\n\nReturn JSON only.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "confidence",
+      "reasoning"
+    ],
+    "properties": {
+      "language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "es",
+          "ja",
+          "other"
+        ]
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "1 sentence explaining the cue (script, vocabulary, idiom)"
+      }
+    }
+  },
+  "raw_response": "{\"language\":\"es\",\"confidence\":0.99,\"reasoning\":\"Spanish vocabulary and grammar throughout (e.g., \\\"Solicito informaci\u00f3n\\\", \\\"planes de mantenimiento preventivo\\\", \\\"\u00bfPueden enviar una cotizaci\u00f3n?\\\") with Latin-script punctuation and accents.\"}",
+  "parsed": {
+    "language": "es",
+    "confidence": 0.99,
+    "reasoning": "Spanish vocabulary and grammar throughout (e.g., \"Solicito informaci\u00f3n\", \"planes de mantenimiento preventivo\", \"\u00bfPueden enviar una cotizaci\u00f3n?\") with Latin-script punctuation and accents."
+  },
+  "error": null
+}
