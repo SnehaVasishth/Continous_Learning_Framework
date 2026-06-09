@@ -16,7 +16,7 @@ from .logging_setup import configure_logging
 from .middleware.auth import BearerAuthMiddleware
 from .middleware.basic_auth import BasicAuthMiddleware
 from .routes import aioa as aioa_routes
-from .routes import analytics, data, docs, email_accounts, emails, feedback, governance, hitl, integrations, kb, learning, notifications, pipeline, seed, sf_users, system, threads, trace
+from .routes import analytics, data, docs, email_accounts, emails, feedback, governance, hitl, integrations, kb, learning, notifications, pipeline, seed, sf_users, signal_graph, system, threads, trace
 # === v1.1 TASK-7 START ===
 from .routes import test_corpus
 # === v1.1 TASK-7 END ===
@@ -156,6 +156,7 @@ app.include_router(governance.router, prefix="/api/governance", tags=["governanc
 app.include_router(aioa_routes.router, prefix="/api/aioa", tags=["aioa"])
 # === v1.1 TASK-7 ===
 app.include_router(test_corpus.router, prefix="/api/test-corpus", tags=["test-corpus"])
+app.include_router(signal_graph.router, prefix="/api/signal-graph", tags=["signal-graph"])
 
 
 @app.get("/api/health")
