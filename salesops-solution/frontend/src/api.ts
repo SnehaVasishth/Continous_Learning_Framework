@@ -1780,6 +1780,57 @@ export type AIOARequestDetail = AIOARequestRow & {
   csr_draft: { subject?: string; body?: string; kind?: string; correlation_id?: string };
 };
 
+// === SIGNAL GRAPH (Quality-Gate Discovery) ===
+// One candidate quality gate returned by GET /signal-graph/recommendations.
+// Mirrors the dict the backend builds in routes/signal_graph.py.
+export type SgRecommendation = {
+  id: number;                 // recommendation row id (used to accept/dismiss/graph)
+  metric: string;            // the gate's key, e.g. "availability.healthcheck_success_rate"
+  segment: string;           // scope of the metric, "global" in v1
+  direction: "min" | "max";  // "min" = higher-is-better, "max" = lower-is-better
+  score: number;             // ranking score (0 until data exists)
+  rationale: string;         // LLM's one-line reason this gate is worth watching
+  inputs: string[];          // the signal keys this gate is computed from (graph edges)
+  compute: string | null;    // how it's computed: rate | ratio | p95 | psi | count | mean
+};
+
+// The signal subgraph for one gate, returned by GET /recommendations/{id}/graph.
+export type SgGraph = {
+  nodes: { key: string; type: string }[];                       // signals + the target node
+  edges: { from: string; to: string; weight: number | null }[]; // signal -> target links
+};
+
+// Small summary returned by POST /signal-graph/discover.
+export type SgDiscoverResult = {
+  session_id: string;
+  signals: number;  // how many signals Pass 1 extracted
+  gates: number;    // how many candidate gates Pass 2 proposed
+};
+
+export const signalGraphApi = {
+  discover: (tenant_id: string, session_id: string) =>
+    jsonRequest<SgDiscoverResult>(`/signal-graph/discover`, {
+      method: "POST",
+      body: JSON.stringify({ tenant_id, session_id }),
+    }),
+  recommendations: (session_id: string) =>
+    jsonRequest<SgRecommendation[]>(
+      `/signal-graph/recommendations?session_id=${encodeURIComponent(session_id)}`,
+    ),
+  accept: (id: number, target_value: number) =>
+    jsonRequest<{ id: number; metric: string; target_value: number; status: string }>(
+      `/signal-graph/recommendations/${id}/accept`,
+      { method: "POST", body: JSON.stringify({ target_value }) },
+    ),
+  dismiss: (id: number) =>
+    jsonRequest<{ ok: boolean }>(`/signal-graph/recommendations/${id}/dismiss`, {
+      method: "POST",
+    }),
+  graph: (id: number) =>
+    jsonRequest<SgGraph>(`/signal-graph/recommendations/${id}/graph`),
+};
+
+
 export const aioaApi = {
   listProviders: () => jsonRequest<AIOAProvider[]>(`/aioa/providers`),
   getProvider: (id: number) => jsonRequest<AIOAProvider>(`/aioa/providers/${id}`),
