@@ -2395,6 +2395,7 @@ export type SgGate = {
   psi?: number | null;
   breached?: boolean;
   severity?: "high" | "medium" | "info";
+  streams?: string;   // "telemetry+feedback" or "telemetry" — which streams fed drift
 };
 
 export type SgAnalyzeResult = { domain: string; edges_updated: number; gates_analyzed: number };

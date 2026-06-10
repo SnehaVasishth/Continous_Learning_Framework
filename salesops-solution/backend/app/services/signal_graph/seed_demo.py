@@ -54,13 +54,13 @@ def seed_demo_observations(db: Session, domain: str, *, windows: int = 8) -> dic
         if not gates[g.metric]["inputs"]:
             gates[g.metric]["inputs"] = g.inputs or []
 
-    def _write(key: str, series: list[float]) -> None:
+    def _write(key: str, series: list[float], stream: str = "telemetry", n_lo: int = 40, n_hi: int = 120) -> None:
         for i, val in enumerate(series):
             ws = base_time + timedelta(days=i)
             record_observation(
                 db, domain=domain, signal_key=key, value=round(val, 4),
                 window_start=ws, window_end=ws + timedelta(days=1),
-                sample_size=rng.randint(40, 120), source_stream="telemetry",
+                sample_size=rng.randint(n_lo, n_hi), source_stream=stream,
                 meta={"synthetic": True},
             )
 
@@ -87,6 +87,14 @@ def seed_demo_observations(db: Session, domain: str, *, windows: int = 8) -> dic
         metric_series[metric] = series
         _write(metric, series)
         written += len(series)
+
+        # Accepted gates also get a FEEDBACK stream: human review on a smaller
+        # subset, running a bit below telemetry (the self-blinding gap that
+        # dual-input drift is meant to catch).
+        if gate is not None:
+            fb_series = [v * 0.93 + rng.uniform(-0.01, 0.01) * abs(v or 1) for v in series]
+            _write(metric, fb_series, stream="feedback", n_lo=12, n_hi=40)
+            written += len(fb_series)
 
     # 2) input signals correlated with their gate metric (so edge weights are real).
     seeded: set[str] = set()

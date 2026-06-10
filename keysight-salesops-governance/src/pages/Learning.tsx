@@ -5087,6 +5087,7 @@ function DiscoverTab() {
                         {" · "}current {g.current?.toFixed(3)}
                         {g.delta_pct != null && <> ({(g.delta_pct * 100).toFixed(1)}%)</>}
                         {g.psi != null && <> · PSI {g.psi.toFixed(2)}</>}
+                        {g.streams && <> · {g.streams}</>}
                       </>
                     )}
                   </div>

@@ -307,6 +307,7 @@ export function SignalGraphPage() {
                           <> ({(g.delta_pct * 100).toFixed(1)}%)</>
                         )}
                         {g.psi != null && <> · PSI {g.psi.toFixed(2)}</>}
+                        {g.streams && <> · {g.streams}</>}
                       </>
                     )}
                   </div>

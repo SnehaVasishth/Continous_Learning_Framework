@@ -22,6 +22,45 @@ def _values(db: Session, domain: str, signal_key: str, segment: str) -> list[flo
     return [r.value for r in observation_series(db, domain, signal_key, segment) if r.value is not None]
 
 
+def consolidated_series(db: Session, domain: str, metric: str, segment: str = "global") -> tuple[list[float], bool]:
+    """Consolidate telemetry + feedback into one value per window (Task 2,
+    'dual-input drift').
+
+    Telemetry covers EVERY case but the AI may grade itself optimistically;
+    human feedback is ground truth on the REVIEWED subset. So per window we
+    blend: the more of the population humans reviewed, the more feedback is
+    trusted. alpha = feedback_samples / telemetry_samples (capped at 1).
+
+        consolidated = (1 - alpha) * telemetry + alpha * feedback
+
+    Returns (values oldest-first, had_feedback). Windows with only telemetry
+    pass through unchanged; this naturally degrades to telemetry-only for
+    clients with no feedback stream (e.g. a plain CRUD app).
+    """
+    tel: dict = {}
+    fb: dict = {}
+    for r in observation_series(db, domain, metric, segment):
+        if r.value is None:
+            continue
+        (tel if r.source_stream == "telemetry" else fb)[r.window_start] = (r.value, r.sample_size or 0)
+
+    out: list[float] = []
+    had_feedback = False
+    for ws in sorted(set(tel) | set(fb)):
+        tv, tn = tel.get(ws, (None, 0))
+        fv, fn = fb.get(ws, (None, 0))
+        if fv is not None and tv is not None:
+            alpha = min(1.0, fn / tn) if tn else 1.0
+            out.append((1 - alpha) * tv + alpha * fv)
+            had_feedback = True
+        elif fv is not None:
+            out.append(fv)
+            had_feedback = True
+        else:
+            out.append(tv)
+    return out, had_feedback
+
+
 def suggested_range(db: Session, domain: str, metric: str, segment: str = "global") -> dict:
     """A non-binding hint for the human's target: where the metric has sat.
 
@@ -91,11 +130,13 @@ def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
     if target is None:
         return {**base, "status": "no_target"}
 
-    status = data_status(db, domain, gate.metric, gate.segment)
-    if status != "ok":
-        return {**base, "status": status}
+    # Dual-input: drift runs on the telemetry+feedback consolidated series.
+    values, had_feedback = consolidated_series(db, domain, gate.metric, gate.segment)
+    if not values:
+        return {**base, "status": "no_data"}
+    if len(values) < MIN_WINDOWS:
+        return {**base, "status": "insufficient_data"}
 
-    values = _values(db, domain, gate.metric, gate.segment)
     current = values[-1]
     delta = current - target
     delta_pct = (delta / target) if target else None
@@ -115,7 +156,8 @@ def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
         severity = "info"
 
     return {**base, "status": "ok", "current": current, "delta": delta,
-            "delta_pct": delta_pct, "psi": psi, "breached": breached, "severity": severity}
+            "delta_pct": delta_pct, "psi": psi, "breached": breached, "severity": severity,
+            "streams": "telemetry+feedback" if had_feedback else "telemetry"}
 
 
 def compute_drift(db: Session, domain: str) -> list[dict]:

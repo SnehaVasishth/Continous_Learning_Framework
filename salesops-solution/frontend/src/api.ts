@@ -1829,6 +1829,7 @@ export type SgGate = {
   psi?: number | null;
   breached?: boolean;
   severity?: "high" | "medium" | "info";
+  streams?: string;   // "telemetry+feedback" or "telemetry" — which streams fed drift
 };
 
 // Summary from POST /signal-graph/analyze.
