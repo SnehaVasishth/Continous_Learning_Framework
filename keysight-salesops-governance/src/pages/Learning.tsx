@@ -115,6 +115,18 @@ export function LearningPage() {
   const [tuneFilter, setTuneFilter] = useState<number | null>(null);
   const [expFilter, setExpFilter] = useState<number | null>(null);
   const [promoteFilter, setPromoteFilter] = useState<number | null>(null);
+  // Shared client (domain) selection — drives BOTH the Baselines and Drift
+  // tabs so a client is picked once. "keysight" is the built-in client.
+  const [domain, setDomain] = useState("keysight");
+  const [domainList, setDomainList] = useState<{ domain: string; gates: number }[]>([]);
+  const [onboarding, setOnboarding] = useState(false);
+  const [tenantId, setTenantId] = useState("676e7711192abc0024679612");
+  const [sessionId, setSessionId] = useState("");
+  const [discovering, setDiscovering] = useState(false);
+
+  const loadDomains = () => {
+    signalGraphApi.domains().then(setDomainList).catch(() => setDomainList([]));
+  };
 
   const reload = () => {
     setError(null);
@@ -145,6 +157,24 @@ export function LearningPage() {
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
+  };
+
+  useEffect(() => { loadDomains(); }, []);
+
+  const onOnboardDiscover = async () => {
+    if (!sessionId.trim()) { showToast("Enter a session id to onboard a client."); return; }
+    setDiscovering(true);
+    try {
+      const res = await signalGraphApi.discover(tenantId.trim(), sessionId.trim());
+      showToast(`Discovered ${res.signals} signals, ${res.gates} candidate gates.`);
+      setDomain(sessionId.trim());   // switch every tab to the new client
+      setOnboarding(false);
+      loadDomains();
+    } catch (e) {
+      showToast(`Discover failed: ${e}`);
+    } finally {
+      setDiscovering(false);
+    }
   };
 
   const switchTab = (next: SubTab) => {
@@ -197,6 +227,45 @@ export function LearningPage() {
             </button>
           ))}
         </div>
+
+        {(tab === "baselines" || tab === "drift") && (
+          <div className="mt-3 flex items-center gap-2 flex-wrap text-xs border-t border-zbrain-divider pt-3">
+            <span className="text-zbrain-muted">Client:</span>
+            <select
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              className="border border-zbrain-divider rounded-md px-2 py-1 bg-white"
+            >
+              <option value="keysight">Keysight (built-in)</option>
+              {domainList.filter((d) => d.domain !== "keysight").map((d) => (
+                <option key={d.domain} value={d.domain}>{d.domain.slice(0, 8)}… ({d.gates})</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setOnboarding((v) => !v)}
+              className="px-2 py-1 rounded-md border border-zbrain-divider bg-white hover:bg-zbrain-50"
+            >
+              {onboarding ? "Cancel" : "+ Onboard client"}
+            </button>
+            {domain !== "keysight" && (
+              <span className="text-zbrain-muted">
+                Viewing <code className="font-mono">{domain.slice(0, 8)}…</code> across Baselines &amp; Drift
+              </span>
+            )}
+            {onboarding && (
+              <span className="inline-flex items-end gap-2 flex-wrap ml-2">
+                <input value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="tenant id"
+                  className="border border-zbrain-divider rounded-md px-2 py-1 w-48" />
+                <input value={sessionId} onChange={(e) => setSessionId(e.target.value)} placeholder="session id"
+                  className="border border-zbrain-divider rounded-md px-2 py-1 w-64" />
+                <button onClick={onOnboardDiscover} disabled={discovering}
+                  className="px-3 py-1 rounded-md border border-zbrain bg-zbrain text-white disabled:opacity-50">
+                  {discovering ? "Discovering…" : "Discover"}
+                </button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <HubFunnel onJump={switchTab} />
@@ -219,6 +288,7 @@ export function LearningPage() {
           error={error}
           windowDays={windowDays}
           reload={reload}
+          domain={domain}
           baselineFilter={driftFilter}
           setBaselineFilter={setDriftFilter}
           onOpenDrill={openDrill}
@@ -259,7 +329,14 @@ export function LearningPage() {
           onOpenDrill={openDrill}
         />
       )}
-      {tab === "baselines" && <BaselinesTab onToast={showToast} onOpenDrill={openDrill} />}
+      {tab === "baselines" && (
+        <BaselinesTab
+          onToast={showToast}
+          onOpenDrill={openDrill}
+          domain={domain}
+          onClientChanged={loadDomains}
+        />
+      )}
 
       <BaselineDrillthrough
         baselineId={drillId}
@@ -471,6 +548,7 @@ function DashboardTab({
 function DriftTab({
   error,
   reload,
+  domain,
   baselineFilter,
   setBaselineFilter,
   onOpenDrill,
@@ -479,19 +557,13 @@ function DriftTab({
   error: string | null;
   windowDays: number;
   reload: () => void;
+  domain: string;
   baselineFilter: number | null;
   setBaselineFilter: (id: number | null) => void;
   onOpenDrill: (id: number) => void;
 }) {
   const [showUnlinked, setShowUnlinked] = useState(false);
   const [unanchoredCount, setUnanchoredCount] = useState<number>(0);
-  // Client (domain) scoping so drift for each client is isolated, matching the
-  // Baselines tab. Defaults to keysight.
-  const [domain, setDomain] = useState("keysight");
-  const [domainList, setDomainList] = useState<{ domain: string; gates: number }[]>([]);
-  useEffect(() => {
-    signalGraphApi.domains().then(setDomainList).catch(() => setDomainList([]));
-  }, []);
   return (
     <div className="space-y-4">
       <div className="card p-4 flex items-center justify-between gap-4 flex-wrap">
@@ -502,17 +574,6 @@ function DriftTab({
           </h2>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <select
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            title="Client"
-            className="text-xs border border-zbrain-divider rounded-md px-2 py-1 bg-white"
-          >
-            <option value="keysight">Keysight (built-in)</option>
-            {domainList.filter((d) => d.domain !== "keysight").map((d) => (
-              <option key={d.domain} value={d.domain}>{d.domain.slice(0, 8)}… ({d.gates})</option>
-            ))}
-          </select>
           <BaselineFilter value={baselineFilter} onChange={setBaselineFilter} />
           <label
             className={`inline-flex items-center gap-1.5 text-[11px] cursor-pointer select-none ${unanchoredCount === 0 ? "text-zbrain-muted/60" : "text-zbrain-muted"}`}
@@ -728,9 +789,13 @@ type BaselineMetricsCatalog = {
 function BaselinesTab({
   onToast,
   onOpenDrill,
+  domain,
+  onClientChanged,
 }: {
   onToast: (msg: string) => void;
   onOpenDrill: (id: number) => void;
+  domain: string;            // shared client selection, owned by LearningPage
+  onClientChanged: () => void;
 }) {
   const [rows, setRows] = useState<Baseline[]>([]);
   const [summary, setSummary] = useState<BaselineSummary | null>(null);
@@ -739,14 +804,6 @@ function BaselinesTab({
   const [editing, setEditing] = useState<Baseline | null>(null);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Client (domain) selection + onboarding. "keysight" is the built-in client;
-  // discovered clients are session ids onboarded via the API.
-  const [domain, setDomain] = useState("keysight");
-  const [domainList, setDomainList] = useState<{ domain: string; gates: number }[]>([]);
-  const [onboarding, setOnboarding] = useState(false);
-  const [tenantId, setTenantId] = useState("676e7711192abc0024679612");
-  const [sessionId, setSessionId] = useState("");
-  const [discovering, setDiscovering] = useState(false);
 
   const load = () => {
     invalidateBaselineCache();
@@ -759,10 +816,6 @@ function BaselinesTab({
       .catch((e) => setError(String(e)));
   };
 
-  const loadDomains = () => {
-    signalGraphApi.domains().then(setDomainList).catch(() => setDomainList([]));
-  };
-
   // Reload the baseline list whenever the selected client changes.
   useEffect(() => {
     load();
@@ -770,31 +823,11 @@ function BaselinesTab({
   }, [domain]);
 
   useEffect(() => {
-    loadDomains();
     fetch("/api/learning/baselines/metrics")
       .then((r) => r.json())
       .then(setCatalog)
       .catch(() => {});
   }, []);
-
-  const onOnboardDiscover = async () => {
-    if (!sessionId.trim()) {
-      onToast("Enter a session id to onboard a client.");
-      return;
-    }
-    setDiscovering(true);
-    try {
-      const res = await signalGraphApi.discover(tenantId.trim(), sessionId.trim());
-      onToast(`Discovered ${res.signals} signals, ${res.gates} candidate gates.`);
-      setDomain(sessionId.trim());   // switch the view to the new client
-      setOnboarding(false);
-      loadDomains();
-    } catch (e) {
-      onToast(`Discover failed: ${e}`);
-    } finally {
-      setDiscovering(false);
-    }
-  };
 
   const refreshObservations = async () => {
     setRefreshing(true);
@@ -854,51 +887,6 @@ function BaselinesTab({
           </div>
         </div>
 
-        {/* Client (domain) selector + onboarding a new client via discovery */}
-        <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-zbrain-muted">Client:</span>
-          <select
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            className="border border-zbrain-divider rounded-md px-2 py-1 bg-white"
-          >
-            <option value="keysight">Keysight (built-in)</option>
-            {domainList.filter((d) => d.domain !== "keysight").map((d) => (
-              <option key={d.domain} value={d.domain}>{d.domain.slice(0, 8)}… ({d.gates})</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setOnboarding((v) => !v)}
-            className="px-2 py-1 rounded-md border border-zbrain-divider bg-white hover:bg-zbrain-50"
-          >
-            {onboarding ? "Cancel" : "+ Onboard client"}
-          </button>
-          {domain !== "keysight" && (
-            <span className="text-zbrain-muted">
-              Discovered client <code className="font-mono">{domain.slice(0, 8)}…</code>
-            </span>
-          )}
-        </div>
-        {onboarding && (
-          <div className="mt-2 flex items-end gap-2 flex-wrap">
-            <label className="text-[11px] text-zbrain-muted">
-              Tenant ID
-              <input value={tenantId} onChange={(e) => setTenantId(e.target.value)}
-                className="block border border-zbrain-divider rounded-md px-2 py-1 text-xs w-56" />
-            </label>
-            <label className="text-[11px] text-zbrain-muted">
-              Session ID
-              <input value={sessionId} onChange={(e) => setSessionId(e.target.value)}
-                placeholder="client session id"
-                className="block border border-zbrain-divider rounded-md px-2 py-1 text-xs w-72" />
-            </label>
-            <button onClick={onOnboardDiscover} disabled={discovering}
-              className="px-3 py-1.5 rounded-md border border-zbrain bg-zbrain text-white text-xs disabled:opacity-50">
-              {discovering ? "Discovering…" : "Discover"}
-            </button>
-          </div>
-        )}
-
         {summary && (
           <div className="grid grid-cols-12 gap-3 mt-4">
             <Kpi
@@ -950,7 +938,7 @@ function BaselinesTab({
       {domain !== "keysight" && (
         <SgDiscoveryPanel
           domain={domain}
-          onChanged={() => { load(); loadDomains(); }}
+          onChanged={() => { load(); onClientChanged(); }}
           onToast={onToast}
         />
       )}
