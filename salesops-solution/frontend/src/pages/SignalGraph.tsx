@@ -1,8 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { signalGraphApi, type SgRecommendation } from "../api";
+import {
+  signalGraphApi,
+  type SgRecommendation,
+  type SgGate,
+  type SgSuggestedRange,
+} from "../api";
 import { Button, Chip, PageHeader, Section, Surface } from "../components/ui";
 import { SignalGraphViewer } from "../components/SignalGraphViewer";
+
+// Render the data-conditional range hint as a short line of text.
+function rangeHint(r: SgSuggestedRange): string {
+  if (r.status === "ok") {
+    return `observed ${r.p10.toFixed(3)}–${r.p90.toFixed(3)} (median ${r.median.toFixed(3)}, ${r.n} windows)`;
+  }
+  return "not enough data yet";
+}
 
 // Demo fixture identifiers (the same pair the senior dev's download-app curl
 // used). Prefilled so the v1 demo is one click; the user can overwrite them.
@@ -22,6 +35,9 @@ export function SignalGraphPage() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   // Which cards have their graph expanded, keyed by recommendation id.
   const [openGraphs, setOpenGraphs] = useState<Record<number, boolean>>({});
+  // Accepted gates (baseline targets) with their drift.
+  const [gates, setGates] = useState<SgGate[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const loadRecs = async (sid: string) => {
     try {
@@ -32,10 +48,35 @@ export function SignalGraphPage() {
     }
   };
 
-  // Load whatever candidates already exist for the prefilled session on mount.
+  const loadGates = async (sid: string) => {
+    try {
+      setGates(await signalGraphApi.baselines(sid));
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+
+  // Load whatever candidates + accepted gates already exist on mount.
   useEffect(() => {
     loadRecs(sessionId);
+    loadGates(sessionId);
   }, []);
+
+  const onAnalyze = async () => {
+    setAnalyzing(true);
+    setErrMsg(null);
+    try {
+      const res = await signalGraphApi.analyze(sessionId);
+      setStatusMsg(
+        `Analyzed: ${res.edges_updated} edge weights updated, ${res.gates_analyzed} gates checked for drift.`,
+      );
+      await loadGates(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const onDiscover = async () => {
     setDiscovering(true);
@@ -67,6 +108,7 @@ export function SignalGraphPage() {
       await signalGraphApi.accept(rec.id, num);
       setStatusMsg(`Accepted "${rec.metric}" with target ${num}.`);
       await loadRecs(sessionId);
+      await loadGates(sessionId);
     } catch (e) {
       setErrMsg(String(e));
     }
@@ -172,7 +214,11 @@ export function SignalGraphPage() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 mt-3">
+                <div className="text-[12px] text-zbrain-muted dark:text-zbrain-dark-muted mt-3">
+                  suggested range: {rangeHint(rec.suggested_range)}
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
                   <input
                     className={inp + " max-w-[180px]"}
                     type="number"
@@ -203,6 +249,61 @@ export function SignalGraphPage() {
                     <SignalGraphViewer recId={rec.id} />
                   </div>
                 )}
+              </div>
+            ))}
+          </div>
+        </Section>
+      </Surface>
+
+      <Surface>
+        <Section
+          title={`Baseline targets (${gates.length})`}
+          subtitle="Gates you accepted, with live drift vs the target you set."
+          action={
+            <Button onClick={onAnalyze} variant="primary" disabled={analyzing}>
+              {analyzing ? "Analyzing…" : "Analyze (weights & drift)"}
+            </Button>
+          }
+        >
+          {gates.length === 0 && (
+            <div className="py-6 text-center text-zbrain-muted dark:text-zbrain-dark-muted">
+              No accepted gates yet. Set a target on a candidate above.
+            </div>
+          )}
+          <div className="space-y-2">
+            {gates.map((g) => (
+              <div
+                key={`${g.metric}:${g.segment}`}
+                className="rounded-lg border border-zbrain-divider/60 dark:border-zbrain-dark-divider/60 p-3 flex items-center justify-between gap-4"
+              >
+                <div className="min-w-0">
+                  <div className="font-mono text-sm font-medium text-zbrain-ink dark:text-zbrain-dark-ink">
+                    {g.metric}
+                  </div>
+                  <div className="text-[12px] text-zbrain-muted dark:text-zbrain-dark-muted mt-0.5">
+                    target {g.target_value ?? "—"}
+                    {g.status === "ok" && (
+                      <>
+                        {" · "}current {g.current?.toFixed(3)}
+                        {g.delta_pct != null && (
+                          <> ({(g.delta_pct * 100).toFixed(1)}%)</>
+                        )}
+                        {g.psi != null && <> · PSI {g.psi.toFixed(2)}</>}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {g.status !== "ok" ? (
+                    <Chip tone="neutral">not enough data</Chip>
+                  ) : g.severity === "high" ? (
+                    <Chip tone="danger">breached</Chip>
+                  ) : g.severity === "medium" ? (
+                    <Chip tone="warning">drifting</Chip>
+                  ) : (
+                    <Chip tone="success">healthy</Chip>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -1814,6 +1814,30 @@ export type SgDiscoverResult = {
   gates: number;    // how many candidate gates Pass 2 proposed
 };
 
+// An accepted gate (a baseline target) with its data-conditional drift, from
+// GET /signal-graph/baselines. "ok" carries live drift; otherwise the status
+// explains why there's nothing computed yet.
+export type SgGate = {
+  metric: string;
+  segment: string;
+  direction: "min" | "max";
+  target_value: number | null;
+  status: "ok" | "insufficient_data" | "no_data" | "no_target";
+  current?: number;
+  delta?: number;
+  delta_pct?: number | null;
+  psi?: number | null;
+  breached?: boolean;
+  severity?: "high" | "medium" | "info";
+};
+
+// Summary from POST /signal-graph/analyze.
+export type SgAnalyzeResult = {
+  domain: string;
+  edges_updated: number;
+  gates_analyzed: number;
+};
+
 export const signalGraphApi = {
   discover: (tenant_id: string, session_id: string) =>
     jsonRequest<SgDiscoverResult>(`/signal-graph/discover`, {
@@ -1835,6 +1859,15 @@ export const signalGraphApi = {
     }),
   graph: (id: number) =>
     jsonRequest<SgGraph>(`/signal-graph/recommendations/${id}/graph`),
+  analyze: (session_id: string) =>
+    jsonRequest<SgAnalyzeResult>(`/signal-graph/analyze`, {
+      method: "POST",
+      body: JSON.stringify({ tenant_id: "", session_id }),
+    }),
+  baselines: (session_id: string) =>
+    jsonRequest<SgGate[]>(
+      `/signal-graph/baselines?session_id=${encodeURIComponent(session_id)}`,
+    ),
 };
 
 
