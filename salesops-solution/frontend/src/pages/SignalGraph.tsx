@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { signalGraphApi, type SgRecommendation } from "../api";
 import { Button, Chip, PageHeader, Section, Surface } from "../components/ui";
+import { SignalGraphViewer } from "../components/SignalGraphViewer";
 
 // Demo fixture identifiers (the same pair the senior dev's download-app curl
 // used). Prefilled so the v1 demo is one click; the user can overwrite them.
@@ -19,6 +20,8 @@ export function SignalGraphPage() {
   const [discovering, setDiscovering] = useState(false);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  // Which cards have their graph expanded, keyed by recommendation id.
+  const [openGraphs, setOpenGraphs] = useState<Record<number, boolean>>({});
 
   const loadRecs = async (sid: string) => {
     try {
@@ -185,7 +188,21 @@ export function SignalGraphPage() {
                   <Button onClick={() => onDismiss(rec)} variant="ghost">
                     Dismiss
                   </Button>
+                  <Button
+                    onClick={() =>
+                      setOpenGraphs((g) => ({ ...g, [rec.id]: !g[rec.id] }))
+                    }
+                    variant="ghost"
+                  >
+                    {openGraphs[rec.id] ? "Hide graph" : "Graph"}
+                  </Button>
                 </div>
+
+                {openGraphs[rec.id] && (
+                  <div className="mt-3">
+                    <SignalGraphViewer recId={rec.id} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
