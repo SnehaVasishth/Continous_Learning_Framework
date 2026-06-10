@@ -4843,8 +4843,9 @@ function HealthByBaselineRow({
 const SG_DEFAULT_TENANT = "676e7711192abc0024679612";
 const SG_DEFAULT_SESSION = "f8651fcd-6c46-4ed2-83ec-665f31027267";
 
-function sgRangeHint(r: SgSuggestedRange): string {
-  if (r.status === "ok") {
+function sgRangeHint(r: SgSuggestedRange | undefined): string {
+  // Defensive: an older backend may not send suggested_range at all.
+  if (r && r.status === "ok") {
     return `observed ${r.p10.toFixed(3)}–${r.p90.toFixed(3)} (median ${r.median.toFixed(3)}, ${r.n} windows)`;
   }
   return "not enough data yet";
