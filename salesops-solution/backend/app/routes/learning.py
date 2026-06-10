@@ -1437,6 +1437,7 @@ def trigger_realised_lift(db: Session = Depends(get_db)) -> dict:
 # table on every pass; admins edit thresholds here without a redeploy.
 # ──────────────────────────────────────────────────────────────────────────
 class BaselineIn(BaseModel):
+    domain: str = "keysight"
     metric: str
     segment: str = "global"
     direction: str = "min"          # 'min' | 'max'
@@ -1470,13 +1471,19 @@ _VALID_SEVERITIES = {"warn", "block_promotion"}
 
 
 @router.get("/baselines")
-def list_baselines(db: Session = Depends(get_db)) -> dict:
-    """Return every baseline along with a live status summary so the UI can
-    render the heatmap without making a second roundtrip."""
+def list_baselines(domain: str = "keysight", db: Session = Depends(get_db)) -> dict:
+    """Return every baseline for a client (domain) along with a live status
+    summary. Defaults to 'keysight' so the existing CL view is unchanged;
+    discovered clients pass their session_id as domain."""
     from ..models import Baseline
     from ..services import baselines as baselines_svc
 
-    rows = db.query(Baseline).order_by(Baseline.metric, Baseline.segment).all()
+    rows = (
+        db.query(Baseline)
+        .filter(Baseline.domain == domain)
+        .order_by(Baseline.metric, Baseline.segment)
+        .all()
+    )
     items = [baselines_svc.to_dict(b) for b in rows]
     summary = {
         "total": len(rows),
@@ -1507,12 +1514,14 @@ def create_baseline(payload: BaselineIn, db: Session = Depends(get_db)) -> dict:
         raise HTTPException(status_code=400, detail=f"severity must be one of {_VALID_SEVERITIES}")
     existing = (
         db.query(Baseline)
-        .filter(Baseline.metric == payload.metric, Baseline.segment == payload.segment)
+        .filter(Baseline.domain == payload.domain,
+                Baseline.metric == payload.metric, Baseline.segment == payload.segment)
         .first()
     )
     if existing is not None:
-        raise HTTPException(status_code=409, detail="baseline for this (metric, segment) already exists")
+        raise HTTPException(status_code=409, detail="baseline for this (domain, metric, segment) already exists")
     b = Baseline(
+        domain=payload.domain,
         metric=payload.metric,
         segment=payload.segment,
         direction=payload.direction,

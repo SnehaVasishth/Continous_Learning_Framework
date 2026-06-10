@@ -12,7 +12,8 @@ import math
 import numpy as np
 from sqlalchemy.orm import Session
 
-from ...models import DriftAlert, QualityGate, SignalEdge, SignalNode, now
+from ...models import Baseline, DriftAlert, SignalEdge, SignalNode, now
+from ..baselines import evaluate_status
 from . import confirm
 from .observe import observation_series, data_status, MIN_WINDOWS
 
@@ -161,15 +162,21 @@ def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
 
 
 def compute_drift(db: Session, domain: str) -> list[dict]:
-    """Compute drift for every accepted gate and upsert a DriftAlert row per
-    gate that has enough data, so it surfaces in the existing drift UI."""
-    gates = db.query(QualityGate).filter(QualityGate.domain == domain).all()
+    """Compute drift for every accepted gate (a discovered Baseline) and upsert
+    a DriftAlert per gate with enough data. Also mirrors the consolidated value
+    + status onto the Baseline row so the existing CL Baselines UI shows it."""
+    gates = db.query(Baseline).filter(Baseline.domain == domain).all()
     results: list[dict] = []
     for gate in gates:
         d = _gate_drift(db, domain, gate)
         results.append(d)
         if d.get("status") != "ok":
             continue
+        # Mirror onto the Baseline row -> existing CL heatmap shows healthy/
+        # drifting/breached for this discovered gate.
+        gate.last_observed = d["current"]
+        gate.last_observed_at = now()
+        gate.last_status = evaluate_status(gate, d["current"])
         fp = f"sg:{domain}:{gate.metric}:{gate.segment}"        # idempotency key
         alert = (
             db.query(DriftAlert)
@@ -194,8 +201,9 @@ def compute_drift(db: Session, domain: str) -> list[dict]:
 
 
 def accepted_gates(db: Session, domain: str) -> list[dict]:
-    """Accepted gates with their (read-only) drift, worst severity first."""
-    gates = db.query(QualityGate).filter(QualityGate.domain == domain).all()
+    """Accepted gates (discovered Baselines) with their (read-only) drift,
+    worst severity first."""
+    gates = db.query(Baseline).filter(Baseline.domain == domain).all()
     rows = [_gate_drift(db, domain, gate) for gate in gates]
     rank = {"high": 0, "medium": 1, "info": 2, "insufficient_data": 3, "no_data": 4, "no_target": 5}
     rows.sort(key=lambda r: rank.get(r.get("severity") or r.get("status"), 9))

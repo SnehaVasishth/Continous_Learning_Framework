@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import BaselineRecommendation, QualityGate, SignalNode, SignalEdge
+from ..models import Baseline, BaselineRecommendation, SignalNode, SignalEdge
 from ..services.signal_graph.discovery.run import run_discovery
 from ..services.signal_graph import analyze
 from ..services.signal_graph.seed_demo import seed_demo_observations
@@ -46,10 +46,10 @@ def recommendations(session_id: str, db: Session = Depends(get_db)) -> list[dict
                 BaselineRecommendation.status == "open")
         .all()
     )
-    # Hide any metric the user has already accepted (it lives in quality_gates
-    # now), so an accepted gate is never re-offered as a candidate.
+    # Hide any metric the user has already accepted (it is now a domain-scoped
+    # Baseline), so an accepted gate is never re-offered as a candidate.
     accepted_metrics = {
-        g.metric for g in db.query(QualityGate).filter(QualityGate.domain == session_id).all()
+        b.metric for b in db.query(Baseline).filter(Baseline.domain == session_id).all()
     }
     return [
         {
@@ -84,27 +84,26 @@ def accept(rec_id: int, body: AcceptBody, db: Session = Depends(get_db)) -> dict
     if not rec:
         raise HTTPException(404, "recommendation not found")
 
-    snap = rec.subgraph_snapshot or {}
-    # Upsert by (domain, metric) so re-accepting the same metric updates the
-    # existing target instead of creating a duplicate.
+    # Upsert a domain-scoped Baseline (the FINAL target) so the accepted gate
+    # shows in the existing Continuous Learning Baselines UI. Keyed by (domain,
+    # metric) so re-accepting updates the target instead of duplicating. v1
+    # normalizes segment to "global" (segment is noisy LLM metadata).
     gate = (
-        db.query(QualityGate)
-        .filter(QualityGate.domain == rec.domain,
-                QualityGate.metric == rec.metric)
+        db.query(Baseline)
+        .filter(Baseline.domain == rec.domain, Baseline.metric == rec.metric)
         .first()
     )
     if gate is None:
-        # v1: normalize to global (segment is noisy LLM metadata); keeps the
-        # gate's observation lookups aligned with how observations are stored.
-        gate = QualityGate(domain=rec.domain, metric=rec.metric, segment="global")
+        gate = Baseline(domain=rec.domain, metric=rec.metric, segment="global")
         db.add(gate)
     gate.direction = rec.direction
-    gate.target_value = body.target_value          # the user's number
-    gate.compute = snap.get("compute")
-    gate.inputs = snap.get("inputs", [])
+    gate.target_value = body.target_value          # the user's number (the invariant)
+    gate.severity = "warn"
+    gate.enabled = True
+    gate.source = "discovered"
     gate.rationale = rec.rationale
 
-    db.delete(rec)                                  # candidate becomes a final gate
+    db.delete(rec)                                  # candidate becomes a final Baseline
     db.commit()
     return {"id": gate.id, "metric": gate.metric, "target_value": gate.target_value, "status": "accepted"}
 

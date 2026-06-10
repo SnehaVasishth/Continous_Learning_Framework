@@ -725,6 +725,10 @@ class Baseline(Base):
 
     __tablename__ = "baselines"
     id = Column(Integer, primary_key=True)
+    # Per-client scope. Existing Keysight rows are "keysight"; discovered gates
+    # for an onboarded client use that client's session_id, so Continuous
+    # Learning can isolate and monitor any client.
+    domain = Column(String, nullable=False, default="keysight", index=True)
     metric = Column(String, nullable=False, index=True)
     segment = Column(String, nullable=False, default="global", index=True)
     direction = Column(String, nullable=False, default="min")  # 'min' | 'max'

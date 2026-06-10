@@ -156,6 +156,7 @@ def to_dict(b: Baseline) -> dict[str, Any]:
     """
     return {
         "id": b.id,
+        "domain": getattr(b, "domain", "keysight") or "keysight",
         "metric": b.metric,
         "segment": b.segment,
         "direction": b.direction,

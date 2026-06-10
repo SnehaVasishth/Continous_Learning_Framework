@@ -15,7 +15,7 @@ from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
-from ...models import BaselineRecommendation, QualityGate, SignalNode, now
+from ...models import Baseline, BaselineRecommendation, SignalNode, now
 from .observe import record_observation
 
 
@@ -48,11 +48,11 @@ def seed_demo_observations(db: Session, domain: str, *, windows: int = 8) -> dic
     for r in db.query(BaselineRecommendation).filter(BaselineRecommendation.domain == domain).all():
         snap = r.subgraph_snapshot or {}
         gates[r.metric] = {"inputs": snap.get("inputs", []), "compute": snap.get("compute"), "gate": None}
-    for g in db.query(QualityGate).filter(QualityGate.domain == domain).all():
-        gates.setdefault(g.metric, {"inputs": g.inputs or [], "compute": g.compute, "gate": None})
-        gates[g.metric]["gate"] = g
-        if not gates[g.metric]["inputs"]:
-            gates[g.metric]["inputs"] = g.inputs or []
+    # Accepted gates are now discovered Baselines (no inputs/compute columns —
+    # we just seed the metric's own series so drift works).
+    for b in db.query(Baseline).filter(Baseline.domain == domain, Baseline.source == "discovered").all():
+        gates.setdefault(b.metric, {"inputs": [], "compute": None, "gate": None})
+        gates[b.metric]["gate"] = b
 
     def _write(key: str, series: list[float], stream: str = "telemetry", n_lo: int = 40, n_hi: int = 120) -> None:
         for i, val in enumerate(series):

@@ -1256,7 +1256,10 @@ def detect_baseline_violations(db: Session) -> int:
     from ..models import Baseline
     from ..services import baselines as baselines_svc
 
-    rows = db.query(Baseline).filter(Baseline.enabled.is_(True)).all()
+    # Keysight-only: the legacy detectors compute observed values with
+    # Keysight-specific logic, so they must never touch discovered client gates
+    # (other domains) — those are evaluated by the signal-graph analyzer.
+    rows = db.query(Baseline).filter(Baseline.enabled.is_(True), Baseline.domain == "keysight").all()
     if not rows:
         return 0
 
@@ -1375,7 +1378,10 @@ def ensure_drift_for_breached_baselines(db: Session) -> dict[str, int]:
     from ..models import Baseline
 
     out = {"created": 0, "resolved": 0, "skipped": 0}
-    rows = db.query(Baseline).filter(Baseline.enabled.is_(True)).all()
+    # Keysight-only: the legacy detectors compute observed values with
+    # Keysight-specific logic, so they must never touch discovered client gates
+    # (other domains) — those are evaluated by the signal-graph analyzer.
+    rows = db.query(Baseline).filter(Baseline.enabled.is_(True), Baseline.domain == "keysight").all()
     if not rows:
         return out
 
