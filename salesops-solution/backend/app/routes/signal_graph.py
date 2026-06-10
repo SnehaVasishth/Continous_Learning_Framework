@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import BaselineRecommendation, SignalNode, SignalEdge
+from ..models import BaselineRecommendation, QualityGate, SignalNode, SignalEdge
 from ..services.signal_graph.discovery.run import run_discovery
 from ..services.signal_graph import analyze
 
@@ -45,6 +45,11 @@ def recommendations(session_id: str, db: Session = Depends(get_db)) -> list[dict
                 BaselineRecommendation.status == "open")
         .all()
     )
+    # Hide any metric the user has already accepted (it lives in quality_gates
+    # now), so an accepted gate is never re-offered as a candidate.
+    accepted_metrics = {
+        g.metric for g in db.query(QualityGate).filter(QualityGate.domain == session_id).all()
+    }
     return [
         {
             "id": r.id,
@@ -60,6 +65,7 @@ def recommendations(session_id: str, db: Session = Depends(get_db)) -> list[dict
             "suggested_range": analyze.suggested_range(db, session_id, r.metric, r.segment),
         }
         for r in rows
+        if r.metric not in accepted_metrics
     ]
 
 
@@ -69,17 +75,34 @@ class AcceptBody(BaseModel):
 
 @router.post("/recommendations/{rec_id}/accept")
 def accept(rec_id: int, body: AcceptBody, db: Session = Depends(get_db)) -> dict:
-    """User accepts a candidate and sets its target. The number lives in
-    context_stats (no target_value column — the invariant)."""
+    """User accepts a candidate and sets its target. Upserts a QualityGate (the
+    durable, deduplicated final target) and removes the candidate row. The
+    target_value comes only from the user (the invariant)."""
     rec = db.query(BaselineRecommendation).filter(BaselineRecommendation.id == rec_id).first()
     if not rec:
         raise HTTPException(404, "recommendation not found")
-    stats = dict(rec.context_stats or {})          # new dict so SQLAlchemy sees the change
-    stats["target_value"] = body.target_value      # the user's number
-    rec.context_stats = stats
-    rec.status = "accepted"
+
+    snap = rec.subgraph_snapshot or {}
+    # Upsert by (domain, metric) so re-accepting the same metric updates the
+    # existing target instead of creating a duplicate.
+    gate = (
+        db.query(QualityGate)
+        .filter(QualityGate.domain == rec.domain,
+                QualityGate.metric == rec.metric)
+        .first()
+    )
+    if gate is None:
+        gate = QualityGate(domain=rec.domain, metric=rec.metric, segment=rec.segment)
+        db.add(gate)
+    gate.direction = rec.direction
+    gate.target_value = body.target_value          # the user's number
+    gate.compute = snap.get("compute")
+    gate.inputs = snap.get("inputs", [])
+    gate.rationale = rec.rationale
+
+    db.delete(rec)                                  # candidate becomes a final gate
     db.commit()
-    return {"id": rec.id, "metric": rec.metric, "target_value": body.target_value, "status": "accepted"}
+    return {"id": gate.id, "metric": gate.metric, "target_value": gate.target_value, "status": "accepted"}
 
 
 @router.post("/recommendations/{rec_id}/dismiss")

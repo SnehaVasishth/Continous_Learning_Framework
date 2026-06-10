@@ -12,7 +12,7 @@ import math
 import numpy as np
 from sqlalchemy.orm import Session
 
-from ...models import BaselineRecommendation, DriftAlert, SignalEdge, SignalNode, now
+from ...models import DriftAlert, QualityGate, SignalEdge, SignalNode, now
 from . import confirm
 from .observe import observation_series, data_status, MIN_WINDOWS
 
@@ -83,26 +83,26 @@ def recompute_edge_weights(db: Session, domain: str) -> int:
     return updated
 
 
-def _gate_drift(db: Session, domain: str, rec: BaselineRecommendation) -> dict:
+def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
     """Pure (no-write) drift summary for one accepted gate vs its user target."""
-    target = (rec.context_stats or {}).get("target_value")
-    base = {"metric": rec.metric, "segment": rec.segment, "direction": rec.direction,
+    target = gate.target_value
+    base = {"metric": gate.metric, "segment": gate.segment, "direction": gate.direction,
             "target_value": target}
     if target is None:
         return {**base, "status": "no_target"}
 
-    status = data_status(db, domain, rec.metric, rec.segment)
+    status = data_status(db, domain, gate.metric, gate.segment)
     if status != "ok":
         return {**base, "status": status}
 
-    values = _values(db, domain, rec.metric, rec.segment)
+    values = _values(db, domain, gate.metric, gate.segment)
     current = values[-1]
     delta = current - target
     delta_pct = (delta / target) if target else None
     # Breach depends on direction: 'min' = higher-is-better (breach when below),
     # 'max' = lower-is-better (breach when above).
-    breached = (rec.direction == "min" and current < target) or (
-        rec.direction == "max" and current > target
+    breached = (gate.direction == "min" and current < target) or (
+        gate.direction == "max" and current > target
     )
     mid = len(values) // 2
     psi = _psi(values[:mid], values[mid:]) if len(values) >= 2 * MIN_WINDOWS else None
@@ -121,19 +121,14 @@ def _gate_drift(db: Session, domain: str, rec: BaselineRecommendation) -> dict:
 def compute_drift(db: Session, domain: str) -> list[dict]:
     """Compute drift for every accepted gate and upsert a DriftAlert row per
     gate that has enough data, so it surfaces in the existing drift UI."""
-    accepted = (
-        db.query(BaselineRecommendation)
-        .filter(BaselineRecommendation.domain == domain,
-                BaselineRecommendation.status == "accepted")
-        .all()
-    )
+    gates = db.query(QualityGate).filter(QualityGate.domain == domain).all()
     results: list[dict] = []
-    for rec in accepted:
-        d = _gate_drift(db, domain, rec)
+    for gate in gates:
+        d = _gate_drift(db, domain, gate)
         results.append(d)
         if d.get("status") != "ok":
             continue
-        fp = f"sg:{domain}:{rec.metric}:{rec.segment}"          # idempotency key
+        fp = f"sg:{domain}:{gate.metric}:{gate.segment}"        # idempotency key
         alert = (
             db.query(DriftAlert)
             .filter(DriftAlert.fingerprint == fp, DriftAlert.status != "resolved")
@@ -143,28 +138,23 @@ def compute_drift(db: Session, domain: str) -> list[dict]:
             alert = DriftAlert(fingerprint=fp, status="open")
             db.add(alert)
         alert.detected_at = now()
-        alert.segment = rec.segment
-        alert.metric = rec.metric
-        alert.baseline = rec.context_stats.get("target_value")
+        alert.segment = gate.segment
+        alert.metric = gate.metric
+        alert.baseline = gate.target_value
         alert.current = d["current"]
         alert.delta = d["delta"]
         alert.delta_pct = d["delta_pct"]
         alert.severity = d["severity"]
         alert.detail = {"source": "signal_graph", "domain": domain,
-                        "psi": d["psi"], "direction": rec.direction, "breached": d["breached"]}
+                        "psi": d["psi"], "direction": gate.direction, "breached": d["breached"]}
     db.commit()
     return results
 
 
 def accepted_gates(db: Session, domain: str) -> list[dict]:
     """Accepted gates with their (read-only) drift, worst severity first."""
-    accepted = (
-        db.query(BaselineRecommendation)
-        .filter(BaselineRecommendation.domain == domain,
-                BaselineRecommendation.status == "accepted")
-        .all()
-    )
-    rows = [_gate_drift(db, domain, rec) for rec in accepted]
+    gates = db.query(QualityGate).filter(QualityGate.domain == domain).all()
+    rows = [_gate_drift(db, domain, gate) for gate in gates]
     rank = {"high": 0, "medium": 1, "info": 2, "insufficient_data": 3, "no_data": 4, "no_target": 5}
     rows.sort(key=lambda r: rank.get(r.get("severity") or r.get("status"), 9))
     return rows

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .db import Base
@@ -759,6 +759,94 @@ class Baseline(Base):
     created_at = Column(DateTime, default=now)
     updated_at = Column(DateTime, default=now, onupdate=now)
     updated_by = Column(String, default="system")
+
+class SignalNode(Base):
+    __tablename__= "signal_nodes"
+    id= Column(Integer,primary_key=True)
+    domain= Column(String,nullable=False,default="keysight",index=True)
+    key= Column(String,nullable=False,index=True)
+    node_type= Column(String,nullable=False,index=True)
+    label = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    source_stream= Column(String,nullable=True)
+    baseline_id= Column(Integer,ForeignKey("baselines.id"),nullable=True,index=True)
+    spec_ref= Column(String,nullable=True)
+    meta= Column(JSON,default=dict)
+    created_at= Column(DateTime,default=now)
+    updated_at= Column(DateTime,default=now,onupdate=now)
+    
+class SignalEdge(Base):
+    __tablename__= "signal_edges"
+    id= Column(Integer,primary_key=True)
+    domain= Column(String,nullable=False,default="keysight",index=True)
+    from_node_id = Column(Integer,ForeignKey("signal_nodes.id"),nullable=False,index=True)
+    to_node_id = Column(Integer,ForeignKey("signal_nodes.id"),nullable=False,index=True)
+    relation = Column(String,nullable=False,default="affects")
+    origin = Column(String,nullable=False,default="structural")
+    weight= Column(Float,nullable=True)
+    evidence= Column(JSON,default=dict)
+    status = Column(String,nullable=False,default="active")
+    created_at = Column(DateTime, default=now)
+    updated_at = Column(DateTime, default=now, onupdate=now)
+    
+class SignalObservation(Base):
+    __tablename__ = "signal_observations"
+    id= Column(Integer,primary_key=True)
+    domain= Column(String,nullable=False,default="keysight",index=True)
+    signal_key = Column(String, nullable=False, index=True)
+    segment= Column(String,nullable=False,default="global",index=True)
+    window_start = Column(DateTime, nullable=False, index=True)
+    window_end = Column(DateTime, nullable=False)
+    value=Column(Float,nullable=True)
+    sample_size= Column(Integer,nullable=False,default=0)
+    source_stream = Column(String, nullable=False)
+    autonomy_tier = Column(String, nullable=True)
+
+    meta = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=now)
+    
+class BaselineRecommendation(Base):
+    __tablename__= "baseline_recommendations"
+    id= Column(Integer,primary_key=True)
+    domain= Column(String,nullable=False,default="keysight",index=True)
+    metric= Column(String,nullable=False,index=True)
+    segment = Column(String, nullable=False, default="global", index=True)
+    direction = Column(String, nullable=False, default="min")
+    score= Column(Float,nullable=False,default=0.0)
+    rationale= Column(Text,nullable=True)
+    context_stats= Column(JSON,default=dict)
+    subgraph_snapshot= Column(JSON,default=dict)
+    status= Column(String,nullable=False,default="open",index=True)
+    created_at = Column(DateTime, default=now)
+    updated_at = Column(DateTime, default=now, onupdate=now)
+
+
+class QualityGate(Base):
+    """A FINAL, accepted baseline target (the user committed to it + set the
+    number). Separate from BaselineRecommendation (which is the disposable
+    candidate list, regenerated on every Discover). This table is never touched
+    by discovery, so accepted targets survive re-runs, and the unique
+    constraint on (domain, metric, segment) prevents duplicates.
+
+    target_value is a real column here (not JSON) but is ONLY ever set by the
+    user via the accept endpoint — no algorithm writes it. `inputs`/`compute`
+    are copied from the candidate at accept time so the gate is self-contained
+    even after candidates are wiped."""
+    __tablename__ = "quality_gates"
+    # One gate per metric per client. Segment is noisy LLM metadata in v1, so it
+    # is NOT part of the identity — accepting the same metric updates in place.
+    __table_args__ = (UniqueConstraint("domain", "metric", name="uq_quality_gate_metric"),)
+    id = Column(Integer, primary_key=True)
+    domain = Column(String, nullable=False, default="keysight", index=True)
+    metric = Column(String, nullable=False, index=True)
+    segment = Column(String, nullable=False, default="global", index=True)
+    direction = Column(String, nullable=False, default="min")
+    target_value = Column(Float, nullable=False)   # the user's number
+    compute = Column(String, nullable=True)
+    inputs = Column(JSON, default=list)            # signal keys this gate is built from
+    rationale = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=now)
+    updated_at = Column(DateTime, default=now, onupdate=now)
 
 
 class LearningOpportunity(Base):

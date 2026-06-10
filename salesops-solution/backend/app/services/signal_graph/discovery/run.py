@@ -16,13 +16,13 @@ from .propose_gates import propose_gates
 
 def _clear_domain(db: Session, domain: str) -> None:
     """Remove prior discovery rows for this session so re-running is clean.
-    (Edges first — they reference nodes via FK. Only 'open' recommendations are
-    cleared, so accepted gates are never wiped.)"""
+    (Edges first — they reference nodes via FK.) ALL candidate rows are cleared;
+    accepted targets live in the separate quality_gates table and are never
+    touched here, so re-running Discover preserves them."""
     db.query(SignalEdge).filter(SignalEdge.domain == domain).delete(synchronize_session=False)
     db.query(SignalNode).filter(SignalNode.domain == domain).delete(synchronize_session=False)
     db.query(BaselineRecommendation).filter(
         BaselineRecommendation.domain == domain,
-        BaselineRecommendation.status == "open",
     ).delete(synchronize_session=False)
     db.commit()
 
