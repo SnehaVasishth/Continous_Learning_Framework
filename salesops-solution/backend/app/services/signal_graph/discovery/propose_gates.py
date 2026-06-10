@@ -1,16 +1,8 @@
-"""Pass 2 of discovery: propose candidate QUALITY GATES (judgments) over the
-signals from Pass 1.
 
-This pass sees ONLY the signal list (not the codebase) — facts in, judgments
-out. Each gate is validated through `CandidateGate`, and its `inputs` are
-filtered to real signal keys so a hallucinated reference can't create a
-dangling graph edge.
-"""
-from __future__ import annotations
 
 import json
 
-from ....agents.llm import ask_llm        # 4 dots -> app.agents.llm
+from ....agents.llm import ask_llm      
 from .schema import Signal, CandidateGate
 
 
@@ -38,7 +30,7 @@ def propose_gates(signals: list[Signal]) -> list[CandidateGate]:
             gate = CandidateGate(**item)
         except Exception:
             continue
-        gate.inputs = [k for k in gate.inputs if k in valid_keys]   # drop hallucinated signal refs
-        if gate.inputs:                                             # a gate needs >=1 real signal
+        gate.inputs = [k for k in gate.inputs if k in valid_keys]   
+        if gate.inputs:                                            
             out.append(gate)
     return out

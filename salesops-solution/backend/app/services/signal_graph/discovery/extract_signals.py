@@ -1,21 +1,11 @@
-"""Pass 1 of discovery: extract observable SIGNALS (facts) from a codebase.
-
-We build a digest of the files most likely to reveal signals (docs + routes +
-schema + server), hand it to the LLM, and validate each returned item through
-the `Signal` model so malformed entries are dropped rather than crashing.
-"""
-from __future__ import annotations
-
 from pathlib import Path
 
-from ....agents.llm import ask_llm        # 4 dots: discovery -> signal_graph -> services -> app, then agents.llm
+from ....agents.llm import ask_llm      
 from .schema import Signal
 
-# Files most likely to contain observable signals.
 _DOC_GLOBS = ("*.md",)
 _SRC_GLOBS = ("**/routes/*.*", "**/*.sql", "**/server.*", "**/agents-plan.md")
-_MAX_CHARS = 60_000   # keep the digest within model context for v1 small codebases
-
+_MAX_CHARS = 60_000   
 
 def _build_digest(code_dir: Path) -> str:
     """Concatenate the relevant files into one labelled text blob, capped."""
@@ -53,7 +43,7 @@ def extract_signals(code_dir: Path) -> list[Signal]:
     out: list[Signal] = []
     for item in raw:
         try:
-            out.append(Signal(**item))          # pydantic validates each; bad ones skipped
+            out.append(Signal(**item))         
         except Exception:
             continue
     return out

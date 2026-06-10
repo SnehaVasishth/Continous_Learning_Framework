@@ -1,10 +1,3 @@
-"""Orchestrate discovery: fetch -> Pass 1 -> Pass 2 -> persist.
-
-Persists the Solution Model directly (no approval gate in v1), scoped by
-`session_id` stored in the existing `domain` column. Re-running a session is
-idempotent: prior discovery output for that domain is cleared first.
-"""
-from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
@@ -15,10 +8,7 @@ from .propose_gates import propose_gates
 
 
 def _clear_domain(db: Session, domain: str) -> None:
-    """Remove prior discovery rows for this session so re-running is clean.
-    (Edges first — they reference nodes via FK.) ALL candidate rows are cleared;
-    accepted targets live in the separate quality_gates table and are never
-    touched here, so re-running Discover preserves them."""
+   
     db.query(SignalEdge).filter(SignalEdge.domain == domain).delete(synchronize_session=False)
     db.query(SignalNode).filter(SignalNode.domain == domain).delete(synchronize_session=False)
     db.query(BaselineRecommendation).filter(
@@ -28,15 +18,15 @@ def _clear_domain(db: Session, domain: str) -> None:
 
 
 def run_discovery(db: Session, *, tenant_id: str, session_id: str) -> dict:
-    domain = session_id                              # v1: session_id is our scope key
+    domain = session_id                              
     code_dir = fetch_solution(tenant_id, session_id)
-    root = next(code_dir.iterdir())                  # the single extracted top folder
-    signals = extract_signals(root)                  # Pass 1
-    gates = propose_gates(signals)                   # Pass 2
+    root = next(code_dir.iterdir())                 
+    signals = extract_signals(root)                 
+    gates = propose_gates(signals)                  
 
     _clear_domain(db, domain)
 
-    # 1) persist each signal as a raw_signal node, remembering key -> node
+  
     key_to_node: dict[str, SignalNode] = {}
     for s in signals:
         node = SignalNode(
@@ -45,10 +35,10 @@ def run_discovery(db: Session, *, tenant_id: str, session_id: str) -> dict:
             meta={"evidence": s.evidence, "observable": s.observable},
         )
         db.add(node)
-        db.flush()                                   # assigns node.id before we link edges
+        db.flush()                                 
         key_to_node[s.key] = node
 
-    # 2) persist each gate: a target node + an open recommendation + edges signal->target
+  
     for g in gates:
         tnode = SignalNode(
             domain=domain, key=f"target:{g.key}", node_type="baseline_target",

@@ -1,12 +1,3 @@
-"""Data-driven analysis over the signal graph: suggested range (Task 12),
-edge weights + drift (Task 13).
-
-Every function here is DATA-CONDITIONAL: it asks observe.data_status first and
-returns an explicit "insufficient_data" verdict rather than inventing numbers
-when a client has no telemetry. The maths is reused from `confirm`.
-"""
-from __future__ import annotations
-
 import math
 
 import numpy as np
@@ -19,25 +10,12 @@ from .observe import observation_series, data_status, MIN_WINDOWS
 
 
 def _values(db: Session, domain: str, signal_key: str, segment: str) -> list[float]:
-    """The non-null observed values for one signal, oldest window first."""
+   
     return [r.value for r in observation_series(db, domain, signal_key, segment) if r.value is not None]
 
 
 def consolidated_series(db: Session, domain: str, metric: str, segment: str = "global") -> tuple[list[float], bool]:
-    """Consolidate telemetry + feedback into one value per window (Task 2,
-    'dual-input drift').
-
-    Telemetry covers EVERY case but the AI may grade itself optimistically;
-    human feedback is ground truth on the REVIEWED subset. So per window we
-    blend: the more of the population humans reviewed, the more feedback is
-    trusted. alpha = feedback_samples / telemetry_samples (capped at 1).
-
-        consolidated = (1 - alpha) * telemetry + alpha * feedback
-
-    Returns (values oldest-first, had_feedback). Windows with only telemetry
-    pass through unchanged; this naturally degrades to telemetry-only for
-    clients with no feedback stream (e.g. a plain CRUD app).
-    """
+    
     tel: dict = {}
     fb: dict = {}
     for r in observation_series(db, domain, metric, segment):
@@ -63,12 +41,7 @@ def consolidated_series(db: Session, domain: str, metric: str, segment: str = "g
 
 
 def suggested_range(db: Session, domain: str, metric: str, segment: str = "global") -> dict:
-    """A non-binding hint for the human's target: where the metric has sat.
-
-    Returns {"status": "ok", "median", "p10", "p90", "n"} when enough data
-    exists, else {"status": "no_data" | "insufficient_data"}. The target value
-    is NEVER derived from this — it only informs the human.
-    """
+   
     status = data_status(db, domain, metric, segment)
     if status != "ok":
         return {"status": status}
@@ -77,7 +50,6 @@ def suggested_range(db: Session, domain: str, metric: str, segment: str = "globa
     return {"status": "ok", "n": len(values), **dist}
 
 
-# ---- Task 13: edge weights + drift ---------------------------------------
 
 def _psi(reference: list[float], current: list[float], buckets: int = 10) -> float | None:
     """Population Stability Index between an earlier and a recent value set.
@@ -112,10 +84,10 @@ def recompute_edge_weights(db: Session, domain: str) -> int:
         tgt = db.query(SignalNode).filter(SignalNode.id == e.to_node_id).first()
         if not src or not tgt:
             continue
-        metric = tgt.key.replace("target:", "", 1)          # target node key -> metric
+        metric = tgt.key.replace("target:", "", 1)       
         sig_series = _values(db, domain, src.key, "global")
         met_series = _values(db, domain, metric, "global")
-        weight = confirm.edge_weight(sig_series, met_series)  # None below sample floor
+        weight = confirm.edge_weight(sig_series, met_series)  
         if weight != e.weight:
             e.weight = weight
             updated += 1
@@ -124,14 +96,14 @@ def recompute_edge_weights(db: Session, domain: str) -> int:
 
 
 def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
-    """Pure (no-write) drift summary for one accepted gate vs its user target."""
+    
     target = gate.target_value
     base = {"metric": gate.metric, "segment": gate.segment, "direction": gate.direction,
             "target_value": target}
     if target is None:
         return {**base, "status": "no_target"}
 
-    # Dual-input: drift runs on the telemetry+feedback consolidated series.
+   
     values, had_feedback = consolidated_series(db, domain, gate.metric, gate.segment)
     if not values:
         return {**base, "status": "no_data"}
@@ -162,9 +134,7 @@ def _gate_drift(db: Session, domain: str, gate: QualityGate) -> dict:
 
 
 def compute_drift(db: Session, domain: str) -> list[dict]:
-    """Compute drift for every accepted gate (a discovered Baseline) and upsert
-    a DriftAlert per gate with enough data. Also mirrors the consolidated value
-    + status onto the Baseline row so the existing CL Baselines UI shows it."""
+   
     gates = db.query(Baseline).filter(Baseline.domain == domain).all()
     results: list[dict] = []
     for gate in gates:
@@ -172,12 +142,11 @@ def compute_drift(db: Session, domain: str) -> list[dict]:
         results.append(d)
         if d.get("status") != "ok":
             continue
-        # Mirror onto the Baseline row -> existing CL heatmap shows healthy/
-        # drifting/breached for this discovered gate.
+      
         gate.last_observed = d["current"]
         gate.last_observed_at = now()
         gate.last_status = evaluate_status(gate, d["current"])
-        fp = f"sg:{domain}:{gate.metric}:{gate.segment}"        # idempotency key
+        fp = f"sg:{domain}:{gate.metric}:{gate.segment}"       
         alert = (
             db.query(DriftAlert)
             .filter(DriftAlert.fingerprint == fp, DriftAlert.status != "resolved")
@@ -186,7 +155,7 @@ def compute_drift(db: Session, domain: str) -> list[dict]:
         if alert is None:
             alert = DriftAlert(fingerprint=fp, status="open")
             db.add(alert)
-        alert.domain = domain          # scope the alert to this client
+        alert.domain = domain         
         alert.detected_at = now()
         alert.segment = gate.segment
         alert.metric = gate.metric
