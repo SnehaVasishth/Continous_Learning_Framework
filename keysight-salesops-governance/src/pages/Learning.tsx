@@ -71,11 +71,10 @@ type Dashboard = {
 // new stage keys in the shared map, never inline here.
 const STAGE_LABELS = STAGE_DISPLAY;
 
-type SubTab = "dashboard" | "discover" | "baselines" | "feedback" | "drift" | "tuning" | "experiments" | "promote";
+type SubTab = "dashboard" | "baselines" | "feedback" | "drift" | "tuning" | "experiments" | "promote";
 
 const SUB_TABS: { key: SubTab; label: string; funnelHint?: string }[] = [
   { key: "dashboard",   label: "Overview" },
-  { key: "discover",    label: "Discover · quality gates" },
   { key: "baselines",   label: "Baselines · quality targets",   funnelHint: "00" },
   { key: "feedback",    label: "Capture · feedback log",        funnelHint: "01" },
   { key: "drift",       label: "Detect · drift & RCA bundles",  funnelHint: "02" },
@@ -213,7 +212,6 @@ export function LearningPage() {
           onOpenDrill={openDrill}
         />
       )}
-      {tab === "discover" && <DiscoverTab />}
       {tab === "feedback" && <FeedbackLogPanel onOpenDrill={openDrill} />}
       {tab === "drift" && (
         <DriftTab
@@ -722,12 +720,18 @@ function BaselinesTab({
   const [editing, setEditing] = useState<Baseline | null>(null);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Client (domain) selection + onboarding. "keysight" is the built-in client;
+  // discovered clients are session ids onboarded via the API.
+  const [domain, setDomain] = useState("keysight");
+  const [domainList, setDomainList] = useState<{ domain: string; gates: number }[]>([]);
+  const [onboarding, setOnboarding] = useState(false);
+  const [tenantId, setTenantId] = useState("676e7711192abc0024679612");
+  const [sessionId, setSessionId] = useState("");
+  const [discovering, setDiscovering] = useState(false);
 
   const load = () => {
-    // Bust the BaselineFilter cache so any open dropdowns reflect adds /
-    // deletes / status flips that just happened on this tab.
     invalidateBaselineCache();
-    fetch("/api/learning/baselines")
+    fetch(`/api/learning/baselines?domain=${encodeURIComponent(domain)}`)
       .then((r) => r.json())
       .then((d) => {
         setRows(d.items || []);
@@ -736,13 +740,42 @@ function BaselinesTab({
       .catch((e) => setError(String(e)));
   };
 
+  const loadDomains = () => {
+    signalGraphApi.domains().then(setDomainList).catch(() => setDomainList([]));
+  };
+
+  // Reload the baseline list whenever the selected client changes.
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domain]);
+
+  useEffect(() => {
+    loadDomains();
     fetch("/api/learning/baselines/metrics")
       .then((r) => r.json())
       .then(setCatalog)
       .catch(() => {});
   }, []);
+
+  const onOnboardDiscover = async () => {
+    if (!sessionId.trim()) {
+      onToast("Enter a session id to onboard a client.");
+      return;
+    }
+    setDiscovering(true);
+    try {
+      const res = await signalGraphApi.discover(tenantId.trim(), sessionId.trim());
+      onToast(`Discovered ${res.signals} signals, ${res.gates} candidate gates.`);
+      setDomain(sessionId.trim());   // switch the view to the new client
+      setOnboarding(false);
+      loadDomains();
+    } catch (e) {
+      onToast(`Discover failed: ${e}`);
+    } finally {
+      setDiscovering(false);
+    }
+  };
 
   const refreshObservations = async () => {
     setRefreshing(true);
@@ -802,6 +835,51 @@ function BaselinesTab({
           </div>
         </div>
 
+        {/* Client (domain) selector + onboarding a new client via discovery */}
+        <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
+          <span className="text-zbrain-muted">Client:</span>
+          <select
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            className="border border-zbrain-divider rounded-md px-2 py-1 bg-white"
+          >
+            <option value="keysight">Keysight (built-in)</option>
+            {domainList.filter((d) => d.domain !== "keysight").map((d) => (
+              <option key={d.domain} value={d.domain}>{d.domain.slice(0, 8)}… ({d.gates})</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setOnboarding((v) => !v)}
+            className="px-2 py-1 rounded-md border border-zbrain-divider bg-white hover:bg-zbrain-50"
+          >
+            {onboarding ? "Cancel" : "+ Onboard client"}
+          </button>
+          {domain !== "keysight" && (
+            <span className="text-zbrain-muted">
+              Discovered client <code className="font-mono">{domain.slice(0, 8)}…</code>
+            </span>
+          )}
+        </div>
+        {onboarding && (
+          <div className="mt-2 flex items-end gap-2 flex-wrap">
+            <label className="text-[11px] text-zbrain-muted">
+              Tenant ID
+              <input value={tenantId} onChange={(e) => setTenantId(e.target.value)}
+                className="block border border-zbrain-divider rounded-md px-2 py-1 text-xs w-56" />
+            </label>
+            <label className="text-[11px] text-zbrain-muted">
+              Session ID
+              <input value={sessionId} onChange={(e) => setSessionId(e.target.value)}
+                placeholder="client session id"
+                className="block border border-zbrain-divider rounded-md px-2 py-1 text-xs w-72" />
+            </label>
+            <button onClick={onOnboardDiscover} disabled={discovering}
+              className="px-3 py-1.5 rounded-md border border-zbrain bg-zbrain text-white text-xs disabled:opacity-50">
+              {discovering ? "Discovering…" : "Discover"}
+            </button>
+          </div>
+        )}
+
         {summary && (
           <div className="grid grid-cols-12 gap-3 mt-4">
             <Kpi
@@ -849,6 +927,14 @@ function BaselinesTab({
           </div>
         )}
       </div>
+
+      {domain !== "keysight" && (
+        <SgDiscoveryPanel
+          domain={domain}
+          onChanged={() => { load(); loadDomains(); }}
+          onToast={onToast}
+        />
+      )}
 
       {(["breached", "drifting", "healthy", "unknown"] as const).map((status) => {
         const list = grouped[status] || [];
@@ -4840,9 +4926,6 @@ function HealthByBaselineRow({
 // the LLM extract signals + propose candidate gates, set a user target to
 // accept, then Analyze to compute edge weights + drift (data-conditional).
 
-const SG_DEFAULT_TENANT = "676e7711192abc0024679612";
-const SG_DEFAULT_SESSION = "f8651fcd-6c46-4ed2-83ec-665f31027267";
-
 function sgRangeHint(r: SgSuggestedRange | undefined): string {
   // Defensive: an older backend may not send suggested_range at all.
   if (r && r.status === "ok") {
@@ -4851,263 +4934,160 @@ function sgRangeHint(r: SgSuggestedRange | undefined): string {
   return "not enough data yet";
 }
 
-function DiscoverTab() {
-  const [tenantId, setTenantId] = useState(SG_DEFAULT_TENANT);
-  const [sessionId, setSessionId] = useState(SG_DEFAULT_SESSION);
+// Recommended-candidates panel for one discovered client, embedded in the
+// Baselines tab. Candidates -> suggested range + cause-effect graph + target
+// input -> Accept (creates a domain-scoped Baseline). onChanged refreshes the
+// Baselines list above so the accepted gate appears there.
+function SgDiscoveryPanel({
+  domain,
+  onChanged,
+  onToast,
+}: {
+  domain: string;
+  onChanged: () => void;
+  onToast: (m: string) => void;
+}) {
   const [recs, setRecs] = useState<SgRecommendation[]>([]);
   const [targets, setTargets] = useState<Record<number, string>>({});
   const [openGraphs, setOpenGraphs] = useState<Record<number, boolean>>({});
-  const [gates, setGates] = useState<SgGate[]>([]);
-  const [discovering, setDiscovering] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
-  const loadRecs = async (sid: string) => {
-    try {
-      setRecs(await signalGraphApi.recommendations(sid));
-    } catch (e) {
-      setErrMsg(String(e));
-    }
-  };
-  const loadGates = async (sid: string) => {
-    try {
-      setGates(await signalGraphApi.baselines(sid));
-    } catch (e) {
-      setErrMsg(String(e));
-    }
+  const loadRecs = () => {
+    signalGraphApi.recommendations(domain).then(setRecs).catch((e) => onToast(String(e)));
   };
 
   useEffect(() => {
-    loadRecs(sessionId);
-    loadGates(sessionId);
+    loadRecs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onDiscover = async () => {
-    setDiscovering(true);
-    setErrMsg(null);
-    setStatusMsg(null);
-    try {
-      const res = await signalGraphApi.discover(tenantId, sessionId);
-      setStatusMsg(`Discovered ${res.signals} signals and ${res.gates} candidate gates.`);
-      await loadRecs(sessionId);
-    } catch (e) {
-      setErrMsg(String(e));
-    } finally {
-      setDiscovering(false);
-    }
-  };
+  }, [domain]);
 
   const onAccept = async (rec: SgRecommendation) => {
     const raw = targets[rec.id];
     const num = Number(raw);
     if (raw === undefined || raw.trim() === "" || Number.isNaN(num)) {
-      setErrMsg(`Enter a numeric target for "${rec.metric}" before accepting.`);
+      onToast(`Enter a numeric target for "${rec.metric}" before accepting.`);
       return;
     }
-    setErrMsg(null);
     try {
       await signalGraphApi.accept(rec.id, num);
-      setStatusMsg(`Accepted "${rec.metric}" with target ${num}.`);
-      await loadRecs(sessionId);
-      await loadGates(sessionId);
+      onToast(`Accepted "${rec.metric}" with target ${num}.`);
+      loadRecs();
+      onChanged();                 // refresh the Baselines list above
     } catch (e) {
-      setErrMsg(String(e));
+      onToast(String(e));
     }
   };
 
   const onDismiss = async (rec: SgRecommendation) => {
-    setErrMsg(null);
     try {
       await signalGraphApi.dismiss(rec.id);
-      await loadRecs(sessionId);
+      loadRecs();
     } catch (e) {
-      setErrMsg(String(e));
+      onToast(String(e));
     }
   };
 
   const onAnalyze = async () => {
     setAnalyzing(true);
-    setErrMsg(null);
     try {
-      const res = await signalGraphApi.analyze(sessionId);
-      setStatusMsg(`Analyzed: ${res.edges_updated} edge weights updated, ${res.gates_analyzed} gates checked.`);
-      await loadGates(sessionId);
+      const res = await signalGraphApi.analyze(domain);
+      onToast(`Analyzed: ${res.edges_updated} edge weights, ${res.gates_analyzed} gates checked.`);
+      onChanged();
     } catch (e) {
-      setErrMsg(String(e));
+      onToast(String(e));
     } finally {
       setAnalyzing(false);
     }
   };
 
   const onSeed = async () => {
-    setErrMsg(null);
     try {
-      const res = await signalGraphApi.seedDemo(sessionId);
-      setStatusMsg(`Seeded ${res.observations_written} sample observations. Click Analyze to compute drift & weights.`);
-      await loadRecs(sessionId);
-      await loadGates(sessionId);
+      const res = await signalGraphApi.seedDemo(domain);
+      onToast(`Seeded ${res.observations_written} sample observations. Click Analyze to compute drift & weights.`);
+      loadRecs();
+      onChanged();
     } catch (e) {
-      setErrMsg(String(e));
+      onToast(String(e));
     }
   };
 
-  const inp =
-    "w-full px-3 py-2 rounded-md border border-zbrain-divider bg-white text-sm";
+  const inp = "w-full px-3 py-2 rounded-md border border-zbrain-divider bg-white text-sm";
 
   return (
-    <div className="space-y-4">
-      {errMsg && (
-        <Surface>
-          <div className="p-4 text-sm text-rose-700">{errMsg}</div>
-        </Surface>
-      )}
-      {statusMsg && (
-        <Surface>
-          <div className="p-4 text-sm text-emerald-700">{statusMsg}</div>
-        </Surface>
-      )}
-
-      <Surface>
-        <Section title="Discover" subtitle="Identify the client solution to analyze.">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <div className="eyebrow">Tenant ID</div>
-              <input className={inp} value={tenantId} onChange={(e) => setTenantId(e.target.value)} />
-            </div>
-            <div>
-              <div className="eyebrow">Session ID</div>
-              <input className={inp} value={sessionId} onChange={(e) => setSessionId(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <Button onClick={onDiscover} variant="primary" disabled={discovering}>
-              {discovering ? "Discovering…" : "Discover"}
-            </Button>
-            <Button onClick={() => loadRecs(sessionId)} variant="ghost">Refresh</Button>
-            <Button onClick={onSeed} variant="ghost" title="Demo only: write synthetic observations so range/drift/weights can be shown">
+    <Surface>
+      <Section
+        title={`Recommended candidates (${recs.length})`}
+        subtitle="Set a target to accept a gate — it becomes a baseline below. Demo data: Seed, then Analyze, to populate range/drift/weights."
+        action={
+          <div className="flex items-center gap-2">
+            <Button onClick={onSeed} variant="ghost" title="Demo only: write synthetic observations">
               Seed sample data
             </Button>
-          </div>
-        </Section>
-      </Surface>
-
-      <Surface>
-        <Section
-          title={`Candidate gates (${recs.length})`}
-          subtitle="Set a target value to accept a gate, or dismiss it."
-        >
-          {recs.length === 0 && (
-            <div className="py-6 text-center text-zbrain-muted">No open candidates. Click "Discover" above.</div>
-          )}
-          <div className="space-y-3">
-            {recs.map((rec) => (
-              <div key={rec.id} className="rounded-lg border border-zbrain-divider/60 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="font-mono text-sm font-medium text-zbrain-ink">{rec.metric}</div>
-                    <div className="text-[13px] text-zbrain-muted mt-1">{rec.rationale}</div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Chip tone="info">{rec.direction === "min" ? "higher is better" : "lower is better"}</Chip>
-                    {rec.compute && <Chip tone="neutral">{rec.compute}</Chip>}
-                  </div>
-                </div>
-
-                {rec.inputs.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                    <span className="text-[12px] text-zbrain-muted">signals:</span>
-                    {rec.inputs.map((sig) => (
-                      <Chip key={sig} tone="violet">{sig}</Chip>
-                    ))}
-                  </div>
-                )}
-
-                <div className="text-[12px] text-zbrain-muted mt-3">
-                  suggested range: {sgRangeHint(rec.suggested_range)}
-                </div>
-
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    className={inp + " max-w-[180px]"}
-                    type="number"
-                    placeholder="target value"
-                    value={targets[rec.id] ?? ""}
-                    onChange={(e) => setTargets((t) => ({ ...t, [rec.id]: e.target.value }))}
-                  />
-                  <Button onClick={() => onAccept(rec)} variant="primary">Accept</Button>
-                  <Button onClick={() => onDismiss(rec)} variant="ghost">Dismiss</Button>
-                  <Button
-                    onClick={() => setOpenGraphs((g) => ({ ...g, [rec.id]: !g[rec.id] }))}
-                    variant="ghost"
-                  >
-                    {openGraphs[rec.id] ? "Hide graph" : "Graph"}
-                  </Button>
-                </div>
-
-                {openGraphs[rec.id] && (
-                  <div className="mt-3">
-                    <SignalGraphViewer recId={rec.id} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Section>
-      </Surface>
-
-      <Surface>
-        <Section
-          title={`Baseline targets (${gates.length})`}
-          subtitle="Gates you accepted, with live drift vs the target you set."
-          action={
             <Button onClick={onAnalyze} variant="primary" disabled={analyzing}>
               {analyzing ? "Analyzing…" : "Analyze (weights & drift)"}
             </Button>
-          }
-        >
-          {gates.length === 0 && (
-            <div className="py-6 text-center text-zbrain-muted">
-              No accepted gates yet. Set a target on a candidate above.
-            </div>
-          )}
-          <div className="space-y-2">
-            {gates.map((g) => (
-              <div
-                key={`${g.metric}:${g.segment}`}
-                className="rounded-lg border border-zbrain-divider/60 p-3 flex items-center justify-between gap-4"
-              >
+          </div>
+        }
+      >
+        {recs.length === 0 && (
+          <div className="py-6 text-center text-zbrain-muted">
+            No open candidates for this client (all accepted, or none discovered yet).
+          </div>
+        )}
+        <div className="space-y-3">
+          {recs.map((rec) => (
+            <div key={rec.id} className="rounded-lg border border-zbrain-divider/60 p-4">
+              <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="font-mono text-sm font-medium text-zbrain-ink">{g.metric}</div>
-                  <div className="text-[12px] text-zbrain-muted mt-0.5">
-                    target {g.target_value ?? "—"}
-                    {g.status === "ok" && (
-                      <>
-                        {" · "}current {g.current?.toFixed(3)}
-                        {g.delta_pct != null && <> ({(g.delta_pct * 100).toFixed(1)}%)</>}
-                        {g.psi != null && <> · PSI {g.psi.toFixed(2)}</>}
-                        {g.streams && <> · {g.streams}</>}
-                      </>
-                    )}
-                  </div>
+                  <div className="font-mono text-sm font-medium text-zbrain-ink">{rec.metric}</div>
+                  <div className="text-[13px] text-zbrain-muted mt-1">{rec.rationale}</div>
                 </div>
-                <div className="shrink-0">
-                  {g.status !== "ok" ? (
-                    <Chip tone="neutral">not enough data</Chip>
-                  ) : g.severity === "high" ? (
-                    <Chip tone="danger">breached</Chip>
-                  ) : g.severity === "medium" ? (
-                    <Chip tone="warning">drifting</Chip>
-                  ) : (
-                    <Chip tone="success">healthy</Chip>
-                  )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Chip tone="info">{rec.direction === "min" ? "higher is better" : "lower is better"}</Chip>
+                  {rec.compute && <Chip tone="neutral">{rec.compute}</Chip>}
                 </div>
               </div>
-            ))}
-          </div>
-        </Section>
-      </Surface>
-    </div>
+
+              {rec.inputs.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                  <span className="text-[12px] text-zbrain-muted">signals:</span>
+                  {rec.inputs.map((sig) => (
+                    <Chip key={sig} tone="violet">{sig}</Chip>
+                  ))}
+                </div>
+              )}
+
+              <div className="text-[12px] text-zbrain-muted mt-3">
+                suggested range: {sgRangeHint(rec.suggested_range)}
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  className={inp + " max-w-[180px]"}
+                  type="number"
+                  placeholder="target value"
+                  value={targets[rec.id] ?? ""}
+                  onChange={(e) => setTargets((t) => ({ ...t, [rec.id]: e.target.value }))}
+                />
+                <Button onClick={() => onAccept(rec)} variant="primary">Accept</Button>
+                <Button onClick={() => onDismiss(rec)} variant="ghost">Dismiss</Button>
+                <Button
+                  onClick={() => setOpenGraphs((g) => ({ ...g, [rec.id]: !g[rec.id] }))}
+                  variant="ghost"
+                >
+                  {openGraphs[rec.id] ? "Hide graph" : "Graph"}
+                </Button>
+              </div>
+
+              {openGraphs[rec.id] && (
+                <div className="mt-3">
+                  <SignalGraphViewer recId={rec.id} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Section>
+    </Surface>
   );
 }

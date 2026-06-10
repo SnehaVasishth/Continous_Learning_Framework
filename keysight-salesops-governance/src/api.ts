@@ -2435,4 +2435,5 @@ export const signalGraphApi = {
       `/signal-graph/seed-demo`,
       { method: "POST", body: JSON.stringify({ session_id, windows }) },
     ),
+  domains: () => jsonRequest<{ domain: string; gates: number }[]>(`/signal-graph/domains`),
 };

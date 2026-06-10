@@ -134,6 +134,19 @@ def baselines(session_id: str, db: Session = Depends(get_db)) -> list[dict]:
     return analyze.accepted_gates(db, session_id)
 
 
+@router.get("/domains")
+def domains(db: Session = Depends(get_db)) -> list[dict]:
+    """Distinct client domains that have baselines, so the CL client selector
+    can auto-list onboarded clients (keysight + discovered sessions)."""
+    from sqlalchemy import func
+    rows = (
+        db.query(Baseline.domain, func.count(Baseline.id))
+        .group_by(Baseline.domain)
+        .all()
+    )
+    return [{"domain": d, "gates": n} for d, n in rows]
+
+
 class SeedBody(BaseModel):
     session_id: str
     windows: int = 8
