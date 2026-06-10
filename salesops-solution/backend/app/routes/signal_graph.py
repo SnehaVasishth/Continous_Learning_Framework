@@ -16,6 +16,7 @@ from ..db import get_db
 from ..models import BaselineRecommendation, QualityGate, SignalNode, SignalEdge
 from ..services.signal_graph.discovery.run import run_discovery
 from ..services.signal_graph import analyze
+from ..services.signal_graph.seed_demo import seed_demo_observations
 
 router = APIRouter()
 
@@ -62,7 +63,8 @@ def recommendations(session_id: str, db: Session = Depends(get_db)) -> list[dict
             "compute": (r.subgraph_snapshot or {}).get("compute"),
             # Non-binding hint for the human's target. "insufficient_data" /
             # "no_data" until telemetry exists; the target is still user-set.
-            "suggested_range": analyze.suggested_range(db, session_id, r.metric, r.segment),
+            # v1 observations are global; segment is noisy LLM metadata.
+            "suggested_range": analyze.suggested_range(db, session_id, r.metric, "global"),
         }
         for r in rows
         if r.metric not in accepted_metrics
@@ -92,7 +94,9 @@ def accept(rec_id: int, body: AcceptBody, db: Session = Depends(get_db)) -> dict
         .first()
     )
     if gate is None:
-        gate = QualityGate(domain=rec.domain, metric=rec.metric, segment=rec.segment)
+        # v1: normalize to global (segment is noisy LLM metadata); keeps the
+        # gate's observation lookups aligned with how observations are stored.
+        gate = QualityGate(domain=rec.domain, metric=rec.metric, segment="global")
         db.add(gate)
     gate.direction = rec.direction
     gate.target_value = body.target_value          # the user's number
@@ -129,6 +133,19 @@ def baselines(session_id: str, db: Session = Depends(get_db)) -> list[dict]:
     """Accepted gates (the user's baseline targets) with their drift status,
     worst severity first."""
     return analyze.accepted_gates(db, session_id)
+
+
+class SeedBody(BaseModel):
+    session_id: str
+    windows: int = 8
+
+
+@router.post("/seed-demo")
+def seed_demo(body: SeedBody, db: Session = Depends(get_db)) -> dict:
+    """DEMO/TEST ONLY: write synthetic (meta.synthetic=true) observations for a
+    discovered session so range/weights/drift can be exercised without real
+    telemetry. Idempotent per session."""
+    return seed_demo_observations(db, body.session_id, windows=body.windows)
 
 
 # ---- the gate's signal graph (backtrack) ---------------------------------
