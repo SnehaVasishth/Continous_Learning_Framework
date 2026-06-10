@@ -9,6 +9,7 @@ import { ErrorsPage } from "./pages/Errors";
 import { HitlPage } from "./pages/Hitl";
 import { InboxPage } from "./pages/Inbox";
 import { KnowledgeBasePage } from "./pages/KnowledgeBase";
+import { SignalGraphPage } from "./pages/SignalGraph";
 import { TestCorpusPage } from "./pages/TestCorpus";
 import { SettingsLayout } from "./pages/Settings";
 import { UserProfileSection } from "./pages/settings/UserProfile";
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="/analytics/stage" element={<Navigate to="/analytics/stage/intake" replace />} />
               <Route path="/analytics/process-flow" element={<ProcessFlowPage />} />
               <Route path="/kb" element={<KnowledgeBasePage />} />
+              <Route path="/signal-graph" element={<SignalGraphPage />} />
               <Route path="/test-corpus" element={<TestCorpusPage />} />
 
               {/* User profile stays on the functional front-end. Every other

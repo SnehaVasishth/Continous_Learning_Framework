@@ -19,6 +19,7 @@ const NAV = [
   { to: "/hitl", label: "HITL Queue" },
   { to: "/analytics", label: "Analytics" },
   { to: "/kb", label: "Knowledge Base" },
+  { to: "/signal-graph", label: "Quality Gates" },
   // AIOA Queue and Errors are not surfaced in the top nav. Operators reach
   // AIOA via the Order Acceptance card on the Dashboard. Errors auto-retry
   // behind the scenes; the contextual banner on the Dashboard surfaces any
