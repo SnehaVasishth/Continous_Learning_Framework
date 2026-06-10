@@ -3,6 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { api, type ABExperiment, type DriftAlert, type LearningOpportunity, type BaselineAnchor, type SegmentObservation } from "../api";
+import {
+  signalGraphApi,
+  type SgRecommendation,
+  type SgGate,
+  type SgSuggestedRange,
+} from "../api";
+import { SignalGraphViewer } from "../components/SignalGraphViewer";
+import { Button, Chip, Section, Surface } from "../components/ui";
 import { useOperator } from "../lib/operator";
 import { kbUrl as kbUrlFor, traceUrl } from "../lib/traceUrl";
 import { InfoTip } from "../components/InfoTip";
@@ -63,10 +71,11 @@ type Dashboard = {
 // new stage keys in the shared map, never inline here.
 const STAGE_LABELS = STAGE_DISPLAY;
 
-type SubTab = "dashboard" | "baselines" | "feedback" | "drift" | "tuning" | "experiments" | "promote";
+type SubTab = "dashboard" | "discover" | "baselines" | "feedback" | "drift" | "tuning" | "experiments" | "promote";
 
 const SUB_TABS: { key: SubTab; label: string; funnelHint?: string }[] = [
   { key: "dashboard",   label: "Overview" },
+  { key: "discover",    label: "Discover · quality gates" },
   { key: "baselines",   label: "Baselines · quality targets",   funnelHint: "00" },
   { key: "feedback",    label: "Capture · feedback log",        funnelHint: "01" },
   { key: "drift",       label: "Detect · drift & RCA bundles",  funnelHint: "02" },
@@ -204,6 +213,7 @@ export function LearningPage() {
           onOpenDrill={openDrill}
         />
       )}
+      {tab === "discover" && <DiscoverTab />}
       {tab === "feedback" && <FeedbackLogPanel onOpenDrill={openDrill} />}
       {tab === "drift" && (
         <DriftTab
@@ -4822,5 +4832,265 @@ function HealthByBaselineRow({
         )}
       </div>
     </button>
+  );
+}
+
+// ─── Discover · quality gates (signal-graph discovery) ───────────────────
+// Drives the shared /api/signal-graph backend: fetch a client solution, let
+// the LLM extract signals + propose candidate gates, set a user target to
+// accept, then Analyze to compute edge weights + drift (data-conditional).
+
+const SG_DEFAULT_TENANT = "676e7711192abc0024679612";
+const SG_DEFAULT_SESSION = "f8651fcd-6c46-4ed2-83ec-665f31027267";
+
+function sgRangeHint(r: SgSuggestedRange): string {
+  if (r.status === "ok") {
+    return `observed ${r.p10.toFixed(3)}–${r.p90.toFixed(3)} (median ${r.median.toFixed(3)}, ${r.n} windows)`;
+  }
+  return "not enough data yet";
+}
+
+function DiscoverTab() {
+  const [tenantId, setTenantId] = useState(SG_DEFAULT_TENANT);
+  const [sessionId, setSessionId] = useState(SG_DEFAULT_SESSION);
+  const [recs, setRecs] = useState<SgRecommendation[]>([]);
+  const [targets, setTargets] = useState<Record<number, string>>({});
+  const [openGraphs, setOpenGraphs] = useState<Record<number, boolean>>({});
+  const [gates, setGates] = useState<SgGate[]>([]);
+  const [discovering, setDiscovering] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+
+  const loadRecs = async (sid: string) => {
+    try {
+      setRecs(await signalGraphApi.recommendations(sid));
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+  const loadGates = async (sid: string) => {
+    try {
+      setGates(await signalGraphApi.baselines(sid));
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+
+  useEffect(() => {
+    loadRecs(sessionId);
+    loadGates(sessionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onDiscover = async () => {
+    setDiscovering(true);
+    setErrMsg(null);
+    setStatusMsg(null);
+    try {
+      const res = await signalGraphApi.discover(tenantId, sessionId);
+      setStatusMsg(`Discovered ${res.signals} signals and ${res.gates} candidate gates.`);
+      await loadRecs(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    } finally {
+      setDiscovering(false);
+    }
+  };
+
+  const onAccept = async (rec: SgRecommendation) => {
+    const raw = targets[rec.id];
+    const num = Number(raw);
+    if (raw === undefined || raw.trim() === "" || Number.isNaN(num)) {
+      setErrMsg(`Enter a numeric target for "${rec.metric}" before accepting.`);
+      return;
+    }
+    setErrMsg(null);
+    try {
+      await signalGraphApi.accept(rec.id, num);
+      setStatusMsg(`Accepted "${rec.metric}" with target ${num}.`);
+      await loadRecs(sessionId);
+      await loadGates(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+
+  const onDismiss = async (rec: SgRecommendation) => {
+    setErrMsg(null);
+    try {
+      await signalGraphApi.dismiss(rec.id);
+      await loadRecs(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+
+  const onAnalyze = async () => {
+    setAnalyzing(true);
+    setErrMsg(null);
+    try {
+      const res = await signalGraphApi.analyze(sessionId);
+      setStatusMsg(`Analyzed: ${res.edges_updated} edge weights updated, ${res.gates_analyzed} gates checked.`);
+      await loadGates(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const inp =
+    "w-full px-3 py-2 rounded-md border border-zbrain-divider bg-white text-sm";
+
+  return (
+    <div className="space-y-4">
+      {errMsg && (
+        <Surface>
+          <div className="p-4 text-sm text-rose-700">{errMsg}</div>
+        </Surface>
+      )}
+      {statusMsg && (
+        <Surface>
+          <div className="p-4 text-sm text-emerald-700">{statusMsg}</div>
+        </Surface>
+      )}
+
+      <Surface>
+        <Section title="Discover" subtitle="Identify the client solution to analyze.">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <div className="eyebrow">Tenant ID</div>
+              <input className={inp} value={tenantId} onChange={(e) => setTenantId(e.target.value)} />
+            </div>
+            <div>
+              <div className="eyebrow">Session ID</div>
+              <input className={inp} value={sessionId} onChange={(e) => setSessionId(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <Button onClick={onDiscover} variant="primary" disabled={discovering}>
+              {discovering ? "Discovering…" : "Discover"}
+            </Button>
+            <Button onClick={() => loadRecs(sessionId)} variant="ghost">Refresh</Button>
+          </div>
+        </Section>
+      </Surface>
+
+      <Surface>
+        <Section
+          title={`Candidate gates (${recs.length})`}
+          subtitle="Set a target value to accept a gate, or dismiss it."
+        >
+          {recs.length === 0 && (
+            <div className="py-6 text-center text-zbrain-muted">No open candidates. Click "Discover" above.</div>
+          )}
+          <div className="space-y-3">
+            {recs.map((rec) => (
+              <div key={rec.id} className="rounded-lg border border-zbrain-divider/60 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-mono text-sm font-medium text-zbrain-ink">{rec.metric}</div>
+                    <div className="text-[13px] text-zbrain-muted mt-1">{rec.rationale}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Chip tone="info">{rec.direction === "min" ? "higher is better" : "lower is better"}</Chip>
+                    {rec.compute && <Chip tone="neutral">{rec.compute}</Chip>}
+                  </div>
+                </div>
+
+                {rec.inputs.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    <span className="text-[12px] text-zbrain-muted">signals:</span>
+                    {rec.inputs.map((sig) => (
+                      <Chip key={sig} tone="violet">{sig}</Chip>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-[12px] text-zbrain-muted mt-3">
+                  suggested range: {sgRangeHint(rec.suggested_range)}
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    className={inp + " max-w-[180px]"}
+                    type="number"
+                    placeholder="target value"
+                    value={targets[rec.id] ?? ""}
+                    onChange={(e) => setTargets((t) => ({ ...t, [rec.id]: e.target.value }))}
+                  />
+                  <Button onClick={() => onAccept(rec)} variant="primary">Accept</Button>
+                  <Button onClick={() => onDismiss(rec)} variant="ghost">Dismiss</Button>
+                  <Button
+                    onClick={() => setOpenGraphs((g) => ({ ...g, [rec.id]: !g[rec.id] }))}
+                    variant="ghost"
+                  >
+                    {openGraphs[rec.id] ? "Hide graph" : "Graph"}
+                  </Button>
+                </div>
+
+                {openGraphs[rec.id] && (
+                  <div className="mt-3">
+                    <SignalGraphViewer recId={rec.id} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </Section>
+      </Surface>
+
+      <Surface>
+        <Section
+          title={`Baseline targets (${gates.length})`}
+          subtitle="Gates you accepted, with live drift vs the target you set."
+          action={
+            <Button onClick={onAnalyze} variant="primary" disabled={analyzing}>
+              {analyzing ? "Analyzing…" : "Analyze (weights & drift)"}
+            </Button>
+          }
+        >
+          {gates.length === 0 && (
+            <div className="py-6 text-center text-zbrain-muted">
+              No accepted gates yet. Set a target on a candidate above.
+            </div>
+          )}
+          <div className="space-y-2">
+            {gates.map((g) => (
+              <div
+                key={`${g.metric}:${g.segment}`}
+                className="rounded-lg border border-zbrain-divider/60 p-3 flex items-center justify-between gap-4"
+              >
+                <div className="min-w-0">
+                  <div className="font-mono text-sm font-medium text-zbrain-ink">{g.metric}</div>
+                  <div className="text-[12px] text-zbrain-muted mt-0.5">
+                    target {g.target_value ?? "—"}
+                    {g.status === "ok" && (
+                      <>
+                        {" · "}current {g.current?.toFixed(3)}
+                        {g.delta_pct != null && <> ({(g.delta_pct * 100).toFixed(1)}%)</>}
+                        {g.psi != null && <> · PSI {g.psi.toFixed(2)}</>}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {g.status !== "ok" ? (
+                    <Chip tone="neutral">not enough data</Chip>
+                  ) : g.severity === "high" ? (
+                    <Chip tone="danger">breached</Chip>
+                  ) : g.severity === "medium" ? (
+                    <Chip tone="warning">drifting</Chip>
+                  ) : (
+                    <Chip tone="success">healthy</Chip>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </Surface>
+    </div>
   );
 }

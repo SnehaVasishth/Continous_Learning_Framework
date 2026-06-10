@@ -2356,3 +2356,77 @@ export const governanceApi = {
       body: JSON.stringify({ kind, note, actor: "governance_dashboard" }),
     }),
 };
+
+// === SIGNAL GRAPH (Quality-Gate Discovery) ===
+// Mirrors /api/signal-graph routes (shared SalesOps backend). Ported from the
+// SalesOps frontend so the Continuous Learning "Discover" tab can drive it.
+export type SgSuggestedRange =
+  | { status: "ok"; n: number; median: number; p10: number; p90: number }
+  | { status: "no_data" | "insufficient_data" };
+
+export type SgRecommendation = {
+  id: number;
+  metric: string;
+  segment: string;
+  direction: "min" | "max";
+  score: number;
+  rationale: string;
+  inputs: string[];
+  compute: string | null;
+  suggested_range: SgSuggestedRange;
+};
+
+export type SgGraph = {
+  nodes: { key: string; type: string }[];
+  edges: { from: string; to: string; weight: number | null }[];
+};
+
+export type SgDiscoverResult = { session_id: string; signals: number; gates: number };
+
+export type SgGate = {
+  metric: string;
+  segment: string;
+  direction: "min" | "max";
+  target_value: number | null;
+  status: "ok" | "insufficient_data" | "no_data" | "no_target";
+  current?: number;
+  delta?: number;
+  delta_pct?: number | null;
+  psi?: number | null;
+  breached?: boolean;
+  severity?: "high" | "medium" | "info";
+};
+
+export type SgAnalyzeResult = { domain: string; edges_updated: number; gates_analyzed: number };
+
+export const signalGraphApi = {
+  discover: (tenant_id: string, session_id: string) =>
+    jsonRequest<SgDiscoverResult>(`/signal-graph/discover`, {
+      method: "POST",
+      body: JSON.stringify({ tenant_id, session_id }),
+    }),
+  recommendations: (session_id: string) =>
+    jsonRequest<SgRecommendation[]>(
+      `/signal-graph/recommendations?session_id=${encodeURIComponent(session_id)}`,
+    ),
+  accept: (id: number, target_value: number) =>
+    jsonRequest<{ id: number; metric: string; target_value: number; status: string }>(
+      `/signal-graph/recommendations/${id}/accept`,
+      { method: "POST", body: JSON.stringify({ target_value }) },
+    ),
+  dismiss: (id: number) =>
+    jsonRequest<{ ok: boolean }>(`/signal-graph/recommendations/${id}/dismiss`, {
+      method: "POST",
+    }),
+  graph: (id: number) =>
+    jsonRequest<SgGraph>(`/signal-graph/recommendations/${id}/graph`),
+  analyze: (session_id: string) =>
+    jsonRequest<SgAnalyzeResult>(`/signal-graph/analyze`, {
+      method: "POST",
+      body: JSON.stringify({ tenant_id: "", session_id }),
+    }),
+  baselines: (session_id: string) =>
+    jsonRequest<SgGate[]>(
+      `/signal-graph/baselines?session_id=${encodeURIComponent(session_id)}`,
+    ),
+};
