@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import BaselineRecommendation, SignalNode, SignalEdge
 from ..services.signal_graph.discovery.run import run_discovery
+from ..services.signal_graph import analyze
 
 router = APIRouter()
 
@@ -54,6 +55,9 @@ def recommendations(session_id: str, db: Session = Depends(get_db)) -> list[dict
             "rationale": r.rationale,
             "inputs": (r.subgraph_snapshot or {}).get("inputs", []),
             "compute": (r.subgraph_snapshot or {}).get("compute"),
+            # Non-binding hint for the human's target. "insufficient_data" /
+            # "no_data" until telemetry exists; the target is still user-set.
+            "suggested_range": analyze.suggested_range(db, session_id, r.metric, r.segment),
         }
         for r in rows
     ]

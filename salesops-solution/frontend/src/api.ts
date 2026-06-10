@@ -1792,7 +1792,14 @@ export type SgRecommendation = {
   rationale: string;         // LLM's one-line reason this gate is worth watching
   inputs: string[];          // the signal keys this gate is computed from (graph edges)
   compute: string | null;    // how it's computed: rate | ratio | p95 | psi | count | mean
+  suggested_range: SgSuggestedRange; // non-binding hint for the human's target
 };
+
+// Data-conditional hint: "ok" carries median/p10/p90 over n windows; otherwise
+// the status explains why there's nothing to show (no telemetry yet).
+export type SgSuggestedRange =
+  | { status: "ok"; n: number; median: number; p10: number; p90: number }
+  | { status: "no_data" | "insufficient_data" };
 
 // The signal subgraph for one gate, returned by GET /recommendations/{id}/graph.
 export type SgGraph = {
