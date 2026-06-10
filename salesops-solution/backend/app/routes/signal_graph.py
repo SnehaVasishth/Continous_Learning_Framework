@@ -92,6 +92,22 @@ def dismiss(rec_id: int, db: Session = Depends(get_db)) -> dict:
     return {"ok": True}
 
 
+# ---- analysis: edge weights + drift --------------------------------------
+
+@router.post("/analyze")
+def analyze_endpoint(body: DiscoverBody, db: Session = Depends(get_db)) -> dict:
+    """Recompute edge weights + drift for a session. Data-conditional: signals
+    without enough telemetry stay weight=null and report insufficient_data."""
+    return analyze.analyze_domain(db, body.session_id)
+
+
+@router.get("/baselines")
+def baselines(session_id: str, db: Session = Depends(get_db)) -> list[dict]:
+    """Accepted gates (the user's baseline targets) with their drift status,
+    worst severity first."""
+    return analyze.accepted_gates(db, session_id)
+
+
 # ---- the gate's signal graph (backtrack) ---------------------------------
 
 @router.get("/recommendations/{rec_id}/graph")
