@@ -1,0 +1,161 @@
+{
+  "timestamp": "20260609_223134_241935",
+  "system_prompt_chars": 541,
+  "user_prompt_chars": 2589,
+  "raw_response_chars": 4674,
+  "system": "You are proposing baseline QUALITY GATES for a software system, given a list of its observable signals. A gate is a metric over one or more signals that is worth monitoring. Do NOT set any threshold/target number (a human will). For each gate give a compute type from [rate, ratio, p95, psi, count, mean], a direction ('min' = higher-is-better, 'max' = lower-is-better), and 'inputs' = the list of signal keys it is computed from. Return JSON: {\"gates\":[{\"key\",\"description\",\"direction\",\"compute\",\"inputs\",\"segment_dimension\",\"rationale\"}]}.",
+  "user": "SIGNALS:\n[\n  {\n    \"key\": \"http.health.200\",\n    \"description\": \"Health check endpoint returns JSON {status:\\\"ok\\\"} on success.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.list.200\",\n    \"description\": \"List todos endpoint responds with JSON array of todos (success path).\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.get.200\",\n    \"description\": \"Get single todo endpoint responds with JSON todo object when found (success path).\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.get.404\",\n    \"description\": \"Get single todo endpoint returns 404 with error payload when todo is not found.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.create.201\",\n    \"description\": \"Create todo endpoint returns 201 with created todo JSON on success.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.create.400.missing_title\",\n    \"description\": \"Create todo endpoint returns 400 when title is missing/blank.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.200\",\n    \"description\": \"Update todo endpoint returns updated todo JSON on success.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.400.no_fields\",\n    \"description\": \"Update todo endpoint returns 400 when no updatable fields are provided.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.404\",\n    \"description\": \"Update todo endpoint returns 404 when the target todo does not exist.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.delete.204\",\n    \"description\": \"Delete todo endpoint returns 204 No Content on success.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.delete.404\",\n    \"description\": \"Delete todo endpoint returns 404 when the target todo does not exist.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.global_error.500\",\n    \"description\": \"Unhandled errors are caught by global error handler and returned as 500 with a generic error payload.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"log.error.stack\",\n    \"description\": \"On unhandled errors, the server logs the error stack trace to stderr.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"log.backend_startup\",\n    \"description\": \"On startup, the backend logs the port it is running on.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"file.write.backend_port\",\n    \"description\": \"On startup, the backend writes its port number to /tmp/todo-backend-port for discovery by the frontend dev server.\",\n    \"stream\": \"telemetry\"\n  }\n]\n\nRespond with a single JSON object only. No code fences. No prose before or after.",
+  "raw_response": "{\"gates\":[{\"key\":\"gate.health_check_success_rate\",\"description\":\"Rate of successful health check responses (service is up and responding correctly).\",\"direction\":\"min\",\"compute\":\"rate\",\"inputs\":[\"http.health.200\"],\"segment_dimension\":\"service_instance\",\"rationale\":\"Basic availability signal; drops indicate the service is unhealthy or unreachable.\"},{\"key\":\"gate.todos_read_success_rate\",\"description\":\"Rate of successful read operations across list and get endpoints.\",\"direction\":\"min\",\"compute\":\"rate\",\"inputs\":[\"http.todos.list.200\",\"http.todos.get.200\"],\"segment_dimension\":\"route\",\"rationale\":\"Tracks core read-path reliability; regressions often surface here first.\"},{\"key\":\"gate.todos_write_success_rate\",\"description\":\"Rate of successful write operations across create, update, and delete endpoints.\",\"direction\":\"min\",\"compute\":\"rate\",\"inputs\":[\"http.todos.create.201\",\"http.todos.update.200\",\"http.todos.delete.204\"],\"segment_dimension\":\"route\",\"rationale\":\"Measures reliability of state-changing operations; sensitive to DB and validation changes.\"},{\"key\":\"gate.global_500_error_rate\",\"description\":\"Rate of unhandled server errors returned as HTTP 500 by the global error handler.\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.global_error.500\"],\"segment_dimension\":\"route\",\"rationale\":\"Primary indicator of unexpected failures; should be minimized and investigated quickly.\"},{\"key\":\"gate.error_stack_trace_rate\",\"description\":\"Rate of logged error stack traces (stderr) indicating unhandled exceptions occurred.\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"log.error.stack\"],\"segment_dimension\":\"service_instance\",\"rationale\":\"Corroborates 500s and can catch failures even when clients don\u2019t observe them (e.g., retries, health probes).\"},{\"key\":\"gate.validation_400_rate_create_missing_title\",\"description\":\"Rate of create requests rejected due to missing/blank title (client validation failures).\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.todos.create.400.missing_title\"],\"segment_dimension\":\"client_id\",\"rationale\":\"Monitors client-side contract adherence and UX regressions that increase invalid submissions.\"},{\"key\":\"gate.validation_400_rate_update_no_fields\",\"description\":\"Rate of update requests rejected because no updatable fields were provided (client validation failures).\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.todos.update.400.no_fields\"],\"segment_dimension\":\"client_id\",\"rationale\":\"Detects client bugs or API misuse leading to invalid update calls.\"},{\"key\":\"gate.not_found_404_rate_get\",\"description\":\"Rate of 404s on get-by-id (requested todo does not exist).\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.todos.get.404\"],\"segment_dimension\":\"client_id\",\"rationale\":\"Helps identify stale IDs, race conditions, or client caching issues causing missing-resource lookups.\"},{\"key\":\"gate.not_found_404_rate_update\",\"description\":\"Rate of 404s on update (attempts to update non-existent todos).\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.todos.update.404\"],\"segment_dimension\":\"client_id\",\"rationale\":\"Highlights concurrency issues and client flows that operate on deleted/nonexistent resources.\"},{\"key\":\"gate.not_found_404_rate_delete\",\"description\":\"Rate of 404s on delete (attempts to delete non-existent todos).\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.todos.delete.404\"],\"segment_dimension\":\"client_id\",\"rationale\":\"Detects repeated deletes, stale state, or idempotency expectations mismatched between client and server.\"},{\"key\":\"gate.backend_startup_log_count\",\"description\":\"Count of backend startup log events (port announcement) over time.\",\"direction\":\"max\",\"compute\":\"count\",\"inputs\":[\"log.backend_startup\"],\"segment_dimension\":\"service_instance\",\"rationale\":\"Unexpected increases can indicate crash loops or frequent restarts impacting availability.\"},{\"key\":\"gate.backend_port_file_write_rate\",\"description\":\"Rate of successful writes of backend port discovery file on startup.\",\"direction\":\"min\",\"compute\":\"rate\",\"inputs\":[\"file.write.backend_port\"],\"segment_dimension\":\"service_instance\",\"rationale\":\"Ensures dev/proxy discovery mechanism works; missing writes can break frontend connectivity and indicate startup issues.\"},{\"key\":\"gate_startup_discovery_consistency_ratio\",\"description\":\"Ratio of port-file writes to startup log events (startup/discovery consistency).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"file.write.backend_port\",\"log.backend_startup\"],\"segment_dimension\":\"service_instance\",\"rationale\":\"Validates that each startup both logs and writes the discovery file; divergence suggests partial initialization or permission/filesystem problems.\"}]}",
+  "parsed": {
+    "gates": [
+      {
+        "key": "gate.health_check_success_rate",
+        "description": "Rate of successful health check responses (service is up and responding correctly).",
+        "direction": "min",
+        "compute": "rate",
+        "inputs": [
+          "http.health.200"
+        ],
+        "segment_dimension": "service_instance",
+        "rationale": "Basic availability signal; drops indicate the service is unhealthy or unreachable."
+      },
+      {
+        "key": "gate.todos_read_success_rate",
+        "description": "Rate of successful read operations across list and get endpoints.",
+        "direction": "min",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.list.200",
+          "http.todos.get.200"
+        ],
+        "segment_dimension": "route",
+        "rationale": "Tracks core read-path reliability; regressions often surface here first."
+      },
+      {
+        "key": "gate.todos_write_success_rate",
+        "description": "Rate of successful write operations across create, update, and delete endpoints.",
+        "direction": "min",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.create.201",
+          "http.todos.update.200",
+          "http.todos.delete.204"
+        ],
+        "segment_dimension": "route",
+        "rationale": "Measures reliability of state-changing operations; sensitive to DB and validation changes."
+      },
+      {
+        "key": "gate.global_500_error_rate",
+        "description": "Rate of unhandled server errors returned as HTTP 500 by the global error handler.",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.global_error.500"
+        ],
+        "segment_dimension": "route",
+        "rationale": "Primary indicator of unexpected failures; should be minimized and investigated quickly."
+      },
+      {
+        "key": "gate.error_stack_trace_rate",
+        "description": "Rate of logged error stack traces (stderr) indicating unhandled exceptions occurred.",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "log.error.stack"
+        ],
+        "segment_dimension": "service_instance",
+        "rationale": "Corroborates 500s and can catch failures even when clients don\u2019t observe them (e.g., retries, health probes)."
+      },
+      {
+        "key": "gate.validation_400_rate_create_missing_title",
+        "description": "Rate of create requests rejected due to missing/blank title (client validation failures).",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.create.400.missing_title"
+        ],
+        "segment_dimension": "client_id",
+        "rationale": "Monitors client-side contract adherence and UX regressions that increase invalid submissions."
+      },
+      {
+        "key": "gate.validation_400_rate_update_no_fields",
+        "description": "Rate of update requests rejected because no updatable fields were provided (client validation failures).",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.update.400.no_fields"
+        ],
+        "segment_dimension": "client_id",
+        "rationale": "Detects client bugs or API misuse leading to invalid update calls."
+      },
+      {
+        "key": "gate.not_found_404_rate_get",
+        "description": "Rate of 404s on get-by-id (requested todo does not exist).",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.get.404"
+        ],
+        "segment_dimension": "client_id",
+        "rationale": "Helps identify stale IDs, race conditions, or client caching issues causing missing-resource lookups."
+      },
+      {
+        "key": "gate.not_found_404_rate_update",
+        "description": "Rate of 404s on update (attempts to update non-existent todos).",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.update.404"
+        ],
+        "segment_dimension": "client_id",
+        "rationale": "Highlights concurrency issues and client flows that operate on deleted/nonexistent resources."
+      },
+      {
+        "key": "gate.not_found_404_rate_delete",
+        "description": "Rate of 404s on delete (attempts to delete non-existent todos).",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.todos.delete.404"
+        ],
+        "segment_dimension": "client_id",
+        "rationale": "Detects repeated deletes, stale state, or idempotency expectations mismatched between client and server."
+      },
+      {
+        "key": "gate.backend_startup_log_count",
+        "description": "Count of backend startup log events (port announcement) over time.",
+        "direction": "max",
+        "compute": "count",
+        "inputs": [
+          "log.backend_startup"
+        ],
+        "segment_dimension": "service_instance",
+        "rationale": "Unexpected increases can indicate crash loops or frequent restarts impacting availability."
+      },
+      {
+        "key": "gate.backend_port_file_write_rate",
+        "description": "Rate of successful writes of backend port discovery file on startup.",
+        "direction": "min",
+        "compute": "rate",
+        "inputs": [
+          "file.write.backend_port"
+        ],
+        "segment_dimension": "service_instance",
+        "rationale": "Ensures dev/proxy discovery mechanism works; missing writes can break frontend connectivity and indicate startup issues."
+      },
+      {
+        "key": "gate_startup_discovery_consistency_ratio",
+        "description": "Ratio of port-file writes to startup log events (startup/discovery consistency).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "file.write.backend_port",
+          "log.backend_startup"
+        ],
+        "segment_dimension": "service_instance",
+        "rationale": "Validates that each startup both logs and writes the discovery file; divergence suggests partial initialization or permission/filesystem problems."
+      }
+    ]
+  },
+  "error": null
+}

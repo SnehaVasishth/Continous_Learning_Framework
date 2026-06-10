@@ -1,0 +1,183 @@
+{
+  "timestamp": "20260610_074724_414096",
+  "system_prompt_chars": 541,
+  "user_prompt_chars": 2560,
+  "raw_response_chars": 5940,
+  "system": "You are proposing baseline QUALITY GATES for a software system, given a list of its observable signals. A gate is a metric over one or more signals that is worth monitoring. Do NOT set any threshold/target number (a human will). For each gate give a compute type from [rate, ratio, p95, psi, count, mean], a direction ('min' = higher-is-better, 'max' = lower-is-better), and 'inputs' = the list of signal keys it is computed from. Return JSON: {\"gates\":[{\"key\",\"description\",\"direction\",\"compute\",\"inputs\",\"segment_dimension\",\"rationale\"}]}.",
+  "user": "SIGNALS:\n[\n  {\n    \"key\": \"http.healthcheck.200\",\n    \"description\": \"Health endpoint returns JSON {status:'ok'} on success.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.list.200\",\n    \"description\": \"List todos endpoint responds with JSON array of todos (optionally filtered by status/priority).\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.get.200\",\n    \"description\": \"Get single todo endpoint responds with JSON todo when found.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.get.404\",\n    \"description\": \"Get single todo endpoint returns 404 with {error:'Todo not found'} when id does not exist.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.create.201\",\n    \"description\": \"Create todo endpoint returns 201 with created todo JSON.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.create.400.missing_title\",\n    \"description\": \"Create todo endpoint returns 400 with {error:'title is required'} when title is missing/blank.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.200\",\n    \"description\": \"Update todo endpoint returns updated todo JSON when update succeeds.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.400.no_fields\",\n    \"description\": \"Update todo endpoint returns 400 with {error:'No fields to update'} when request body has no updatable fields.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.update.404\",\n    \"description\": \"Update todo endpoint returns 404 with {error:'Todo not found'} when id does not exist (no rows changed).\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.delete.204\",\n    \"description\": \"Delete todo endpoint returns 204 No Content on successful deletion.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.todos.delete.404\",\n    \"description\": \"Delete todo endpoint returns 404 with {error:'Todo not found'} when id does not exist (no rows changed).\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"http.server.500.global_error\",\n    \"description\": \"Unhandled errors are logged and returned as 500 with {error:'Internal server error'}.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"log.backend.startup\",\n    \"description\": \"Backend logs a startup message including the port number.\",\n    \"stream\": \"telemetry\"\n  },\n  {\n    \"key\": \"file.backend_port.discovery\",\n    \"description\": \"Backend writes its port number to /tmp/todo-backend-port for frontend discovery.\",\n    \"stream\": \"telemetry\"\n  }\n]\n\nRespond with a single JSON object only. No code fences. No prose before or after.",
+  "raw_response": "{\"gates\":[{\"key\":\"availability.healthcheck_success_rate\",\"description\":\"Proportion of healthcheck requests that return 200 OK (service availability signal).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"http.healthcheck.200\"],\"segment_dimension\":\"env,region,instance\",\"rationale\":\"Tracks basic service availability and routing; a drop indicates outages, misconfig, or dependency failures.\"},{\"key\":\"todos.read_success_rate\",\"description\":\"Proportion of todo read requests that succeed (list + get 200) relative to all read outcomes (including expected 404s).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.list.200\",\"http.todos.get.200\",\"http.todos.get.404\"],\"segment_dimension\":\"env,region,route\",\"rationale\":\"Measures end-user read experience while accounting for expected not-found behavior; shifts can indicate data access issues or routing problems.\"},{\"key\":\"todos.get_not_found_ratio\",\"description\":\"Share of GET-by-id requests resulting in 404 (not found) relative to all GET-by-id outcomes.\",\"direction\":\"max\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.get.404\",\"http.todos.get.200\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Detects client-side ID misuse, stale caches, or data loss; sudden increases can indicate persistence or replication issues.\"},{\"key\":\"todos.create_success_rate\",\"description\":\"Proportion of create requests that succeed (201) relative to create outcomes (including validation failures).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.create.201\",\"http.todos.create.400.missing_title\",\"http.server.500.global_error\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Captures create reliability and validation behavior; separates user input issues from server faults via inclusion of 500s.\"},{\"key\":\"todos.create_validation_error_ratio\",\"description\":\"Share of create attempts failing due to missing/blank title relative to create successes + this validation error.\",\"direction\":\"max\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.create.400.missing_title\",\"http.todos.create.201\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Monitors client/API contract adherence and UX regressions (e.g., frontend not sending title).\"},{\"key\":\"todos.update_success_rate\",\"description\":\"Proportion of update requests that succeed (200) relative to update outcomes (including expected 400/404 and 500).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.update.200\",\"http.todos.update.400.no_fields\",\"http.todos.update.404\",\"http.server.500.global_error\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Measures update reliability while accounting for expected client and not-found errors; highlights server-side regressions when success rate drops.\"},{\"key\":\"todos.update_no_fields_ratio\",\"description\":\"Share of update requests rejected for having no updatable fields relative to update successes + this validation error.\",\"direction\":\"max\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.update.400.no_fields\",\"http.todos.update.200\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Detects client bugs or API misuse (sending empty bodies/unsupported fields) and helps validate request-shaping changes.\"},{\"key\":\"todos.update_not_found_ratio\",\"description\":\"Share of update requests resulting in 404 relative to update outcomes (200 + 404).\",\"direction\":\"max\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.update.404\",\"http.todos.update.200\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Surfaces stale IDs, race conditions, or data consistency issues affecting updates.\"},{\"key\":\"todos.delete_success_rate\",\"description\":\"Proportion of delete requests that succeed (204) relative to delete outcomes (204 + 404 + 500).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.delete.204\",\"http.todos.delete.404\",\"http.server.500.global_error\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Tracks delete reliability and distinguishes expected not-found from server failures.\"},{\"key\":\"todos.delete_not_found_ratio\",\"description\":\"Share of delete requests resulting in 404 relative to delete outcomes (204 + 404).\",\"direction\":\"max\",\"compute\":\"ratio\",\"inputs\":[\"http.todos.delete.404\",\"http.todos.delete.204\"],\"segment_dimension\":\"env,region,client_id\",\"rationale\":\"Detects client-side stale IDs and potential data loss; spikes can indicate unexpected deletions or inconsistent state.\"},{\"key\":\"server_global_error_rate\",\"description\":\"Rate of unhandled server errors (500 global error) across all traffic.\",\"direction\":\"max\",\"compute\":\"rate\",\"inputs\":[\"http.server.500.global_error\"],\"segment_dimension\":\"env,region,instance,route\",\"rationale\":\"Primary stability signal; increases indicate regressions, dependency failures, or unhandled edge cases.\"},{\"key\":\"startup_log_emission_count\",\"description\":\"Count of backend startup log messages (used to detect restarts and crash loops).\",\"direction\":\"max\",\"compute\":\"count\",\"inputs\":[\"log.backend.startup\"],\"segment_dimension\":\"env,region,instance\",\"rationale\":\"Unexpected increases indicate frequent restarts; absence can indicate logging/boot failures.\"},{\"key\":\"port_discovery_write_success_count\",\"description\":\"Count of successful writes of backend port discovery file for frontend discovery.\",\"direction\":\"min\",\"compute\":\"count\",\"inputs\":[\"file.backend_port.discovery\"],\"segment_dimension\":\"env,region,instance\",\"rationale\":\"Ensures the backend publishes its port for dependent components; missing events can break frontend-backend connectivity.\"},{\"key\":\"port_discovery_coverage_ratio\",\"description\":\"Ratio of port discovery file writes to backend startups (coverage of discovery mechanism per boot).\",\"direction\":\"min\",\"compute\":\"ratio\",\"inputs\":[\"file.backend_port.discovery\",\"log.backend.startup\"],\"segment_dimension\":\"env,region,instance\",\"rationale\":\"Validates that each startup results in a discoverable port; catches partial initialization and filesystem permission issues.\"}]}",
+  "parsed": {
+    "gates": [
+      {
+        "key": "availability.healthcheck_success_rate",
+        "description": "Proportion of healthcheck requests that return 200 OK (service availability signal).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "http.healthcheck.200"
+        ],
+        "segment_dimension": "env,region,instance",
+        "rationale": "Tracks basic service availability and routing; a drop indicates outages, misconfig, or dependency failures."
+      },
+      {
+        "key": "todos.read_success_rate",
+        "description": "Proportion of todo read requests that succeed (list + get 200) relative to all read outcomes (including expected 404s).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.list.200",
+          "http.todos.get.200",
+          "http.todos.get.404"
+        ],
+        "segment_dimension": "env,region,route",
+        "rationale": "Measures end-user read experience while accounting for expected not-found behavior; shifts can indicate data access issues or routing problems."
+      },
+      {
+        "key": "todos.get_not_found_ratio",
+        "description": "Share of GET-by-id requests resulting in 404 (not found) relative to all GET-by-id outcomes.",
+        "direction": "max",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.get.404",
+          "http.todos.get.200"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Detects client-side ID misuse, stale caches, or data loss; sudden increases can indicate persistence or replication issues."
+      },
+      {
+        "key": "todos.create_success_rate",
+        "description": "Proportion of create requests that succeed (201) relative to create outcomes (including validation failures).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.create.201",
+          "http.todos.create.400.missing_title",
+          "http.server.500.global_error"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Captures create reliability and validation behavior; separates user input issues from server faults via inclusion of 500s."
+      },
+      {
+        "key": "todos.create_validation_error_ratio",
+        "description": "Share of create attempts failing due to missing/blank title relative to create successes + this validation error.",
+        "direction": "max",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.create.400.missing_title",
+          "http.todos.create.201"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Monitors client/API contract adherence and UX regressions (e.g., frontend not sending title)."
+      },
+      {
+        "key": "todos.update_success_rate",
+        "description": "Proportion of update requests that succeed (200) relative to update outcomes (including expected 400/404 and 500).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.update.200",
+          "http.todos.update.400.no_fields",
+          "http.todos.update.404",
+          "http.server.500.global_error"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Measures update reliability while accounting for expected client and not-found errors; highlights server-side regressions when success rate drops."
+      },
+      {
+        "key": "todos.update_no_fields_ratio",
+        "description": "Share of update requests rejected for having no updatable fields relative to update successes + this validation error.",
+        "direction": "max",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.update.400.no_fields",
+          "http.todos.update.200"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Detects client bugs or API misuse (sending empty bodies/unsupported fields) and helps validate request-shaping changes."
+      },
+      {
+        "key": "todos.update_not_found_ratio",
+        "description": "Share of update requests resulting in 404 relative to update outcomes (200 + 404).",
+        "direction": "max",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.update.404",
+          "http.todos.update.200"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Surfaces stale IDs, race conditions, or data consistency issues affecting updates."
+      },
+      {
+        "key": "todos.delete_success_rate",
+        "description": "Proportion of delete requests that succeed (204) relative to delete outcomes (204 + 404 + 500).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.delete.204",
+          "http.todos.delete.404",
+          "http.server.500.global_error"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Tracks delete reliability and distinguishes expected not-found from server failures."
+      },
+      {
+        "key": "todos.delete_not_found_ratio",
+        "description": "Share of delete requests resulting in 404 relative to delete outcomes (204 + 404).",
+        "direction": "max",
+        "compute": "ratio",
+        "inputs": [
+          "http.todos.delete.404",
+          "http.todos.delete.204"
+        ],
+        "segment_dimension": "env,region,client_id",
+        "rationale": "Detects client-side stale IDs and potential data loss; spikes can indicate unexpected deletions or inconsistent state."
+      },
+      {
+        "key": "server_global_error_rate",
+        "description": "Rate of unhandled server errors (500 global error) across all traffic.",
+        "direction": "max",
+        "compute": "rate",
+        "inputs": [
+          "http.server.500.global_error"
+        ],
+        "segment_dimension": "env,region,instance,route",
+        "rationale": "Primary stability signal; increases indicate regressions, dependency failures, or unhandled edge cases."
+      },
+      {
+        "key": "startup_log_emission_count",
+        "description": "Count of backend startup log messages (used to detect restarts and crash loops).",
+        "direction": "max",
+        "compute": "count",
+        "inputs": [
+          "log.backend.startup"
+        ],
+        "segment_dimension": "env,region,instance",
+        "rationale": "Unexpected increases indicate frequent restarts; absence can indicate logging/boot failures."
+      },
+      {
+        "key": "port_discovery_write_success_count",
+        "description": "Count of successful writes of backend port discovery file for frontend discovery.",
+        "direction": "min",
+        "compute": "count",
+        "inputs": [
+          "file.backend_port.discovery"
+        ],
+        "segment_dimension": "env,region,instance",
+        "rationale": "Ensures the backend publishes its port for dependent components; missing events can break frontend-backend connectivity."
+      },
+      {
+        "key": "port_discovery_coverage_ratio",
+        "description": "Ratio of port discovery file writes to backend startups (coverage of discovery mechanism per boot).",
+        "direction": "min",
+        "compute": "ratio",
+        "inputs": [
+          "file.backend_port.discovery",
+          "log.backend.startup"
+        ],
+        "segment_dimension": "env,region,instance",
+        "rationale": "Validates that each startup results in a discoverable port; catches partial initialization and filesystem permission issues."
+      }
+    ]
+  },
+  "error": null
+}

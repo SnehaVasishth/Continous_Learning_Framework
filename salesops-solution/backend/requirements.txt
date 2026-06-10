@@ -19,3 +19,6 @@ requests==2.34.2
 simple-salesforce==1.12.9
 # === v1.1 TASK-8 === .msg attachment unrolling
 extract-msg==0.55.0
+# === signal-graph: stats for confirm/drift ===
+numpy==2.1.3
+scipy==1.14.1
