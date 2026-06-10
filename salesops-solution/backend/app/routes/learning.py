@@ -56,11 +56,17 @@ def _label_resolver(db: Session):
 @router.get("/drift_alerts")
 def list_drift_alerts(
     baseline_id: int | None = None,
+    domain: str = "keysight",
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    """List drift alerts. Pass `?baseline_id=<id>` to filter to the alerts
-    anchored to a specific Baseline Quality Target."""
-    q = db.query(DriftAlert).order_by(DriftAlert.detected_at.desc())
+    """List drift alerts for a client (domain). Defaults to 'keysight' so the
+    existing view is unchanged; discovered clients pass their session_id.
+    Pass `?baseline_id=<id>` to filter to a specific Baseline Quality Target."""
+    q = (
+        db.query(DriftAlert)
+        .filter(DriftAlert.domain == domain)
+        .order_by(DriftAlert.detected_at.desc())
+    )
     if baseline_id is not None:
         q = q.filter(DriftAlert.baseline_id == baseline_id)
     rows = q.all()

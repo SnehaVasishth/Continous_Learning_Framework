@@ -143,6 +143,7 @@ def _ensure_alert(
             existing.top_contributors = top_contributors
         return existing
     row = DriftAlert(
+        domain="keysight",          # legacy detectors only run on the keysight client
         fingerprint=fingerprint,
         segment=segment,
         metric=metric,

@@ -485,6 +485,13 @@ function DriftTab({
 }) {
   const [showUnlinked, setShowUnlinked] = useState(false);
   const [unanchoredCount, setUnanchoredCount] = useState<number>(0);
+  // Client (domain) scoping so drift for each client is isolated, matching the
+  // Baselines tab. Defaults to keysight.
+  const [domain, setDomain] = useState("keysight");
+  const [domainList, setDomainList] = useState<{ domain: string; gates: number }[]>([]);
+  useEffect(() => {
+    signalGraphApi.domains().then(setDomainList).catch(() => setDomainList([]));
+  }, []);
   return (
     <div className="space-y-4">
       <div className="card p-4 flex items-center justify-between gap-4 flex-wrap">
@@ -495,6 +502,17 @@ function DriftTab({
           </h2>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          <select
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            title="Client"
+            className="text-xs border border-zbrain-divider rounded-md px-2 py-1 bg-white"
+          >
+            <option value="keysight">Keysight (built-in)</option>
+            {domainList.filter((d) => d.domain !== "keysight").map((d) => (
+              <option key={d.domain} value={d.domain}>{d.domain.slice(0, 8)}… ({d.gates})</option>
+            ))}
+          </select>
           <BaselineFilter value={baselineFilter} onChange={setBaselineFilter} />
           <label
             className={`inline-flex items-center gap-1.5 text-[11px] cursor-pointer select-none ${unanchoredCount === 0 ? "text-zbrain-muted/60" : "text-zbrain-muted"}`}
@@ -522,6 +540,7 @@ function DriftTab({
 
       <DriftAlertLedger
         baselineFilter={baselineFilter}
+        domain={domain}
         showUnlinked={showUnlinked}
         onOpenDrill={onOpenDrill}
         onUnanchoredCountChange={setUnanchoredCount}
@@ -1962,11 +1981,13 @@ function DriftTopContributorChip({
 
 function DriftAlertLedger({
   baselineFilter,
+  domain,
   showUnlinked,
   onOpenDrill,
   onUnanchoredCountChange,
 }: {
   baselineFilter: number | null;
+  domain: string;
   showUnlinked: boolean;
   onOpenDrill: (id: number) => void;
   onUnanchoredCountChange?: (n: number) => void;
@@ -1974,7 +1995,7 @@ function DriftAlertLedger({
   const [rows, setRows] = useState<DriftAlert[] | null>(null);
   const reload = async () => {
     try {
-      const r = await api.learningDriftAlerts(baselineFilter ?? undefined);
+      const r = await api.learningDriftAlerts(baselineFilter ?? undefined, domain);
       setRows(r);
       if (onUnanchoredCountChange) {
         const unanchored = (r || []).filter((row: DriftAlert) => row.baseline_id == null).length;
@@ -1989,7 +2010,8 @@ function DriftAlertLedger({
     reload();
     const id = setInterval(reload, 15000);
     return () => clearInterval(id);
-  }, [baselineFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baselineFilter, domain]);
 
   // Unanchored alerts (baseline_id is null) are hidden by default: the
   // workspace is baseline-driven, so an alert without an anchor is treated

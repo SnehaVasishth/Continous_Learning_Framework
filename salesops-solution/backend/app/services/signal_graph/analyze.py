@@ -186,6 +186,7 @@ def compute_drift(db: Session, domain: str) -> list[dict]:
         if alert is None:
             alert = DriftAlert(fingerprint=fp, status="open")
             db.add(alert)
+        alert.domain = domain          # scope the alert to this client
         alert.detected_at = now()
         alert.segment = gate.segment
         alert.metric = gate.metric

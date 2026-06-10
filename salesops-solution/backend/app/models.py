@@ -645,6 +645,9 @@ class DriftAlert(Base):
 
     __tablename__ = "drift_alerts"
     id = Column(Integer, primary_key=True)
+    # Per-client scope so the Drift tab can isolate clients (keysight vs each
+    # discovered session), matching the Baseline.domain scoping.
+    domain = Column(String, nullable=False, default="keysight", index=True)
     detected_at = Column(DateTime, default=now, index=True)
     updated_at = Column(DateTime, default=now)
     fingerprint = Column(String, nullable=True, index=True)  # idempotency key per (detector, segment)

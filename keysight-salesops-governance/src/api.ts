@@ -1338,10 +1338,11 @@ export const api = {
     jsonRequest<FeedbackEntry[]>(
       `/feedback${baselineId != null ? `?baseline_id=${baselineId}` : ""}`,
     ),
-  learningDriftAlerts: (baselineId?: number) =>
-    jsonRequest<DriftAlert[]>(
-      `/learning/drift_alerts${baselineId != null ? `?baseline_id=${baselineId}` : ""}`,
-    ),
+  learningDriftAlerts: (baselineId?: number, domain: string = "keysight") => {
+    const q = new URLSearchParams({ domain });
+    if (baselineId != null) q.set("baseline_id", String(baselineId));
+    return jsonRequest<DriftAlert[]>(`/learning/drift_alerts?${q.toString()}`);
+  },
   learningOpportunities: (baselineId?: number) =>
     jsonRequest<LearningOpportunity[]>(
       `/learning/opportunities${baselineId != null ? `?baseline_id=${baselineId}` : ""}`,

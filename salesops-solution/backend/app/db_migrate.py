@@ -104,6 +104,7 @@ ADDS: list[tuple[str, str, str]] = [
     # === Signal-graph: per-client scoping so any discovered client is isolated
     # under Continuous Learning. DEFAULT 'keysight' backfills the existing rows. ===
     ("baselines", "domain", "VARCHAR DEFAULT 'keysight'"),
+    ("drift_alerts", "domain", "VARCHAR DEFAULT 'keysight'"),
 ]
 
 
