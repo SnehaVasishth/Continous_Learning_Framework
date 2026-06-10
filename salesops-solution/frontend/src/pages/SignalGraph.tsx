@@ -79,6 +79,20 @@ export function SignalGraphPage() {
     }
   };
 
+  const onSeed = async () => {
+    setErrMsg(null);
+    try {
+      const res = await signalGraphApi.seedDemo(sessionId);
+      setStatusMsg(
+        `Seeded ${res.observations_written} sample observations. Click Analyze to compute drift & weights.`,
+      );
+      await loadRecs(sessionId);
+      await loadGates(sessionId);
+    } catch (e) {
+      setErrMsg(String(e));
+    }
+  };
+
   const onDiscover = async () => {
     setDiscovering(true);
     setErrMsg(null);
@@ -164,6 +178,9 @@ export function SignalGraphPage() {
             </Button>
             <Button onClick={() => loadRecs(sessionId)} variant="ghost">
               Refresh
+            </Button>
+            <Button onClick={onSeed} variant="ghost" title="Demo only: write synthetic observations so range/drift/weights can be shown">
+              Seed sample data
             </Button>
           </div>
         </Section>

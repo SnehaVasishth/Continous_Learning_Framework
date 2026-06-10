@@ -2429,4 +2429,9 @@ export const signalGraphApi = {
     jsonRequest<SgGate[]>(
       `/signal-graph/baselines?session_id=${encodeURIComponent(session_id)}`,
     ),
+  seedDemo: (session_id: string, windows = 8) =>
+    jsonRequest<{ domain: string; windows: number; observations_written: number; gates: number; signals_seeded: number }>(
+      `/signal-graph/seed-demo`,
+      { method: "POST", body: JSON.stringify({ session_id, windows }) },
+    ),
 };
